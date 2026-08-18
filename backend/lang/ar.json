@@ -1,0 +1,8 @@
+{
+    "The given data was invalid.": "البيانات المدخلة غير صحيحة.",
+    "Unauthenticated.": "الجلسة غير صالحة، الرجاء تسجيل الدخول من جديد.",
+    "This action is unauthorized.": "لا تملك صلاحية تنفيذ هذا الإجراء.",
+    "Resource not found.": "العنصر المطلوب غير موجود.",
+    "Request failed.": "تعذر تنفيذ الطلب.",
+    "Server error.": "حدث خطأ في النظام، الرجاء المحاولة لاحقاً."
+}

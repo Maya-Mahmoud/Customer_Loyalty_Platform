@@ -1,0 +1,21 @@
+{
+  "app": {
+    "name": "Customer Loyalty Platform",
+    "shortName": "Loyalty Platform"
+  },
+  "common": {
+    "dismiss": "Dismiss",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search",
+    "loading": "Loading...",
+    "language": "Language",
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "errors": {
+    "network": "Could not reach the server. Please check your connection.",
+    "unexpected": "Something went wrong. Please try again."
+  }
+}
