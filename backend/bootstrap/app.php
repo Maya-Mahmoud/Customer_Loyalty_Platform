@@ -1,14 +1,17 @@
 <?php
 
+use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -22,6 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(append: [
             SetLocale::class,
+        ]);
+
+        $middleware->alias([
+            // Pins the request to the signed-in user's merchant so the global
+            // scope can enforce BRD FR-ADM-06 without per-query where clauses.
+            'tenant' => ResolveTenant::class,
+            // Locks out disabled users and suspended merchants (BRD FR-ADM-03).
+            'account.active' => EnsureAccountIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -52,6 +63,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof NotFoundHttpException => [
                     404,
                     __('Resource not found.'),
+                    null,
+                ],
+                /*
+                 * A mail transport failure is an operational condition we expect,
+                 * not an unexpected crash. It is answered with a plain message
+                 * even in debug, because the driver's own message names the SMTP
+                 * host, the account and the provider's reply — and registration is
+                 * a public, unauthenticated form. The details still reach the log.
+                 */
+                $e instanceof TransportExceptionInterface => [
+                    503,
+                    __('We could not send the email just now. Please try again in a few minutes.'),
                     null,
                 ],
                 $e instanceof HttpExceptionInterface => [

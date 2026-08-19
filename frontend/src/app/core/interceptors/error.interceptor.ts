@@ -1,39 +1,70 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { Injector, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
 import { ApiError } from '../models/api.model';
 import { NotificationService } from '../services/notification.service';
 import { TokenService } from '../services/token.service';
+import { isApiRequest } from './is-api-request';
+
+/**
+ * The endpoint the route guards call to rebuild a session from a stored token.
+ * A 401 here is an expected outcome, not an error to report.
+ */
+function isSessionProbe(url: string): boolean {
+  return url.endsWith('/auth/me');
+}
 
 /**
  * Turns the API's error envelope into a user-facing message. Validation errors
  * (422) are left to the form that issued the request, since they belong next to
  * the offending fields rather than in a toast.
+ *
+ * Only API calls are handled. Asset fetches pass straight through — the
+ * translation files go through HttpClient too, and reporting one as an
+ * unreachable server would be both wrong and untranslatable.
+ *
+ * Nothing but the Injector is resolved eagerly. NotificationService needs
+ * TranslateService, TranslateService loads its files through HttpClient, and
+ * HttpClient runs this interceptor — so injecting it up front makes the
+ * interceptor part of TranslateService's own construction, which Angular rejects
+ * as a circular dependency (NG0200). Resolving on demand breaks that loop.
  */
 export const errorInterceptor: HttpInterceptorFn = (request, next) => {
-  const router = inject(Router);
-  const tokens = inject(TokenService);
-  const notifications = inject(NotificationService);
+  const injector = inject(Injector);
+
+  if (!isApiRequest(request.url)) {
+    return next(request);
+  }
+
+  const notify = (message: string): void => injector.get(NotificationService).error(message);
 
   return next(request).pipe(
     catchError((response: HttpErrorResponse) => {
       if (response.status === 0) {
-        notifications.error('errors.network');
+        notify('errors.network');
+
         return throwError(() => response);
       }
 
       const body = response.error as ApiError | null;
 
       if (response.status === 401) {
-        tokens.clear();
-        router.navigate(['/login']);
+        injector.get(TokenService).clear();
+
+        // The session probe is the guards' own call. They already redirect, with
+        // a returnUrl, so redirecting here as well would start a second
+        // navigation that cancels theirs and leaves a blank page.
+        if (!isSessionProbe(request.url)) {
+          void injector.get(Router).navigate(['/login']);
+        }
+
         return throwError(() => response);
       }
 
       if (response.status !== 422) {
-        notifications.error(body?.message ?? 'errors.unexpected');
+        notify(body?.message ?? 'errors.unexpected');
       }
 
       return throwError(() => response);

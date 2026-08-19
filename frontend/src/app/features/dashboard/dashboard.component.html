@@ -1,0 +1,52 @@
+<div class="max-w-3xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">
+    {{ 'dashboard.title' | translate }}
+  </h1>
+  <p class="text-sm text-slate-500 mb-6">{{ 'dashboard.subtitle' | translate }}</p>
+
+  <mat-card class="p-5 mb-4">
+    <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'dashboard.session' | translate }}</h2>
+
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <div>
+        <dt class="text-slate-500">{{ 'dashboard.user' | translate }}</dt>
+        <dd class="text-slate-900">{{ user()?.name }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
+        <dd class="text-slate-900" dir="ltr">{{ user()?.email }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">{{ 'dashboard.role' | translate }}</dt>
+        <dd class="text-slate-900">{{ 'roles.' + user()?.role | translate }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">{{ 'dashboard.branch' | translate }}</dt>
+        <dd class="text-slate-900">{{ branch()?.name ?? ('dashboard.allBranches' | translate) }}</dd>
+      </div>
+      @if (merchant()) {
+        <div>
+          <dt class="text-slate-500">{{ 'dashboard.merchant' | translate }}</dt>
+          <dd class="text-slate-900">{{ merchant()!.name }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'dashboard.currency' | translate }}</dt>
+          <dd class="text-slate-900" dir="ltr">{{ merchant()!.currency }}</dd>
+        </div>
+      }
+    </dl>
+  </mat-card>
+
+  <mat-card class="p-5">
+    <h2 class="text-sm font-medium text-slate-700 mb-1">
+      {{ 'dashboard.permissions' | translate }}
+    </h2>
+    <p class="text-xs text-slate-500 mb-3">{{ 'dashboard.permissionsHint' | translate }}</p>
+
+    <mat-chip-set>
+      @for (permission of user()?.permissions ?? []; track permission) {
+        <mat-chip disabled>{{ permission }}</mat-chip>
+      }
+    </mat-chip-set>
+  </mat-card>
+</div>

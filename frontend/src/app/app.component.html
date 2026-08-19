@@ -1,11 +1,1 @@
-<mat-toolbar color="primary" class="flex items-center justify-between">
-  <span class="text-lg font-medium">{{ 'app.name' | translate }}</span>
-
-  <button mat-button (click)="toggleLanguage()">
-    {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
-  </button>
-</mat-toolbar>
-
-<main class="p-6">
-  <router-outlet />
-</main>
+<router-outlet />

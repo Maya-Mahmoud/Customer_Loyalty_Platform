@@ -1,8 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/*
+ * Scheduled work. Requires the single cron entry that drives Laravel's scheduler:
+ *   * * * * * php artisan schedule:run
+ */
+
+// BRD FR-ADM-05: advance warning before a subscription lapses.
+Schedule::command('subscriptions:notify-expiring')
+    ->dailyAt('08:00')
+    ->onOneServer();

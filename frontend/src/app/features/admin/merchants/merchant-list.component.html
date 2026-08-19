@@ -1,0 +1,127 @@
+<div>
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'admin.merchantsTitle' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'admin.merchantsSubtitle' | translate }}</p>
+
+  <!-- Headline counters (BRD FR-ADM-01) -->
+  @if (stats(); as summary) {
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'admin.awaitingReview' | translate }}</p>
+        <p class="text-2xl font-semibold text-amber-700">{{ summary.awaiting_review }}</p>
+      </mat-card>
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'status.active' | translate }}</p>
+        <p class="text-2xl font-semibold text-emerald-700">{{ summary.merchants.active }}</p>
+      </mat-card>
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'status.suspended' | translate }}</p>
+        <p class="text-2xl font-semibold text-orange-700">{{ summary.merchants.suspended }}</p>
+      </mat-card>
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'admin.expiringSoon' | translate }}</p>
+        <p class="text-2xl font-semibold text-slate-700">{{ summary.expiring_soon }}</p>
+      </mat-card>
+    </div>
+  }
+
+  <mat-card class="p-4">
+    <div class="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+      <mat-form-field appearance="outline" class="md:w-80" subscriptSizing="dynamic">
+        <mat-label>{{ 'admin.searchMerchants' | translate }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchControl" />
+      </mat-form-field>
+
+      <mat-chip-listbox class="flex-1" [value]="activeStatus()"
+                        (change)="filterBy($any($event).value ?? '')">
+        @for (status of statuses; track status) {
+          <mat-chip-option [value]="status" [selected]="activeStatus() === status">
+            {{ (status === '' ? 'admin.allStatuses' : 'status.' + status) | translate }}
+          </mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    @if (loading()) {
+      <div class="py-10 text-center">
+        <mat-spinner diameter="28" class="mx-auto" />
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="py-10 text-center text-sm text-slate-500">
+        {{ 'admin.noMerchants' | translate }}
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="rows()" class="w-full">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'admin.store' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="font-medium text-slate-900">{{ row.name }}</span>
+              <span class="block text-xs text-slate-500" dir="ltr">{{ row.commercial_register }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="city">
+            <th mat-header-cell *matHeaderCellDef>{{ 'register.city' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="text-slate-700">{{ row.city }}</span>
+              <span class="block text-xs text-slate-500" dir="ltr">{{ row.email }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>{{ 'admin.status' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap"
+                    [class]="statusClass(row.status)">
+                {{ 'status.' + row.status | translate }}
+              </span>
+
+              <!-- A request cannot be approved before both codes are confirmed
+                   (BRD FR-MER-02), so the gap is flagged here. -->
+              @if (row.status === 'pending' && !row.is_verified) {
+                <mat-icon class="!text-base !w-4 !h-4 align-middle ms-1 text-slate-400"
+                          [matTooltip]="'admin.notVerified' | translate">error_outline</mat-icon>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="submitted">
+            <th mat-header-cell *matHeaderCellDef>{{ 'admin.submitted' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="text-xs text-slate-600" dir="ltr">
+                {{ (row.submitted_at ?? row.created_at)?.slice(0, 10) ?? '—' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="counts">
+            <th mat-header-cell *matHeaderCellDef>{{ 'admin.size' | translate }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="text-xs text-slate-600">
+                {{ 'admin.branchesCount' | translate: { count: row.branches_count ?? 0 } }}
+                &middot;
+                {{ 'admin.usersCount' | translate: { count: row.users_count ?? 0 } }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <a mat-button [routerLink]="['/admin/merchants', row.id]">
+                {{ 'admin.review' | translate }}
+              </a>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+
+      <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
+                     [pageSizeOptions]="[10, 20, 50]" (page)="onPage($event)" />
+    }
+  </mat-card>
+</div>

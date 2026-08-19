@@ -1,0 +1,240 @@
+@if (loading()) {
+  <div class="py-16 text-center">
+    <mat-spinner diameter="32" class="mx-auto" />
+  </div>
+} @else {
+  <!-- Nested rather than an @else if, because an `as` alias is only allowed on a
+       primary @if block. -->
+  @if (merchant(); as store) {
+  <div class="max-w-4xl">
+    <a mat-button routerLink="/admin/merchants" class="mb-2 -ms-2">
+      <mat-icon>arrow_back</mat-icon>
+      {{ 'admin.backToQueue' | translate }}
+    </a>
+
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+      <div>
+        <h1 class="text-xl font-semibold text-slate-800">{{ store.name }}</h1>
+        <p class="text-sm text-slate-500" dir="ltr">{{ store.commercial_register }}</p>
+      </div>
+
+      <span class="inline-block rounded-full px-3 py-1 text-sm font-medium"
+            [class]="statusClass(store.status)">
+        {{ 'status.' + store.status | translate }}
+      </span>
+    </div>
+
+    <!-- Why the account is in its current state (BRD FR-ADM-02) -->
+    @if (store.status_reason) {
+      <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
+        <strong class="block text-xs mb-0.5">{{ 'admin.reason' | translate }}</strong>
+        {{ store.status_reason }}
+      </div>
+    }
+
+    <!-- BRD BR-020: nothing may be archived before this date -->
+    @if (store.retention_floor) {
+      <div class="mb-4 rounded-md bg-slate-100 border border-slate-200 px-3 py-2 text-sm text-slate-700">
+        <mat-icon class="!text-base !w-4 !h-4 align-middle">inventory_2</mat-icon>
+        {{ 'admin.retentionNotice' | translate: { date: store.retention_floor } }}
+      </div>
+    }
+
+    <mat-card class="p-5 mb-4">
+      <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'admin.registrationDetails' | translate }}</h2>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+        <div>
+          <dt class="text-slate-500">{{ 'register.tradeName' | translate }}</dt>
+          <dd class="text-slate-900">{{ store.trade_name ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'register.ownerName' | translate }}</dt>
+          <dd class="text-slate-900">{{ store.owner_name }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
+          <dd class="text-slate-900 flex items-center gap-1" dir="ltr">
+            {{ store.email }}
+            @if (store.email_verified_at) {
+              <mat-icon class="!text-base !w-4 !h-4 text-emerald-600"
+                        [matTooltip]="'admin.verified' | translate">verified</mat-icon>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'register.phone' | translate }}</dt>
+          <dd class="text-slate-900 flex items-center gap-1" dir="ltr">
+            {{ store.phone }}
+            @if (store.phone_verified_at) {
+              <mat-icon class="!text-base !w-4 !h-4 text-emerald-600"
+                        [matTooltip]="'admin.verified' | translate">verified</mat-icon>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'register.city' | translate }}</dt>
+          <dd class="text-slate-900">{{ store.city }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'dashboard.currency' | translate }}</dt>
+          <dd class="text-slate-900" dir="ltr">{{ store.currency }}</dd>
+        </div>
+      </dl>
+
+      <mat-divider class="!my-4" />
+
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+        <div>
+          <dt class="text-slate-500">{{ 'admin.submitted' | translate }}</dt>
+          <dd class="text-slate-900" dir="ltr">{{ store.submitted_at?.slice(0, 10) ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'admin.reviewedAt' | translate }}</dt>
+          <dd class="text-slate-900" dir="ltr">{{ store.reviewed_at?.slice(0, 10) ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'admin.reviewedBy' | translate }}</dt>
+          <dd class="text-slate-900">{{ store.reviewed_by ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'admin.activatedAt' | translate }}</dt>
+          <dd class="text-slate-900" dir="ltr">{{ store.activated_at?.slice(0, 10) ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">{{ 'admin.size' | translate }}</dt>
+          <dd class="text-slate-900">
+            {{ 'admin.branchesCount' | translate: { count: store.branches_count ?? 0 } }}
+            &middot;
+            {{ 'admin.usersCount' | translate: { count: store.users_count ?? 0 } }}
+          </dd>
+        </div>
+      </dl>
+    </mat-card>
+
+    <!-- Decisions (BRD 8.1 step 5, FR-ADM-02) -->
+    <mat-card class="p-5 mb-4">
+      <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.decision' | translate }}</h2>
+
+      @if (blockedByVerification()) {
+        <p class="text-xs text-amber-800 mb-3">{{ 'admin.notVerified' | translate }}</p>
+      } @else {
+        <p class="text-xs text-slate-500 mb-3">{{ 'admin.decisionHint' | translate }}</p>
+      }
+
+      <div class="flex flex-wrap gap-2">
+        @if (canActivate()) {
+          <button mat-flat-button color="primary" type="button"
+                  [disabled]="working() || blockedByVerification()" (click)="activate()">
+            <mat-icon>check_circle</mat-icon>
+            {{ (store.status === 'suspended' ? 'admin.restore' : 'admin.activate') | translate }}
+          </button>
+        }
+
+        @if (canReject()) {
+          <button mat-stroked-button type="button" [disabled]="working()" (click)="reject()">
+            <mat-icon>cancel</mat-icon>
+            {{ 'admin.reject' | translate }}
+          </button>
+        }
+
+        @if (canSuspend()) {
+          <button mat-stroked-button type="button" [disabled]="working()" (click)="suspend()">
+            <mat-icon>pause_circle</mat-icon>
+            {{ 'admin.suspend' | translate }}
+          </button>
+        }
+
+        @if (!canActivate() && !canReject() && !canSuspend()) {
+          <p class="text-sm text-slate-500">{{ 'admin.noActions' | translate }}</p>
+        }
+      </div>
+    </mat-card>
+
+    <!-- Owner access. An activated store whose owner never followed the
+         invitation is open but unusable, so it is called out explicitly. -->
+    @if (store.owner; as owner) {
+      <mat-card class="p-5 mb-4">
+        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.ownerAccess' | translate }}</h2>
+
+        @if (ownerCannotSignIn()) {
+          <p class="text-xs text-amber-800 mb-3">{{ 'admin.ownerPending' | translate }}</p>
+        } @else {
+          <p class="text-xs text-slate-500 mb-3">{{ 'admin.ownerReady' | translate }}</p>
+        }
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+          <div>
+            <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
+            <dd class="text-slate-900" dir="ltr">{{ owner.email }}</dd>
+          </div>
+          <div>
+            <dt class="text-slate-500">{{ 'admin.canSignIn' | translate }}</dt>
+            <dd [class]="owner.has_password ? 'text-emerald-700' : 'text-amber-800'">
+              {{ (owner.has_password ? 'common.yes' : 'common.no') | translate }}
+            </dd>
+          </div>
+          @if (!owner.has_password && owner.invitation_expires_at) {
+            <div>
+              <dt class="text-slate-500">{{ 'admin.invitationExpires' | translate }}</dt>
+              <dd class="text-slate-900" dir="ltr">{{ owner.invitation_expires_at.slice(0, 10) }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (ownerCannotSignIn()) {
+          <button mat-stroked-button type="button" [disabled]="working()" (click)="resendInvitation()">
+            <mat-icon>forward_to_inbox</mat-icon>
+            {{ 'admin.resendInvitation' | translate }}
+          </button>
+          <p class="text-xs text-slate-500 mt-2">{{ 'admin.resendInvitationHint' | translate }}</p>
+        }
+      </mat-card>
+    }
+
+    <!-- Subscription plan (BRD FR-ADM-04) -->
+    <mat-card class="p-5">
+      <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.subscription' | translate }}</h2>
+      <p class="text-xs text-slate-500 mb-3">{{ 'admin.subscriptionHint' | translate }}</p>
+
+      <form [formGroup]="planForm" (ngSubmit)="savePlan()"
+            class="flex flex-col sm:flex-row sm:items-start gap-3">
+        <mat-form-field appearance="outline" class="sm:w-64">
+          <mat-label>{{ 'admin.plan' | translate }}</mat-label>
+          <mat-select formControlName="subscription_plan_id">
+            @for (plan of plans(); track plan.id) {
+              <mat-option [value]="plan.id">
+                {{ plan.name }} — {{ plan.monthly_price }} {{ store.currency }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (planForm.controls.subscription_plan_id.touched && planForm.controls.subscription_plan_id.invalid) {
+            <mat-error>{{ 'validation.required' | translate }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="sm:w-56">
+          <mat-label>{{ 'admin.endsAt' | translate }}</mat-label>
+          <input matInput [matDatepicker]="endsPicker" formControlName="subscription_ends_at" />
+          <mat-datepicker-toggle matIconSuffix [for]="endsPicker" />
+          <mat-datepicker #endsPicker />
+          @if (planForm.controls.subscription_ends_at.touched && planForm.controls.subscription_ends_at.invalid) {
+            <mat-error>{{ 'validation.required' | translate }}</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="submit" class="h-14 sm:mt-1"
+                [disabled]="working()">
+          {{ 'common.save' | translate }}
+        </button>
+      </form>
+
+      @if (store.subscription_plan; as plan) {
+        <p class="text-xs text-slate-500 mt-2">
+          {{ 'admin.currentCaps' | translate: capsFor(plan) }}
+        </p>
+      }
+    </mat-card>
+  </div>
+  }
+}

@@ -1,0 +1,58 @@
+<mat-sidenav-container class="h-screen">
+  <mat-sidenav mode="side" opened class="w-64 border-e border-slate-200">
+    <div class="px-4 py-4">
+      <p class="text-base font-semibold text-slate-800">{{ 'app.shortName' | translate }}</p>
+      @if (merchant()) {
+        <p class="text-xs text-slate-500 mt-0.5">{{ merchant()!.name }}</p>
+      }
+    </div>
+
+    <mat-divider />
+
+    <mat-nav-list>
+      @for (item of visibleNavItems(); track item.route) {
+        <a mat-list-item [routerLink]="item.route" routerLinkActive
+           [activated]="true" ariaCurrentWhenActive="page">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.labelKey | translate }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="bg-slate-50">
+    <mat-toolbar class="bg-white border-b border-slate-200 flex items-center justify-between">
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm font-medium text-slate-800">{{ user()?.name }}</span>
+        <span class="text-xs text-slate-500">
+          {{ roleLabelKey() | translate }}
+          @if (branch()) {
+            &middot; {{ branch()!.name }}
+          }
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button mat-button type="button" (click)="toggleLanguage()">
+          {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
+        </button>
+
+        <button mat-icon-button [matMenuTriggerFor]="accountMenu"
+                [attr.aria-label]="'nav.account' | translate">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+
+        <mat-menu #accountMenu>
+          <button mat-menu-item type="button" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>{{ 'auth.signOut' | translate }}</span>
+          </button>
+        </mat-menu>
+      </div>
+    </mat-toolbar>
+
+    <main class="p-6">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

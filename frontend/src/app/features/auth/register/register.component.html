@@ -1,0 +1,270 @@
+<div class="min-h-screen bg-slate-100 p-4 py-8">
+  <div class="w-full max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-xl font-semibold text-slate-800">{{ 'app.name' | translate }}</h1>
+
+      <button mat-button type="button" (click)="toggleLanguage()">
+        {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
+      </button>
+    </div>
+
+    <!-- Step indicator -->
+    <ol class="flex items-center gap-3 mb-4 text-sm">
+      <li class="flex items-center gap-2"
+          [class.font-semibold]="step() === 'form'"
+          [class.text-slate-400]="step() !== 'form'">
+        <span class="grid place-items-center w-6 h-6 rounded-full border"
+              [class.bg-blue-700]="step() !== 'form'"
+              [class.text-white]="step() !== 'form'"
+              [class.border-blue-700]="step() !== 'form'">
+          @if (step() === 'form') { 1 } @else { <mat-icon class="!text-base !w-4 !h-4">check</mat-icon> }
+        </span>
+        {{ 'register.stepDetails' | translate }}
+      </li>
+      <li class="flex-1 h-px bg-slate-300"></li>
+      <li class="flex items-center gap-2"
+          [class.font-semibold]="step() === 'verify'"
+          [class.text-slate-400]="step() === 'form'">
+        <span class="grid place-items-center w-6 h-6 rounded-full border"
+              [class.bg-blue-700]="step() === 'done'"
+              [class.text-white]="step() === 'done'"
+              [class.border-blue-700]="step() === 'done'">
+          @if (step() === 'done') { <mat-icon class="!text-base !w-4 !h-4">check</mat-icon> } @else { 2 }
+        </span>
+        {{ 'register.stepVerify' | translate }}
+      </li>
+    </ol>
+
+    @if (formError()) {
+      <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800"
+           role="alert">
+        {{ formError()! | translate }}
+      </div>
+    }
+
+    <!-- ---------------------------------------------------------------- -->
+    <!-- Step 1 — the registration form (BRD 8.1 steps 1 and 2)           -->
+    <!-- ---------------------------------------------------------------- -->
+    @if (step() === 'form') {
+      <mat-card class="p-6">
+        <h2 class="text-lg font-medium mb-1">{{ 'register.title' | translate }}</h2>
+        <p class="text-sm text-slate-500 mb-5">{{ 'register.subtitle' | translate }}</p>
+
+        <form [formGroup]="detailsForm" (ngSubmit)="submitDetails()">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.storeName' | translate }}</mat-label>
+              <input matInput formControlName="name" />
+              @if (detailsForm.controls.name.touched) {
+                @if (detailsForm.controls.name.hasError('required')) {
+                  <mat-error>{{ 'validation.required' | translate }}</mat-error>
+                } @else if (detailsForm.controls.name.hasError('server')) {
+                  <mat-error>{{ detailsForm.controls.name.getError('server') }}</mat-error>
+                }
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.tradeName' | translate }}</mat-label>
+              <input matInput formControlName="trade_name" />
+              <mat-hint>{{ 'common.optional' | translate }}</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.commercialRegister' | translate }}</mat-label>
+              <input matInput formControlName="commercial_register" dir="ltr" />
+              @if (detailsForm.controls.commercial_register.touched) {
+                @if (detailsForm.controls.commercial_register.hasError('required')) {
+                  <mat-error>{{ 'validation.required' | translate }}</mat-error>
+                } @else if (detailsForm.controls.commercial_register.hasError('server')) {
+                  <mat-error>{{ detailsForm.controls.commercial_register.getError('server') }}</mat-error>
+                }
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.ownerName' | translate }}</mat-label>
+              <input matInput formControlName="owner_name" />
+              @if (detailsForm.controls.owner_name.touched && detailsForm.controls.owner_name.invalid) {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'auth.email' | translate }}</mat-label>
+              <input matInput type="email" formControlName="email" dir="ltr" autocomplete="email" />
+              @if (detailsForm.controls.email.touched) {
+                @if (detailsForm.controls.email.hasError('required')) {
+                  <mat-error>{{ 'validation.required' | translate }}</mat-error>
+                } @else if (detailsForm.controls.email.hasError('email')) {
+                  <mat-error>{{ 'validation.email' | translate }}</mat-error>
+                } @else if (detailsForm.controls.email.hasError('server')) {
+                  <mat-error>{{ detailsForm.controls.email.getError('server') }}</mat-error>
+                }
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.phone' | translate }}</mat-label>
+              <input matInput formControlName="phone" dir="ltr" inputmode="tel" autocomplete="tel" />
+              @if (detailsForm.controls.phone.touched) {
+                @if (detailsForm.controls.phone.hasError('required')) {
+                  <mat-error>{{ 'validation.required' | translate }}</mat-error>
+                } @else if (detailsForm.controls.phone.hasError('pattern')) {
+                  <mat-error>{{ 'validation.phone' | translate }}</mat-error>
+                } @else if (detailsForm.controls.phone.hasError('server')) {
+                  <mat-error>{{ detailsForm.controls.phone.getError('server') }}</mat-error>
+                }
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'register.city' | translate }}</mat-label>
+              <input matInput formControlName="city" />
+              @if (detailsForm.controls.city.touched && detailsForm.controls.city.invalid) {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Chosen here rather than through a link after activation: the code
+               in the next step already proves the mailbox. -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'auth.password' | translate }}</mat-label>
+              <input matInput [type]="hidePassword() ? 'password' : 'text'"
+                     formControlName="password" autocomplete="new-password" />
+              <button mat-icon-button matSuffix type="button"
+                      [attr.aria-label]="'auth.togglePassword' | translate"
+                      (click)="hidePassword.set(!hidePassword())">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (detailsForm.controls.password.touched) {
+                @if (detailsForm.controls.password.hasError('required')) {
+                  <mat-error>{{ 'validation.required' | translate }}</mat-error>
+                } @else if (detailsForm.controls.password.hasError('minlength') || detailsForm.controls.password.hasError('pattern')) {
+                  <mat-error>{{ 'setPassword.policy' | translate }}</mat-error>
+                } @else if (detailsForm.controls.password.hasError('server')) {
+                  <mat-error>{{ detailsForm.controls.password.getError('server') }}</mat-error>
+                }
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'setPassword.confirmPassword' | translate }}</mat-label>
+              <input matInput [type]="hidePassword() ? 'password' : 'text'"
+                     formControlName="password_confirmation" autocomplete="new-password" />
+              @if (detailsForm.controls.password_confirmation.touched && detailsForm.controls.password_confirmation.hasError('required')) {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              } @else if (passwordsMismatch) {
+                <mat-error>{{ 'setPassword.mismatch' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <p class="text-xs text-slate-500 -mt-1 mb-3">{{ 'setPassword.policy' | translate }}</p>
+
+          <!-- BRD 8.1 step 2, and the legal basis of section 16 -->
+          <div class="mt-2 mb-4 flex flex-col gap-2">
+            <mat-checkbox formControlName="accepts_terms">
+              <span class="text-sm">{{ 'register.acceptTerms' | translate }}</span>
+            </mat-checkbox>
+            @if (detailsForm.controls.accepts_terms.touched && detailsForm.controls.accepts_terms.invalid) {
+              <span class="text-xs text-red-700 ms-8">{{ 'register.mustAccept' | translate }}</span>
+            }
+
+            <mat-checkbox formControlName="accepts_data_processing">
+              <span class="text-sm">{{ 'register.acceptDataProcessing' | translate }}</span>
+            </mat-checkbox>
+            @if (detailsForm.controls.accepts_data_processing.touched && detailsForm.controls.accepts_data_processing.invalid) {
+              <span class="text-xs text-red-700 ms-8">{{ 'register.mustAccept' | translate }}</span>
+            }
+          </div>
+
+          <button mat-flat-button color="primary" type="submit" class="h-11 w-full" [disabled]="loading()">
+            @if (loading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'register.continue' | translate }}
+            }
+          </button>
+        </form>
+      </mat-card>
+    }
+
+    <!-- ---------------------------------------------------------------- -->
+    <!-- Step 2 — proving email and phone (BRD FR-MER-02)                 -->
+    <!-- ---------------------------------------------------------------- -->
+    @if (step() === 'verify') {
+      <mat-card class="p-6">
+        <h2 class="text-lg font-medium mb-1">{{ 'register.verifyTitle' | translate }}</h2>
+        <p class="text-sm text-slate-500 mb-1">
+          {{ 'register.sentToEmail' | translate }}
+          <span dir="ltr" class="font-medium text-slate-700">{{ email }}</span>
+        </p>
+        <p class="text-sm text-slate-500 mb-5">
+          {{ 'register.verifySubtitle' | translate: { minutes: codeTtlMinutes() } }}
+        </p>
+
+        <form [formGroup]="codeForm" (ngSubmit)="submitCode()" class="flex flex-col gap-1">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>{{ 'register.code' | translate }}</mat-label>
+            <input matInput formControlName="code" dir="ltr" inputmode="numeric"
+                   maxlength="6" autocomplete="one-time-code" />
+            @if (codeForm.controls.code.touched) {
+              @if (codeForm.controls.code.hasError('server')) {
+                <mat-error>{{ codeForm.controls.code.getError('server') }}</mat-error>
+              } @else if (codeForm.controls.code.invalid) {
+                <mat-error>{{ 'register.codeFormat' | translate }}</mat-error>
+              }
+            }
+          </mat-form-field>
+
+          <button mat-button type="button" class="!text-xs self-start"
+                  [disabled]="resendCooldown() > 0" (click)="resend()">
+            @if (resendCooldown() > 0) {
+              {{ 'register.resendIn' | translate: { seconds: resendCooldown() } }}
+            } @else {
+              {{ 'register.resend' | translate }}
+            }
+          </button>
+
+          <div class="flex items-center gap-2 mt-3">
+            <button mat-flat-button color="primary" type="submit" class="h-11 flex-1" [disabled]="loading()">
+              @if (loading()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                {{ 'register.verify' | translate }}
+              }
+            </button>
+            <button mat-stroked-button type="button" class="h-11" (click)="backToDetails()">
+              {{ 'register.editDetails' | translate }}
+            </button>
+          </div>
+        </form>
+      </mat-card>
+    }
+
+    <!-- ---------------------------------------------------------------- -->
+    <!-- Step 3 — waiting for the supervisor (BRD 8.1 steps 4 and 5)      -->
+    <!-- ---------------------------------------------------------------- -->
+    @if (step() === 'done') {
+      <mat-card class="p-8 text-center">
+        <mat-icon class="!w-12 !h-12 !text-5xl text-emerald-600">mark_email_read</mat-icon>
+        <h2 class="text-lg font-medium mt-3 mb-2">{{ 'register.doneTitle' | translate }}</h2>
+        <p class="text-sm text-slate-600 max-w-md mx-auto">{{ 'register.doneBody' | translate }}</p>
+
+        <a mat-stroked-button routerLink="/login" class="mt-5">
+          {{ 'register.backToLogin' | translate }}
+        </a>
+      </mat-card>
+    }
+
+    @if (step() !== 'done') {
+      <p class="mt-4 text-center text-sm text-slate-600">
+        {{ 'register.haveAccount' | translate }}
+        <a routerLink="/login" class="text-blue-700 hover:underline">{{ 'auth.signIn' | translate }}</a>
+      </p>
+    }
+  </div>
+</div>

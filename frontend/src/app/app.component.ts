@@ -1,24 +1,15 @@
-import { Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
 
-import { LanguageService } from './core/services/language.service';
-
+/**
+ * Nothing but the router outlet: the authenticated chrome lives in
+ * ShellComponent, and the login screen deliberately has none.
+ */
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, TranslateModule, MatToolbarModule, MatButtonModule],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {
-  private readonly language = inject(LanguageService);
-
-  readonly currentLanguage = this.language.current;
-
-  toggleLanguage(): void {
-    this.language.toggle();
-  }
-}
+export class AppComponent {}
