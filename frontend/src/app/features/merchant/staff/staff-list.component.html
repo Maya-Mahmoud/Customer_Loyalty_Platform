@@ -1,0 +1,159 @@
+<div>
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+    <div>
+      <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'staff.title' | translate }}</h1>
+      <p class="text-sm text-slate-500">{{ 'staff.subtitle' | translate }}</p>
+    </div>
+
+    @if (!atCap() && hasActiveBranch()) {
+      <button mat-flat-button color="primary" type="button" [disabled]="working()" (click)="add()">
+        <mat-icon>person_add</mat-icon>
+        {{ 'staff.add' | translate }}
+      </button>
+    }
+  </div>
+
+  <!-- Nothing to assign anyone to yet -->
+  @if (!loading() && !hasActiveBranch()) {
+    <mat-card class="p-5 mb-4">
+      <p class="text-sm text-amber-900 mb-3">{{ 'staff.needBranchFirst' | translate }}</p>
+      <a mat-stroked-button routerLink="/branches">
+        <mat-icon>store</mat-icon>
+        {{ 'staff.goToBranches' | translate }}
+      </a>
+    </mat-card>
+  }
+
+  @if (usage(); as limits) {
+    <mat-card class="p-4 mb-4">
+      <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+        <div>
+          <span class="text-slate-500">{{ 'staff.used' | translate }}</span>
+          <span class="ms-2 font-medium text-slate-900">
+            {{ limits.users.used }}
+            @if (limits.users.max !== null) {
+              / {{ limits.users.max }}
+            } @else {
+              <span class="text-slate-500">({{ 'admin.unlimited' | translate }})</span>
+            }
+          </span>
+        </div>
+
+        @if (limits.plan) {
+          <div>
+            <span class="text-slate-500">{{ 'admin.plan' | translate }}</span>
+            <span class="ms-2 font-medium text-slate-900">{{ limits.plan }}</span>
+          </div>
+        }
+      </div>
+
+      @if (atCap()) {
+        <p class="text-xs text-amber-800 mt-2">{{ 'staff.atCap' | translate }}</p>
+      }
+    </mat-card>
+  }
+
+  <mat-card class="p-4">
+    @if (loading()) {
+      <div class="py-10 text-center"><mat-spinner diameter="28" class="mx-auto" /></div>
+    } @else if (members().length === 0) {
+      <div class="py-10 text-center text-sm text-slate-500">{{ 'staff.empty' | translate }}</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="members()" class="w-full">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'staff.name' | translate }}</th>
+            <td mat-cell *matCellDef="let member">
+              <span class="font-medium text-slate-900">
+                {{ member.name }}
+                @if (member.id === currentUserId()) {
+                  <span class="text-xs text-slate-500">({{ 'staff.you' | translate }})</span>
+                }
+              </span>
+              <span class="block text-xs text-slate-500" dir="ltr">{{ member.email }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>{{ 'dashboard.role' | translate }}</th>
+            <td mat-cell *matCellDef="let member">
+              <span class="text-slate-700">{{ 'roles.' + member.role | translate }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="branch">
+            <th mat-header-cell *matHeaderCellDef>{{ 'dashboard.branch' | translate }}</th>
+            <td mat-cell *matCellDef="let member">
+              <span class="text-slate-700">
+                {{ member.branch?.name ?? ('dashboard.allBranches' | translate) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="access">
+            <th mat-header-cell *matHeaderCellDef>{{ 'staff.access' | translate }}</th>
+            <td mat-cell *matCellDef="let member">
+              @if (member.status === 'disabled') {
+                <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-200 text-slate-700">
+                  {{ 'staff.disabledLabel' | translate }}
+                </span>
+              } @else if (!member.has_password) {
+                <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-900"
+                      [matTooltip]="'staff.invitationPendingHint' | translate">
+                  {{ 'staff.invitationPending' | translate }}
+                </span>
+              } @else {
+                <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-900">
+                  {{ 'status.active' | translate }}
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let member">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [disabled]="working()"
+                      [attr.aria-label]="'common.actions' | translate">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #menu>
+                <button mat-menu-item type="button" [disabled]="!canEdit(member)" (click)="edit(member)">
+                  <mat-icon>edit</mat-icon>
+                  <span>{{ 'common.edit' | translate }}</span>
+                </button>
+
+                @if (!member.has_password && member.status !== 'disabled') {
+                  <button mat-menu-item type="button" (click)="resendInvitation(member)">
+                    <mat-icon>forward_to_inbox</mat-icon>
+                    <span>{{ 'staff.resendInvitation' | translate }}</span>
+                  </button>
+                }
+
+                <!-- Disabled, never deleted: their invoices stay attached
+                     (BRD FR-BRN-05). -->
+                @if (member.status === 'disabled') {
+                  <button mat-menu-item type="button" (click)="toggle(member)">
+                    <mat-icon>toggle_on</mat-icon>
+                    <span>{{ 'staff.enable' | translate }}</span>
+                  </button>
+                } @else {
+                  <button mat-menu-item type="button" [disabled]="!canDisable(member)" (click)="toggle(member)">
+                    <mat-icon>toggle_off</mat-icon>
+                    <span>{{ 'staff.disable' | translate }}</span>
+                  </button>
+                }
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-3">{{ 'staff.noDeleteNote' | translate }}</p>
+    }
+  </mat-card>
+</div>

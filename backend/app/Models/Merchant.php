@@ -112,11 +112,18 @@ class Merchant extends Model
     {
         $date ??= now()->toDateString();
 
+        /*
+         * whereDate, not where. A `date` column is written through the datetime
+         * format, so the stored value is "2026-08-20 00:00:00" while the bound
+         * parameter is "2026-08-20". Compared as strings the timestamp sorts after
+         * the bare date, so `effective_from <= today` excludes a rule starting
+         * today — and with no rule found, nothing would ever accumulate.
+         */
         return $this->loyaltyRules()
-            ->where('effective_from', '<=', $date)
+            ->whereDate('effective_from', '<=', $date)
             ->where(fn (Builder $query) => $query
                 ->whereNull('effective_to')
-                ->orWhere('effective_to', '>=', $date))
+                ->orWhereDate('effective_to', '>=', $date))
             ->orderByDesc('effective_from')
             ->orderByDesc('version')
             ->first();

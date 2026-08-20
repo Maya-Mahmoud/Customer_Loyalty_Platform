@@ -11,8 +11,12 @@
 
     <mat-nav-list>
       @for (item of visibleNavItems(); track item.route) {
-        <a mat-list-item [routerLink]="item.route" routerLinkActive
-           [activated]="true" ariaCurrentWhenActive="page">
+        <!-- Bound to the directive, not hardcoded: with [activated]="true" every
+             entry rendered as selected, so the first one always looked current
+             regardless of where the user actually was. -->
+        <a mat-list-item [routerLink]="item.route"
+           routerLinkActive #linkActive="routerLinkActive"
+           [activated]="linkActive.isActive" ariaCurrentWhenActive="page">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.labelKey | translate }}</span>
         </a>

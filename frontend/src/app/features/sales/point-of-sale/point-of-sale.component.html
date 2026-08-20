@@ -1,0 +1,264 @@
+<div class="max-w-xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'pos.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'pos.subtitle' | translate }}</p>
+
+  <!-- What the last save produced. Kept on screen while the rep talks to the
+       customer, rather than a toast that disappears. -->
+  @if (lastResult(); as result) {
+    <mat-card class="p-5 mb-4"
+              [class]="result.cycle?.is_eligible ? '!bg-emerald-50 border-s-4 !border-s-emerald-500' : 'border-s-4 !border-s-slate-300'">
+      @if (result.cycle?.is_eligible) {
+        <!-- BRD FR-RED-02: the rep has to be told at the counter, loudly. -->
+        <div class="flex items-start gap-3">
+          <mat-icon class="!w-8 !h-8 !text-3xl text-emerald-600">redeem</mat-icon>
+          <div>
+            <p class="text-base font-semibold text-emerald-900">{{ 'pos.eligibleTitle' | translate }}</p>
+            <p class="text-sm text-emerald-800 mt-0.5">{{ 'pos.eligibleBody' | translate }}</p>
+          </div>
+        </div>
+      } @else {
+        <p class="text-sm text-slate-700">{{ result.message }}</p>
+
+        @if (result.cycle; as cycle) {
+          <p class="text-sm text-slate-600 mt-2">
+            @if (cycle.amount_remaining !== null) {
+              {{ 'pos.remainingAmount' | translate: { amount: cycle.amount_remaining, currency: currency() } }}
+            }
+            @if (cycle.invoices_remaining !== null) {
+              {{ 'pos.remainingVisits' | translate: { count: cycle.invoices_remaining } }}
+            }
+          </p>
+        }
+      }
+    </mat-card>
+  }
+
+  @if (formError()) {
+    <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800" role="alert">
+      {{ formError()! | translate }}
+    </div>
+  }
+
+  <!-- ================================================================ -->
+  <!-- Step 1 — the number (BRD 8.4 steps 1 and 2)                      -->
+  <!-- ================================================================ -->
+  @if (stage() === 'lookup') {
+    <mat-card class="p-5">
+      <form [formGroup]="phoneForm" (ngSubmit)="search()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>{{ 'pos.phone' | translate }}</mat-label>
+          <input #phoneField matInput formControlName="phone" dir="ltr" inputmode="tel"
+                 autocomplete="off" cdkFocusInitial />
+          <mat-icon matPrefix>search</mat-icon>
+          @if (phoneForm.controls.phone.touched && phoneForm.controls.phone.invalid) {
+            <mat-error>{{ 'validation.phone' | translate }}</mat-error>
+          } @else {
+            <mat-hint>{{ 'pos.phoneHint' | translate }}</mat-hint>
+          }
+        </mat-form-field>
+
+        <div class="flex items-center gap-2 mt-4">
+          <button mat-flat-button color="primary" type="submit" class="h-12 flex-1" [disabled]="searching()">
+            @if (searching()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'pos.search' | translate }}
+            }
+          </button>
+
+          <!-- BRD BR-022: respects a refusal without losing the sale. -->
+          <button mat-stroked-button type="button" class="h-12" (click)="skipCustomer()">
+            {{ 'pos.noNumber' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  }
+
+  <!-- ================================================================ -->
+  <!-- Step 2 — registering on the spot (BRD 8.4 step 4)                -->
+  <!-- ================================================================ -->
+  @if (stage() === 'register') {
+    <mat-card class="p-5">
+      <div class="flex items-start gap-2 mb-4">
+        <mat-icon class="text-amber-600">person_add</mat-icon>
+        <div>
+          <p class="text-sm font-medium text-slate-800">{{ 'pos.newCustomer' | translate }}</p>
+          <p class="text-xs text-slate-500 mt-0.5" dir="ltr">{{ phoneForm.controls.phone.value }}</p>
+        </div>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="register()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>{{ 'pos.customerName' | translate }}</mat-label>
+          <input matInput formControlName="name" autocomplete="off" cdkFocusInitial />
+          @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('required')) {
+            <mat-error>{{ 'validation.required' | translate }}</mat-error>
+          } @else if (registerForm.controls.name.hasError('server')) {
+            <mat-error>{{ registerForm.controls.name.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- BRD FR-CUS-07 and section 16: the rep asks, and records the answer. -->
+        <mat-checkbox formControlName="consent_given" class="mb-1">
+          <span class="text-sm">{{ 'pos.consent' | translate }}</span>
+        </mat-checkbox>
+        <p class="text-xs text-slate-500 ms-8 mb-4">{{ 'pos.consentHint' | translate }}</p>
+
+        <div class="flex items-center gap-2">
+          <button mat-flat-button color="primary" type="submit" class="h-12 flex-1" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'pos.registerAndContinue' | translate }}
+            }
+          </button>
+
+          <button mat-button type="button" class="h-12" (click)="startOver()">
+            {{ 'common.cancel' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  }
+
+  <!-- ================================================================ -->
+  <!-- Step 3 — the customer card and the sale                          -->
+  <!-- ================================================================ -->
+  @if (stage() === 'sale') {
+    <!-- BRD FR-CUS-05: everything about the customer, in one glance -->
+    @if (customer(); as card) {
+      <mat-card class="p-5 mb-4">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <p class="text-base font-semibold text-slate-900">{{ card.name }}</p>
+            <p class="text-xs text-slate-500" dir="ltr">{{ card.phone }}</p>
+          </div>
+
+          @if (card.cycle?.is_eligible) {
+            <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-900">
+              <mat-icon class="!text-base !w-4 !h-4">redeem</mat-icon>
+              {{ 'pos.eligibleBadge' | translate }}
+            </span>
+          }
+        </div>
+
+        @if (card.cycle; as cycle) {
+          <!-- BRD FR-CUS-06: the progress bar shows the condition still holding
+               the customer back, not the flattering one. -->
+          <mat-progress-bar mode="determinate" [value]="cycle.progress * 100"
+                            [color]="cycle.is_eligible ? 'accent' : 'primary'" class="!h-2 !rounded" />
+
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mt-4 text-sm">
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'pos.accumulated' | translate }}</dt>
+              <dd class="font-medium text-slate-900" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</dt>
+              <dd class="font-medium text-slate-900">{{ cycle.invoice_count }}</dd>
+            </div>
+            @if (cycle.amount_remaining !== null) {
+              <div>
+                <dt class="text-xs text-slate-500">{{ 'pos.toReward' | translate }}</dt>
+                <dd class="font-medium" [class]="cycle.is_eligible ? 'text-emerald-700' : 'text-slate-900'" dir="ltr">
+                  {{ cycle.amount_remaining }} {{ currency() }}
+                </dd>
+              </div>
+            }
+            @if (cycle.invoices_remaining !== null) {
+              <div>
+                <dt class="text-xs text-slate-500">{{ 'pos.visitsToReward' | translate }}</dt>
+                <dd class="font-medium text-slate-900">{{ cycle.invoices_remaining }}</dd>
+              </div>
+            }
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'pos.lastPurchase' | translate }}</dt>
+              <dd class="text-slate-700" dir="ltr">{{ card.last_purchase_at?.slice(0, 10) ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'pos.previousRewards' | translate }}</dt>
+              <dd class="text-slate-700">{{ card.redemptions_count }}</dd>
+            </div>
+          </dl>
+        } @else {
+          <!-- The till still works; there is simply nothing to accumulate towards. -->
+          <p class="text-xs text-amber-800 mt-1">{{ 'pos.noRule' | translate }}</p>
+        }
+      </mat-card>
+    }
+
+    @if (anonymous()) {
+      <mat-card class="p-4 mb-4 border-s-4 !border-s-slate-300">
+        <p class="text-sm text-slate-700">{{ 'pos.anonymousNotice' | translate }}</p>
+      </mat-card>
+    }
+
+    <mat-card class="p-5">
+      <form [formGroup]="saleForm" (ngSubmit)="recordSale()">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'pos.invoiceNumber' | translate }}</mat-label>
+            <input #invoiceField matInput formControlName="invoice_number" dir="ltr" autocomplete="off" />
+            @if (saleForm.controls.invoice_number.hasError('server')) {
+              <mat-error>{{ saleForm.controls.invoice_number.getError('server') }}</mat-error>
+            } @else if (saleForm.controls.invoice_number.touched && saleForm.controls.invoice_number.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'pos.amount' | translate }}</mat-label>
+            <input matInput type="number" formControlName="amount" dir="ltr" inputmode="decimal" step="0.01" />
+            <span matTextSuffix class="text-xs text-slate-500 ms-2">{{ currency() }}</span>
+            @if (saleForm.controls.amount.hasError('server')) {
+              <mat-error>{{ saleForm.controls.amount.getError('server') }}</mat-error>
+            } @else if (saleForm.controls.amount.touched && saleForm.controls.amount.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            } @else if (belowMinimum()) {
+              <!-- BRD BR-003, said before saving rather than after. -->
+              <mat-hint class="!text-amber-800">{{ 'pos.belowMinimum' | translate }}</mat-hint>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'pos.invoiceDate' | translate }}</mat-label>
+            <input matInput type="date" formControlName="invoice_date" dir="ltr" />
+            @if (saleForm.controls.invoice_date.hasError('server')) {
+              <mat-error>{{ saleForm.controls.invoice_date.getError('server') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Only an owner sees this; a rep's branch comes from their account. -->
+          @if (needsBranch()) {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'dashboard.branch' | translate }}</mat-label>
+              <mat-select formControlName="branch_id">
+                @for (branch of branches(); track branch.id) {
+                  <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+                }
+              </mat-select>
+              @if (saleForm.controls.branch_id.touched && !saleForm.controls.branch_id.value) {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          }
+        </div>
+
+        <div class="flex items-center gap-2 mt-2">
+          <button mat-flat-button color="primary" type="submit" class="h-12 flex-1" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'pos.recordSale' | translate }}
+            }
+          </button>
+
+          <button mat-button type="button" class="h-12" (click)="startOver()">
+            {{ 'pos.startOver' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  }
+</div>

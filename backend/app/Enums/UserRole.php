@@ -32,6 +32,7 @@ enum UserRole: string
                 Permission::LookupCustomer,
                 Permission::AmendInvoice,
                 Permission::RedeemDiscount,
+                Permission::AcceptVoucher,
                 Permission::AdjustBalance,
                 Permission::ViewAllBranchReports,
                 Permission::ViewOwnBranchReports,
@@ -44,12 +45,15 @@ enum UserRole: string
                 Permission::LookupCustomer,
                 Permission::AmendInvoice,
                 Permission::RedeemDiscount,
+                Permission::AcceptVoucher,
                 Permission::ViewOwnBranchReports,
             ],
             self::SalesRep => [
                 Permission::RegisterCustomer,
                 Permission::CreateInvoice,
                 Permission::LookupCustomer,
+                // Amendment to BRD 7.2: see Permission::AcceptVoucher.
+                Permission::AcceptVoucher,
             ],
         };
     }
@@ -57,6 +61,22 @@ enum UserRole: string
     public function has(Permission $permission): bool
     {
         return in_array($permission, $this->permissions(), strict: true);
+    }
+
+    /**
+     * Roles a store owner may hand out. The platform supervisor operates the
+     * platform itself, so it must never be creatable from inside a merchant.
+     *
+     * @return list<self>
+     */
+    public static function assignableByOwner(): array
+    {
+        return [self::MerchantOwner, self::BranchManager, self::SalesRep];
+    }
+
+    public function isAssignableByOwner(): bool
+    {
+        return in_array($this, self::assignableByOwner(), strict: true);
     }
 
     public function isPlatformAdmin(): bool

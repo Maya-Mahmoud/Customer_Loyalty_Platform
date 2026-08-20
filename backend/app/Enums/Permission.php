@@ -18,6 +18,16 @@ enum Permission: string
     case LookupCustomer = 'customers.lookup';
     case AmendInvoice = 'invoices.amend';
     case RedeemDiscount = 'redemptions.create';
+
+    /**
+     * Accepting a purchase voucher at the till.
+     *
+     * An amendment to BRD 7.2, which lists no such row. Redeeming a discount is
+     * restricted to a manager or the owner (BR-013), but a voucher's value was
+     * already authorised when it was issued, so accepting one is open to a sales
+     * rep too — otherwise every reward would need a manager at the counter.
+     */
+    case AcceptVoucher = 'vouchers.accept';
     case AdjustBalance = 'ledger.adjust';
     case ViewAllBranchReports = 'reports.view_all_branches';
     case ViewOwnBranchReports = 'reports.view_own_branch';

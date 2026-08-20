@@ -10,6 +10,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -23,9 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(append: [
-            SetLocale::class,
-        ]);
+        $middleware->api(
+            append: [SetLocale::class],
+            /*
+             * Route model binding is deliberately taken out of the group and
+             * re-added inside the authenticated routes, after ResolveTenant.
+             *
+             * In the group it runs before the tenant is pinned, so MerchantScope is
+             * not yet active and an id belonging to another merchant — or to the
+             * platform supervisor, who belongs to none — resolves happily. That
+             * turns every `{user}` and `{branch}` route into a hole in the isolation
+             * of BRD FR-ADM-06. Binding after the tenant is set closes it, because
+             * the scope is then part of the lookup itself.
+             */
+            remove: [SubstituteBindings::class],
+        );
 
         $middleware->alias([
             // Pins the request to the signed-in user's merchant so the global
@@ -77,9 +90,15 @@ return Application::configure(basePath: dirname(__DIR__))
                     __('We could not send the email just now. Please try again in a few minutes.'),
                     null,
                 ],
+                /*
+                 * Put the message through the translator. Ours arrive already
+                 * translated and pass through untouched, but the framework's own —
+                 * "Too Many Attempts." from the rate limiter, most visibly on the
+                 * login form — would otherwise reach an Arabic user in English.
+                 */
                 $e instanceof HttpExceptionInterface => [
                     $e->getStatusCode(),
-                    $e->getMessage() ?: __('Request failed.'),
+                    $e->getMessage() !== '' ? __($e->getMessage()) : __('Request failed.'),
                     null,
                 ],
                 default => [

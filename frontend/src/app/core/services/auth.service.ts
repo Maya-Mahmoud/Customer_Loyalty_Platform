@@ -91,8 +91,20 @@ export class AuthService {
     return permissions.some((permission) => this.has(permission));
   }
 
-  /** Where a user lands after signing in, which differs by role. */
+  /**
+   * Where a user lands after signing in.
+   *
+   * A sales rep goes straight to the till — it is the only screen they need, and
+   * a dashboard they cannot act on would be a wasted tap at the start of every
+   * shift.
+   */
   homeRoute(): string {
-    return this.currentUser()?.role === 'platform_admin' ? '/admin/merchants' : '/dashboard';
+    const role = this.currentUser()?.role;
+
+    if (role === 'platform_admin') {
+      return '/admin/merchants';
+    }
+
+    return role === 'sales_rep' ? '/pos' : '/dashboard';
   }
 }

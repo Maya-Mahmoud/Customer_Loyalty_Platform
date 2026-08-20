@@ -22,6 +22,16 @@ class Branch extends Model
         'is_active',
     ];
 
+    /**
+     * Mirrors the column default, so a freshly created branch reports itself as
+     * active rather than returning null for a field the database already filled.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected function casts(): array
     {
         return [

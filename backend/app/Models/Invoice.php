@@ -27,6 +27,18 @@ class Invoice extends Model
         'cancelled_at',
     ];
 
+    /**
+     * Mirrors the column defaults so a newly created instance carries them in
+     * memory too. Otherwise the caller reads null back for a field the database has
+     * already filled — and the resource serialising it crashes on the enum cast.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'status' => InvoiceStatus::Active->value,
+        'qualifies_for_accumulation' => true,
+    ];
+
     protected function casts(): array
     {
         return [

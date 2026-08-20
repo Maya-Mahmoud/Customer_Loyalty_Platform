@@ -57,7 +57,41 @@ export class ShellComponent {
    * disabled, so a sales rep never sees a reports link they cannot open.
    */
   private readonly navItems: NavItem[] = [
+    /*
+     * The till comes first: it is the screen a sales rep spends their whole day
+     * in, and the only one some roles ever need.
+     */
+    {
+      route: '/pos',
+      labelKey: 'nav.pos',
+      icon: 'point_of_sale',
+      permissions: ['invoices.create'],
+    },
+    {
+      route: '/customers',
+      labelKey: 'nav.customers',
+      icon: 'person_search',
+      permissions: ['customers.lookup'],
+    },
     { route: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
+    {
+      route: '/branches',
+      labelKey: 'nav.branches',
+      icon: 'store',
+      permissions: ['branches.manage'],
+    },
+    {
+      route: '/loyalty-rule',
+      labelKey: 'nav.loyaltyRule',
+      icon: 'loyalty',
+      permissions: ['loyalty_rules.manage'],
+    },
+    {
+      route: '/staff',
+      labelKey: 'nav.staff',
+      icon: 'group',
+      permissions: ['users.manage'],
+    },
     {
       route: '/admin/merchants',
       labelKey: 'nav.merchants',

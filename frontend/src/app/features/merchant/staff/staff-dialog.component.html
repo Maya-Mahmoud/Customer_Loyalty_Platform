@@ -1,0 +1,74 @@
+<h2 mat-dialog-title>
+  {{ (isEdit ? 'staff.editTitle' : 'staff.addTitle') | translate }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="flex flex-col gap-1 pt-2">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'staff.name' | translate }}</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'auth.email' | translate }}</mat-label>
+      <input matInput type="email" formControlName="email" dir="ltr" />
+      @if (isEdit) {
+        <mat-hint>{{ 'staff.emailLocked' | translate }}</mat-hint>
+      } @else if (form.controls.email.touched && form.controls.email.invalid) {
+        <mat-error>{{ 'validation.email' | translate }}</mat-error>
+      } @else {
+        <mat-hint>{{ 'staff.emailHint' | translate }}</mat-hint>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'register.phone' | translate }}</mat-label>
+      <input matInput formControlName="phone" dir="ltr" inputmode="tel" />
+      @if (form.controls.phone.touched && form.controls.phone.invalid) {
+        <mat-error>{{ 'validation.phone' | translate }}</mat-error>
+      } @else {
+        <mat-hint>{{ 'common.optional' | translate }}</mat-hint>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'dashboard.role' | translate }}</mat-label>
+      <mat-select formControlName="role">
+        @for (role of roles; track role) {
+          <mat-option [value]="role">{{ 'roles.' + role | translate }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Only branch-bound roles get a branch; an owner spans all of them. -->
+    @if (needsBranch()) {
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'dashboard.branch' | translate }}</mat-label>
+        <mat-select formControlName="branch_id">
+          @for (branch of activeBranches; track branch.id) {
+            <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.branch_id.touched && !form.controls.branch_id.value) {
+          <mat-error>{{ 'validation.required' | translate }}</mat-error>
+        } @else {
+          <mat-hint>{{ 'staff.branchHint' | translate }}</mat-hint>
+        }
+      </mat-form-field>
+    }
+
+    @if (!isEdit) {
+      <p class="text-xs text-slate-500 mt-1">{{ 'staff.invitationNote' | translate }}</p>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>{{ 'common.cancel' | translate }}</button>
+  <button mat-flat-button color="primary" type="button" (click)="save()">
+    {{ 'common.save' | translate }}
+  </button>
+</mat-dialog-actions>

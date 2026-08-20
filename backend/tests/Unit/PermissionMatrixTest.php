@@ -35,6 +35,17 @@ class PermissionMatrixTest extends TestCase
             'look up a customer' => [Permission::LookupCustomer, [$owner, $manager, $rep]],
             'edit or cancel an invoice' => [Permission::AmendInvoice, [$owner, $manager]],
             'redeem a discount' => [Permission::RedeemDiscount, [$owner, $manager]],
+
+            /*
+             * Not a row in BRD 7.2 — an amendment, recorded here so it stays a
+             * deliberate decision rather than a drift.
+             *
+             * A voucher is spent on a later visit, and its value was already
+             * authorised when a manager issued it. Requiring a manager again at
+             * the till would make the reward unusable in practice, so a sales rep
+             * may accept one. Issuing a discount remains restricted (BR-013).
+             */
+            'accept a purchase voucher' => [Permission::AcceptVoucher, [$owner, $manager, $rep]],
             'adjust a balance manually' => [Permission::AdjustBalance, [$owner]],
             'view reports for all branches' => [Permission::ViewAllBranchReports, [$owner]],
             'view reports for own branch' => [Permission::ViewOwnBranchReports, [$owner, $manager]],

@@ -117,6 +117,9 @@ class AuthenticationTest extends TestCase
                 'customers.register',
                 'invoices.create',
                 'customers.lookup',
+                // An amendment to BRD 7.2; the reasoning lives on
+                // Permission::AcceptVoucher and in the matrix test.
+                'vouchers.accept',
             ]);
     }
 

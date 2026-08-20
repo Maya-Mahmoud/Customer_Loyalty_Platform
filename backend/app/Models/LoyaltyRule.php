@@ -33,6 +33,7 @@ class LoyaltyRule extends Model
         'accumulation_scope',
         'reset_policy',
         'balance_validity_months',
+        'voucher_validity_days',
         'effective_from',
         'effective_to',
         'is_active',
@@ -53,6 +54,7 @@ class LoyaltyRule extends Model
             'accumulation_scope' => AccumulationScope::class,
             'reset_policy' => ResetPolicy::class,
             'balance_validity_months' => 'integer',
+            'voucher_validity_days' => 'integer',
             'effective_from' => 'date',
             'effective_to' => 'date',
             'is_active' => 'boolean',
@@ -97,6 +99,32 @@ class LoyaltyRule extends Model
             'accumulation_scope' => AccumulationScope::Merchant,
             'reset_policy' => ResetPolicy::CarryOver,
             'balance_validity_months' => 12,
+            /*
+             * Not in BRD 11.1: a purchase voucher is spent on a later visit, so it
+             * needs a life of its own. Thirty days encourages a prompt return
+             * without leaving an open-ended commitment on the merchant's books,
+             * which is the same reasoning BR-017 applies to balances. Null means it
+             * never expires, which the owner may choose.
+             */
+            'voucher_validity_days' => 30,
         ];
+    }
+
+    /**
+     * The same defaults as plain values, for the settings form to pre-fill from.
+     * The version is left out: that is the service's to assign.
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaultsForDisplay(): array
+    {
+        $defaults = self::defaults();
+
+        unset($defaults['version']);
+
+        return array_map(
+            fn (mixed $value) => $value instanceof \BackedEnum ? $value->value : $value,
+            $defaults,
+        );
     }
 }

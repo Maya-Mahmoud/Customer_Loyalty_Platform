@@ -26,6 +26,14 @@ class UserResource extends JsonResource
             'branch_id' => $this->branch_id,
             'last_login_at' => $this->last_login_at?->toIso8601String(),
 
+            /*
+             * Whether this account can actually be used yet. A staff member who
+             * never followed their invitation looks identical on the list
+             * otherwise, and it is what the resend button keys off.
+             */
+            'has_password' => $this->password !== null,
+            'invitation_expires_at' => $this->invitation_expires_at?->toIso8601String(),
+
             // Sent so the Angular side can hide what the role cannot do. The
             // server still enforces every one of them — this is presentation only.
             'permissions' => array_map(

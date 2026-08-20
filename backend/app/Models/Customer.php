@@ -32,6 +32,20 @@ class Customer extends Model
         'anonymized_at',
     ];
 
+    /**
+     * Mirrors the column defaults so a freshly created instance carries them in
+     * memory too. Without this, the caller gets nulls back for fields the database
+     * has already filled — and the ledger entry written from that instance fails
+     * on a NOT NULL cycle_number.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'current_cycle_number' => 1,
+        'consent_status' => ConsentStatus::NotCollected->value,
+        'is_active' => true,
+    ];
+
     protected function casts(): array
     {
         return [

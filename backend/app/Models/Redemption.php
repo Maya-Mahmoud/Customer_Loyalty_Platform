@@ -6,6 +6,7 @@ use App\Enums\RewardType;
 use App\Models\Concerns\BelongsToMerchant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -73,6 +74,16 @@ class Redemption extends Model
     public function overrideApprovedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'override_approved_by');
+    }
+
+    /**
+     * The voucher this redemption issued, when the reward took that shape. A
+     * relation rather than a column, because a voucher has its own lifecycle once
+     * it leaves the counter.
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class);
     }
 
     public function ledgerEntries(): MorphMany

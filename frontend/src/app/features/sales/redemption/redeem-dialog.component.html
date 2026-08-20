@@ -1,0 +1,105 @@
+<h2 mat-dialog-title>{{ 'redeem.title' | translate }}</h2>
+
+<mat-dialog-content class="!pt-2">
+  <p class="text-sm text-slate-600 mb-4">
+    {{ 'redeem.forCustomer' | translate: { name: data.customer.name ?? data.customer.phone } }}
+  </p>
+
+  @if (loading()) {
+    <div class="flex justify-center py-6">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (preview() !== null) {
+    @if (reward(); as reward) {
+      <!-- The figure the server will pay, not one this screen worked out. -->
+      <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 mb-4">
+        <p class="text-xs text-emerald-900">{{ 'redeem.amountDue' | translate }}</p>
+        <p class="text-3xl font-semibold text-emerald-900 mt-1" dir="ltr">
+          {{ reward.discount_amount }} {{ currency() }}
+        </p>
+
+        @if (reward.was_capped) {
+          <!-- BRD 11.2 poses this exact question: why 50 and not 116. -->
+          <p class="text-xs text-emerald-800 mt-2">
+            {{ 'redeem.capped' | translate: { computed: reward.computed_amount, currency: currency() } }}
+          </p>
+        }
+      </div>
+
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm mb-4">
+        <div>
+          <dt class="text-xs text-slate-500">{{ 'redeem.cycleTotal' | translate }}</dt>
+          <dd class="font-medium text-slate-900" dir="ltr">
+            {{ cycle()?.total_amount }} {{ currency() }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</dt>
+          <dd class="font-medium text-slate-900">{{ cycle()?.invoice_count }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-slate-500">{{ 'redeem.cycleNumber' | translate }}</dt>
+          <dd class="text-slate-700">{{ cycle()?.cycle_number }}</dd>
+        </div>
+        <div>
+          <!-- BR-006: what the customer keeps for the next cycle. -->
+          <dt class="text-xs text-slate-500">{{ 'redeem.carriedOver' | translate }}</dt>
+          <dd class="text-slate-700" dir="ltr">
+            {{ reward.carried_over_amount }} {{ currency() }}
+          </dd>
+        </div>
+      </dl>
+    } @else {
+      <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-4">
+        <p class="text-sm text-amber-900">{{ 'redeem.notEligible' | translate }}</p>
+
+        @if (!canOverride()) {
+          <p class="text-xs text-amber-800 mt-1">{{ 'redeem.ownerOnlyOverride' | translate }}</p>
+        }
+      </div>
+    }
+
+    <form [formGroup]="form" class="flex flex-col gap-3">
+      @if (needsBranch()) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ 'dashboard.branch' | translate }}</mat-label>
+          <mat-select formControlName="branch_id">
+            @for (branch of branches(); track branch.id) {
+              <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.branch_id.touched && form.controls.branch_id.invalid) {
+            <mat-error>{{ 'validation.required' | translate }}</mat-error>
+          }
+        </mat-form-field>
+      }
+
+      @if (canOverride()) {
+        <!-- BRD BR-014: the exception is the owner's own decision, and it is
+             recorded with its reason. -->
+        <mat-checkbox formControlName="override" color="warn">
+          {{ 'redeem.override' | translate }}
+        </mat-checkbox>
+
+        @if (form.controls.override.value) {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'redeem.overrideReason' | translate }}</mat-label>
+            <textarea matInput formControlName="override_reason" rows="2"></textarea>
+            <mat-hint>{{ 'redeem.overrideReasonHint' | translate }}</mat-hint>
+            @if (form.controls.override_reason.touched && form.controls.override_reason.invalid) {
+              <mat-error>{{ 'redeem.overrideReasonRequired' | translate }}</mat-error>
+            }
+          </mat-form-field>
+        }
+      }
+    </form>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close type="button">{{ 'common.cancel' | translate }}</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="!canConfirm()" (click)="confirm()">
+    <mat-icon>redeem</mat-icon>
+    {{ 'redeem.confirm' | translate }}
+  </button>
+</mat-dialog-actions>

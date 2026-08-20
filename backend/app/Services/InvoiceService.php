@@ -1,0 +1,194 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\LedgerEntryType;
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\LedgerEntry;
+use App\Models\User;
+use App\Services\Loyalty\CycleSnapshot;
+use App\Services\Loyalty\LoyaltyEngine;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Recording a sale (BRD 8.4) — the operation the whole system exists to support,
+ * and the one performed most often.
+ *
+ * The invoice and its ledger entry are written as one unit. If the entry failed
+ * after the invoice was stored, the customer's balance would be permanently short
+ * by that sale and nothing would reveal which one, so partial success is not an
+ * outcome worth allowing.
+ *
+ * Three cases produce an invoice with no ledger entry, deliberately:
+ *
+ *  - no customer attached (BR-022): the sale is recorded for the reports, but
+ *    belongs to nobody and accumulates nothing;
+ *  - below the rule's minimum (BR-003): recorded, and visibly not counted;
+ *  - no rule published yet: nothing can be evaluated, so nothing is claimed.
+ *
+ * The ledger stays a record of movements only. An entry worth zero would still be
+ * a movement, and reconciling the balance would have to filter it out.
+ */
+class InvoiceService
+{
+    public function __construct(
+        private readonly LoyaltyEngine $engine,
+        private readonly AuditLogger $audit,
+    ) {
+    }
+
+    /**
+     * Saves the sale and returns what the rep needs to see next.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{invoice: Invoice, snapshot: CycleSnapshot|null, counted: bool}
+     */
+    public function record(array $data, User $enteredBy): array
+    {
+        $customer = $this->resolveCustomer($data['customer_id'] ?? null);
+        $branchId = $this->resolveBranchId($data['branch_id'] ?? null, $enteredBy);
+        $amount = (float) $data['amount'];
+        $invoiceDate = $data['invoice_date'];
+
+        /*
+         * The rule in force on the invoice date, not today's. A sale recorded a day
+         * late is governed by the rule that applied when it happened (BR-015).
+         */
+        $rule = $customer !== null
+            ? $this->engine->ruleFor($customer, $invoiceDate)
+            : null;
+
+        $counted = $customer !== null
+            && $rule !== null
+            && $this->engine->qualifies($rule, $amount);
+
+        $invoice = DB::transaction(function () use ($data, $customer, $branchId, $amount, $invoiceDate, $enteredBy, $counted, $rule) {
+            $invoice = $this->createInvoice([
+                'branch_id' => $branchId,
+                'user_id' => $enteredBy->getKey(),
+                'customer_id' => $customer?->getKey(),
+                'invoice_number' => $data['invoice_number'],
+                'amount' => $amount,
+                'invoice_date' => $invoiceDate,
+                'qualifies_for_accumulation' => $counted,
+            ]);
+
+            if ($counted) {
+                LedgerEntry::create([
+                    'customer_id' => $customer->getKey(),
+                    'branch_id' => $branchId,
+                    'cycle_number' => $customer->current_cycle_number,
+                    'type' => LedgerEntryType::Accrual,
+                    'amount' => $amount,
+                    'invoice_count_delta' => 1,
+                    'source_type' => $invoice::class,
+                    'source_id' => $invoice->getKey(),
+                    'loyalty_rule_id' => $rule->getKey(),
+                    'created_by' => $enteredBy->getKey(),
+                ]);
+            }
+
+            // Cached rather than derived: the customer card shows it on every
+            // lookup, and BR-017 measures inactivity from it.
+            if ($customer !== null) {
+                $customer->forceFill(['last_purchase_at' => now()])->save();
+            }
+
+            return $invoice;
+        });
+
+        $this->audit->record(
+            action: 'invoice.recorded',
+            entity: $invoice,
+            after: $invoice->only(['invoice_number', 'amount', 'customer_id', 'branch_id', 'qualifies_for_accumulation']),
+            actor: $enteredBy,
+        );
+
+        return [
+            'invoice' => $invoice,
+            // BRD FR-RED-01: eligibility is re-evaluated after every entry, so the
+            // rep is told at the counter while the customer is still standing there.
+            'snapshot' => $customer !== null
+                ? $this->engine->snapshot($customer->fresh(), $rule, $branchId)
+                : null,
+            'counted' => $counted,
+        ];
+    }
+
+    /**
+     * Invoices of one customer, newest first — the history behind the customer card
+     * (BRD FR-CUS-05, 8.5 step 2).
+     */
+    public function historyFor(Customer $customer, int $limit = 20)
+    {
+        return Invoice::with('branch')
+            ->where('customer_id', $customer->getKey())
+            ->orderByDesc('invoice_date')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createInvoice(array $attributes): Invoice
+    {
+        try {
+            return Invoice::create($attributes);
+        } catch (UniqueConstraintViolationException) {
+            /*
+             * BRD BR-004 and AF-01: the number is unique inside the merchant, which
+             * is what stops the same sale being entered twice to inflate a balance.
+             *
+             * Caught from the constraint rather than checked beforehand, because a
+             * check-then-insert leaves a gap two tills can both pass through. The
+             * index is the only thing that cannot be raced.
+             */
+            throw ValidationException::withMessages([
+                'invoice_number' => __('This invoice number has already been recorded.'),
+            ]);
+        }
+    }
+
+    private function resolveCustomer(mixed $customerId): ?Customer
+    {
+        if ($customerId === null) {
+            return null;
+        }
+
+        // Scoped, so an id from another merchant simply does not resolve.
+        $customer = Customer::find($customerId);
+
+        if ($customer === null) {
+            throw ValidationException::withMessages([
+                'customer_id' => __('This customer was not found.'),
+            ]);
+        }
+
+        return $customer;
+    }
+
+    /**
+     * A rep or branch manager records at their own branch, whatever the request
+     * says — the branch is theirs, not the client's to choose (BRD FR-INV-03).
+     * An owner spans every branch, so they must say which one.
+     */
+    private function resolveBranchId(mixed $requested, User $enteredBy): int
+    {
+        if ($enteredBy->branch_id !== null) {
+            return $enteredBy->branch_id;
+        }
+
+        if ($requested === null) {
+            throw ValidationException::withMessages([
+                'branch_id' => __('Choose the branch this sale belongs to.'),
+            ]);
+        }
+
+        return (int) $requested;
+    }
+}

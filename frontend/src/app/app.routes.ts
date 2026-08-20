@@ -51,6 +51,51 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        // The till (BRD 8.4). Open to every role that serves a customer, which is
+        // why it leads the navigation and is where a sales rep lands.
+        path: 'pos',
+        canActivate: [requirePermission('invoices.create')],
+        loadComponent: () =>
+          import('./features/sales/point-of-sale/point-of-sale.component').then(
+            (m) => m.PointOfSaleComponent
+          ),
+      },
+      {
+        // Reading a customer's position without recording a sale (BRD 8.5).
+        path: 'customers',
+        canActivate: [requirePermission('customers.lookup')],
+        loadComponent: () =>
+          import('./features/sales/customer-lookup/customer-lookup.component').then(
+            (m) => m.CustomerLookupComponent
+          ),
+      },
+      {
+        // The store owner's own setup (BRD 8.2). Guards mirror the matrix of
+        // BRD 7.2; the API refuses these calls for every other role regardless.
+        path: 'branches',
+        canActivate: [requirePermission('branches.manage')],
+        loadComponent: () =>
+          import('./features/merchant/branches/branch-list.component').then(
+            (m) => m.BranchListComponent
+          ),
+      },
+      {
+        path: 'loyalty-rule',
+        canActivate: [requirePermission('loyalty_rules.manage')],
+        loadComponent: () =>
+          import('./features/merchant/loyalty-rule/loyalty-rule.component').then(
+            (m) => m.LoyaltyRuleComponent
+          ),
+      },
+      {
+        path: 'staff',
+        canActivate: [requirePermission('users.manage')],
+        loadComponent: () =>
+          import('./features/merchant/staff/staff-list.component').then(
+            (m) => m.StaffListComponent
+          ),
+      },
+      {
         // Platform supervisor console. The guard only avoids a pointless
         // navigation; the API refuses these calls for every other role.
         path: 'admin/merchants',
