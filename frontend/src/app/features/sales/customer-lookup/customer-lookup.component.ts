@@ -12,10 +12,11 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { CustomerCard, Redemption } from '../../../core/models/sales.model';
+import { CustomerCard, CustomerInvoice, Redemption } from '../../../core/models/sales.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SalesService } from '../../../core/services/sales.service';
+import { CorrectionDialogComponent } from '../corrections/correction-dialog.component';
 import { RedeemDialogComponent } from '../redemption/redeem-dialog.component';
 
 /**
@@ -53,7 +54,7 @@ export class CustomerLookupComponent {
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
 
-  readonly invoiceColumns = ['number', 'amount', 'date', 'counted'];
+  readonly invoiceColumns = ['number', 'amount', 'date', 'counted', 'actions'];
   readonly rewardColumns = ['date', 'amount', 'cycle', 'by'];
 
   readonly searching = signal(false);
@@ -68,6 +69,8 @@ export class CustomerLookupComponent {
   readonly canRegister = computed(() => this.auth.has('customers.register'));
   /** BR-013: a rep never sees the button, and the server refuses them anyway. */
   readonly canRedeem = computed(() => this.auth.has('redemptions.create'));
+  /** BR-012: a rep may ask for a correction, but not decide on one. */
+  readonly canRequestCorrection = computed(() => this.auth.has('invoices.create'));
 
   readonly form = this.fb.nonNullable.group({
     phone: ['', [Validators.required, Validators.pattern(/^\+?[\d\s-]{6,20}$/)]],
@@ -168,5 +171,41 @@ export class CustomerLookupComponent {
       next: (rewards) => this.rewards.set(rewards),
       error: () => this.rewards.set([]),
     });
+  }
+
+  /**
+   * Asking for an invoice to be cancelled or returned (BRD 8.7).
+   *
+   * Raised from the invoice row on the card, because that is where someone
+   * notices the mistake. Whether it takes effect now or waits for a manager is
+   * the server's decision (BR-012), and the message says which happened.
+   */
+  requestCorrection(invoice: CustomerInvoice): void {
+    const card = this.customer();
+
+    if (card === null) {
+      return;
+    }
+
+    this.dialog
+      .open(CorrectionDialogComponent, { data: { invoice }, width: '520px' })
+      .afterClosed()
+      .subscribe((form) => {
+        if (!form) {
+          return;
+        }
+
+        this.sales.requestCorrection(invoice.id, form).subscribe({
+          next: (result) => {
+            this.notifications.success(result.message);
+
+            // An applied correction has already moved the balance, so the card is
+            // read again rather than patched.
+            this.sales.card(card.id).subscribe({
+              next: (fresh) => this.customer.set(fresh),
+            });
+          },
+        });
+      });
   }
 }

@@ -26,6 +26,10 @@ export interface CustomerInvoice {
   branch?: string | null;
   entered_by?: string | null;
   created_at: string | null;
+  /** A correction request waiting for a decision (BRD 8.7). */
+  pending_correction?: boolean;
+  /** Already returned on a partial return (BRD FR-INV-07); '0.00' when none. */
+  returned_amount?: string;
 }
 
 /** The card of BRD FR-CUS-05 — everything the rep sees on lookup. */
@@ -131,4 +135,50 @@ export interface RedeemForm {
 export interface RedeemResult {
   message: string;
   data: Redemption;
+}
+
+/**
+ * Cancelling and returning invoices (BRD 8.7).
+ *
+ * A rep raises the request and a manager decides it (BR-012), so the same record is
+ * read from both sides: the till sees its own request pending, the manager sees a
+ * queue of them.
+ */
+export type CorrectionType = 'cancel' | 'full_return' | 'partial_return';
+
+export interface CorrectionForm {
+  type: CorrectionType;
+  /** Only a partial return carries one. */
+  amount?: number | null;
+  reason: string;
+}
+
+export interface InvoiceCorrection {
+  id: number;
+  invoice_id: number;
+  type: CorrectionType;
+  amount: string | null;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  review_note: string | null;
+  reviewed_at: string | null;
+  created_at: string | null;
+  requested_by?: string | null;
+  reviewed_by?: string | null;
+  invoice?: {
+    id: number;
+    invoice_number: string;
+    amount: string;
+    invoice_date: string | null;
+    status: 'active' | 'cancelled';
+    branch: string | null;
+    customer: { id: number; name: string | null; phone: string } | null;
+  };
+}
+
+export interface CorrectionResult {
+  message: string;
+  data: InvoiceCorrection;
+  /** True when the person requesting could also approve, so it took effect at once. */
+  applied: boolean;
 }

@@ -124,7 +124,9 @@ class InvoiceService
      */
     public function historyFor(Customer $customer, int $limit = 20)
     {
-        return Invoice::with('branch')
+        // Corrections come along so the card can show a pending request and what
+        // has already been returned (BRD 8.7).
+        return Invoice::with(['branch', 'corrections'])
             ->where('customer_id', $customer->getKey())
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')

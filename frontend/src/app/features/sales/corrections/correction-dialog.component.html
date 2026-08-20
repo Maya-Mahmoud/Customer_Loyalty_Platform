@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>{{ 'correction.title' | translate }}</h2>
+
+<mat-dialog-content class="!pt-2">
+  <!-- What is being corrected, so nobody cancels the wrong sale. -->
+  <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 mb-4 text-sm">
+    <div class="flex justify-between gap-3">
+      <span class="text-slate-500">{{ 'pos.invoiceNumber' | translate }}</span>
+      <span class="font-medium text-slate-900" dir="ltr">{{ data.invoice.invoice_number }}</span>
+    </div>
+    <div class="flex justify-between gap-3 mt-1">
+      <span class="text-slate-500">{{ 'pos.amount' | translate }}</span>
+      <span class="font-medium text-slate-900" dir="ltr">
+        {{ data.invoice.amount }} {{ currency() }}
+      </span>
+    </div>
+    <div class="flex justify-between gap-3 mt-1">
+      <span class="text-slate-500">{{ 'pos.invoiceDate' | translate }}</span>
+      <span class="text-slate-700" dir="ltr">{{ data.invoice.invoice_date }}</span>
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <mat-radio-group formControlName="type" class="flex flex-col gap-1">
+      @for (type of types; track type) {
+        <mat-radio-button [value]="type">
+          {{ 'correction.types.' + type | translate }}
+        </mat-radio-button>
+      }
+    </mat-radio-group>
+
+    @if (isPartial()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'correction.returnedAmount' | translate }}</mat-label>
+        <input matInput type="number" formControlName="amount" dir="ltr" step="0.01" min="0.01" />
+        <span matTextSuffix>{{ currency() }}</span>
+        <mat-hint>{{ 'correction.returnedAmountHint' | translate }}</mat-hint>
+        @if (form.controls.amount.touched && form.controls.amount.invalid) {
+          <mat-error>{{ 'correction.returnedAmountRange' | translate }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ 'correction.reason' | translate }}</mat-label>
+      <textarea matInput formControlName="reason" rows="3"></textarea>
+      <mat-hint>{{ 'correction.reasonHint' | translate }}</mat-hint>
+      @if (form.controls.reason.touched && form.controls.reason.invalid) {
+        <mat-error>{{ 'correction.reasonRequired' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- BR-012: a rep's request waits for a decision, and saying so here avoids
+         them telling the customer their balance has already changed. -->
+    <p class="text-xs rounded-lg p-3"
+       [class]="appliesAtOnce() ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-600'">
+      @if (appliesAtOnce()) {
+        {{ 'correction.appliesAtOnce' | translate }}
+      } @else {
+        {{ 'correction.needsApproval' | translate }}
+      }
+    </p>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close type="button">{{ 'common.cancel' | translate }}</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()">
+    {{ 'correction.submit' | translate }}
+  </button>
+</mat-dialog-actions>

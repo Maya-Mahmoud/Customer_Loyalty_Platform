@@ -2,7 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import {
+  CorrectionForm,
+  CorrectionResult,
   CustomerCard,
+  InvoiceCorrection,
   InvoiceForm,
   InvoiceResult,
   LookupResult,
@@ -75,6 +78,37 @@ export class SalesService {
   redemptions(customerId: number): Observable<Redemption[]> {
     return this.api
       .get<{ data: Redemption[] }>(`customers/${customerId}/redemptions`)
+      .pipe(map((response) => response.data));
+  }
+
+  // ---------------------------------------------------------------
+  // Cancelling and returning invoices (BRD 8.7)
+  // ---------------------------------------------------------------
+
+  /**
+   * Raises the request. Whether it takes effect now or waits for a manager is the
+   * server's call (BR-012), and the answer comes back in `applied`.
+   */
+  requestCorrection(invoiceId: number, form: CorrectionForm): Observable<CorrectionResult> {
+    return this.api.post<CorrectionResult>(`invoices/${invoiceId}/corrections`, form);
+  }
+
+  /** The queue a manager decides on (BRD FR-INV-08). */
+  pendingCorrections(): Observable<InvoiceCorrection[]> {
+    return this.api
+      .get<{ data: InvoiceCorrection[] }>('corrections')
+      .pipe(map((response) => response.data));
+  }
+
+  decideCorrection(
+    id: number,
+    approve: boolean,
+    note: string | null = null
+  ): Observable<InvoiceCorrection> {
+    return this.api
+      .post<{ data: InvoiceCorrection }>(`corrections/${id}/${approve ? 'approve' : 'reject'}`, {
+        review_note: note,
+      })
       .pipe(map((response) => response.data));
   }
 }

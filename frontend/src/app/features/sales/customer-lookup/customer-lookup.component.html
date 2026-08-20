@@ -221,6 +221,27 @@
               </td>
             </ng-container>
 
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let invoice">
+                @if (invoice.pending_correction) {
+                  <!-- One open request at a time, so a second button would only
+                       lead to a refusal (BRD 8.7). -->
+                  <span class="text-xs text-amber-800">{{ 'correction.pending' | translate }}</span>
+                } @else if (invoice.returned_amount && invoice.returned_amount !== '0.00') {
+                  <span class="text-xs text-slate-500" dir="ltr">
+                    -{{ invoice.returned_amount }}
+                  </span>
+                } @else if (canRequestCorrection() && invoice.status === 'active') {
+                  <button mat-icon-button type="button"
+                          [attr.aria-label]="'correction.title' | translate"
+                          (click)="requestCorrection(invoice)">
+                    <mat-icon class="!text-base !w-4 !h-4">undo</mat-icon>
+                  </button>
+                }
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="invoiceColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: invoiceColumns"></tr>
           </table>

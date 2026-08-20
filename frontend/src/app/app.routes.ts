@@ -70,6 +70,16 @@ export const routes: Routes = [
           ),
       },
       {
+        // Deciding on correction requests (BRD 8.7). Managers and the owner only;
+        // a rep raises requests from the customer card instead.
+        path: 'corrections',
+        canActivate: [requirePermission('invoices.amend')],
+        loadComponent: () =>
+          import('./features/sales/corrections/correction-queue.component').then(
+            (m) => m.CorrectionQueueComponent
+          ),
+      },
+      {
         // The store owner's own setup (BRD 8.2). Guards mirror the matrix of
         // BRD 7.2; the API refuses these calls for every other role regardless.
         path: 'branches',

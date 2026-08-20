@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Merchant\LoyaltyRuleController;
 use App\Http\Controllers\Api\V1\Merchant\StaffController;
 use App\Http\Controllers\Api\V1\MerchantRegistrationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\Sales\CorrectionController;
 use App\Http\Controllers\Api\V1\Sales\CustomerController as SalesCustomerController;
 use App\Http\Controllers\Api\V1\Sales\InvoiceController;
 use App\Http\Controllers\Api\V1\Sales\RedemptionController;

@@ -80,7 +80,8 @@
     "staff": "Users",
     "loyaltyRule": "Loyalty rule",
     "pos": "Record a sale",
-    "customers": "Customers"
+    "customers": "Customers",
+    "corrections": "Corrections"
   },
   "roles": {
     "platform_admin": "Platform supervisor",
@@ -374,5 +375,33 @@
     "history": "Previous rewards",
     "voucherCode": "Voucher code",
     "voucherExpires": "Valid until {{date}}"
+  },
+  "correction": {
+    "title": "Cancel or return an invoice",
+    "submit": "Send the request",
+    "types": {
+      "cancel": "Cancel the invoice — it was entered by mistake",
+      "full_return": "Full return — everything came back",
+      "partial_return": "Partial return — part of it came back"
+    },
+    "returnedAmount": "Amount returned",
+    "returnedAmountHint": "Less than the invoice; returning all of it is a full return.",
+    "returnedAmountRange": "Enter an amount above zero and below the invoice.",
+    "reason": "Reason",
+    "reasonHint": "Explain what happened — the manager decides on this, and it stays on the record.",
+    "reasonRequired": "Write the reason, at least ten characters.",
+    "needsApproval": "The request goes to the branch manager. Nothing changes until they decide.",
+    "appliesAtOnce": "You can approve corrections, so this takes effect immediately.",
+    "pending": "Awaiting a decision",
+    "queueTitle": "Correction requests",
+    "queueSubtitle": "Cancellations and returns waiting for your decision.",
+    "queueEmpty": "Nothing is waiting for a decision.",
+    "requestedBy": "Requested by {{name}}",
+    "reviewNote": "Note (optional)",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "The request has been approved and the balance corrected.",
+    "rejected": "The request has been rejected and nothing has changed.",
+    "noCustomer": "No customer attached"
   }
 }

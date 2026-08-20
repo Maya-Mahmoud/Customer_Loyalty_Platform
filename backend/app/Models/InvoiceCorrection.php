@@ -65,6 +65,11 @@ class InvoiceCorrection extends Model
         return $this->status === CorrectionStatus::Pending;
     }
 
+    public function isApproved(): bool
+    {
+        return $this->status === CorrectionStatus::Approved;
+    }
+
     /**
      * The value the reversing entry has to carry: the requested amount for a
      * partial return, the whole invoice otherwise (BRD FR-INV-07).

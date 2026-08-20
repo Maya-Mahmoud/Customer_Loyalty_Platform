@@ -73,6 +73,12 @@ export class ShellComponent {
       icon: 'person_search',
       permissions: ['customers.lookup'],
     },
+    {
+      route: '/corrections',
+      labelKey: 'nav.corrections',
+      icon: 'rule',
+      permissions: ['invoices.amend'],
+    },
     { route: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
     {
       route: '/branches',

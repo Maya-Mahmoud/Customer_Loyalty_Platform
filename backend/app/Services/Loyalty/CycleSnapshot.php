@@ -88,7 +88,12 @@ final readonly class CycleSnapshot
             return 0.0;
         }
 
-        return min(1.0, min($ratios));
+        /*
+         * Floored at zero: a cancellation or a return can push a cycle below what it
+         * started with (BRD BR-009), and a negative bar would render as a nonsense
+         * to the customer looking at it.
+         */
+        return max(0.0, min(1.0, min($ratios)));
     }
 
     private function amountReached(): bool

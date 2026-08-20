@@ -121,5 +121,15 @@
     "This voucher has been withdrawn.": "تم سحب هذه القسيمة.",
     "This voucher expired on :date.": "انتهت صلاحية هذه القسيمة بتاريخ :date.",
     "A voucher can only be used on an invoice linked to its owner.": "لا تُستخدم القسيمة إلا على فاتورة مرتبطة بصاحبها.",
-    "This voucher belongs to another customer.": "هذه القسيمة تخص زبوناً آخر."
+    "This voucher belongs to another customer.": "هذه القسيمة تخص زبوناً آخر.",
+    "This invoice has already been cancelled.": "هذه الفاتورة ملغاة مسبقاً.",
+    "A correction request for this invoice is already awaiting a decision.": "يوجد طلب تصحيح على هذه الفاتورة بانتظار القرار.",
+    "This request has already been decided.": "تم اتخاذ القرار بهذا الطلب مسبقاً.",
+    "Enter the amount being returned.": "الرجاء إدخال المبلغ المُرجَع.",
+    "A partial return must be less than the invoice. Use a full return instead.": "الإرجاع الجزئي يجب أن يكون أقل من قيمة الفاتورة، وإلا فهو إرجاع كامل.",
+    "The invoice has been cancelled and the balance corrected.": "تم إلغاء الفاتورة وتصحيح الرصيد.",
+    "The request has been sent to the branch manager for a decision.": "تم إرسال الطلب إلى مدير الفرع لاتخاذ القرار.",
+    "The request has been approved and the balance corrected.": "تم اعتماد الطلب وتصحيح الرصيد.",
+    "The request has been rejected and nothing has changed.": "تم رفض الطلب ولم يتغيّر أي شيء.",
+    "Reversal of a cycle that had already been redeemed; carried into the open cycle.": "قيد معاكس على دورة مصروفة مسبقاً، تم تحميله على الدورة المفتوحة."
 }
