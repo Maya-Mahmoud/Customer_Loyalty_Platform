@@ -1,0 +1,340 @@
+<div class="max-w-5xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'reports.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'reports.subtitle' | translate }}</p>
+
+  <!-- One period for all five reports, so the figures can be read against each other -->
+  <mat-card class="p-5 mb-4">
+    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-start gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.from' | translate }}</mat-label>
+        <input matInput type="date" formControlName="from" dir="ltr" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.to' | translate }}</mat-label>
+        <input matInput type="date" formControlName="to" dir="ltr" />
+      </mat-form-field>
+
+      @if (canPickBranch()) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-48">
+          <mat-label>{{ 'dashboard.branch' | translate }}</mat-label>
+          <mat-select formControlName="branch_id">
+            <mat-option [value]="null">{{ 'dashboard.allBranches' | translate }}</mat-option>
+            @for (branch of branches(); track branch.id) {
+              <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      <button mat-flat-button color="primary" type="submit" class="h-14" [disabled]="loading()">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          {{ 'reports.apply' | translate }}
+        }
+      </button>
+    </form>
+
+    <div class="flex flex-wrap gap-2 mt-3">
+      <button mat-stroked-button type="button" (click)="applyPreset('week')">
+        {{ 'reports.presets.week' | translate }}
+      </button>
+      <button mat-stroked-button type="button" (click)="applyPreset('month')">
+        {{ 'reports.presets.month' | translate }}
+      </button>
+      <button mat-stroked-button type="button" (click)="applyPreset('lastMonth')">
+        {{ 'reports.presets.lastMonth' | translate }}
+      </button>
+      <button mat-stroked-button type="button" (click)="applyPreset('year')">
+        {{ 'reports.presets.year' | translate }}
+      </button>
+    </div>
+
+    @if (period(); as period) {
+      <p class="text-xs text-slate-500 mt-3" dir="ltr">
+        {{ period.from }} → {{ period.to }} · {{ period.days }}
+        <span dir="auto">{{ 'reports.days' | translate }}</span>
+      </p>
+
+      @if (period.branch_locked) {
+        <!-- FR-BRN-03: the server answered with their branch, so the screen says so. -->
+        <p class="text-xs text-amber-800 mt-1">{{ 'reports.branchLocked' | translate }}</p>
+      }
+    }
+  </mat-card>
+
+  <!-- RPT-01 -->
+  @if (summary(); as summary) {
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</p>
+        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+          {{ summary.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+        </p>
+        <p class="text-xs text-slate-500 mt-1">
+          {{ 'reports.invoiceCount' | translate: { count: summary.invoice_count } }}
+        </p>
+      </mat-card>
+
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'reports.discountTotal' | translate }}</p>
+        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+          {{ summary.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+        </p>
+        <!-- The one figure that answers whether the programme is worth running. -->
+        <p class="text-xs text-slate-500 mt-1" dir="ltr">
+          {{ summary.discount_ratio }}% <span dir="auto">{{ 'reports.ofSales' | translate }}</span>
+        </p>
+      </mat-card>
+
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'reports.averageInvoice' | translate }}</p>
+        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+          {{ summary.average_invoice }} <span class="text-sm font-normal">{{ currency() }}</span>
+        </p>
+        <p class="text-xs text-slate-500 mt-1">
+          {{ 'reports.customersServed' | translate: { count: summary.customers_served } }}
+        </p>
+      </mat-card>
+
+      <mat-card class="p-4">
+        <p class="text-xs text-slate-500">{{ 'reports.newCustomers' | translate }}</p>
+        <p class="text-2xl font-semibold text-slate-900 mt-1">{{ summary.new_customers }}</p>
+        <p class="text-xs text-slate-500 mt-1">
+          {{ 'reports.rewardsPaid' | translate: { count: summary.redemption_count } }}
+        </p>
+      </mat-card>
+    </div>
+  }
+
+  <mat-card>
+    <mat-tab-group>
+      <!-- RPT-03 -->
+      <mat-tab [label]="'reports.tabs.branches' | translate">
+        <div class="p-4 overflow-x-auto">
+          <table mat-table [dataSource]="branchRows()" class="w-full">
+            <ng-container matColumnDef="branch">
+              <th mat-header-cell *matHeaderCellDef>{{ 'dashboard.branch' | translate }}</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.branch }}
+                @if (!row.is_active) {
+                  <span class="text-xs text-slate-500">({{ 'branches.off' | translate }})</span>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sales">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.salesTotal' | translate }}</th>
+              <td mat-cell *matCellDef="let row" dir="ltr">{{ row.sales_total }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="invoices">
+              <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoices' | translate }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.invoice_count }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="average">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.averageInvoice' | translate }}</th>
+              <td mat-cell *matCellDef="let row" dir="ltr">{{ row.average_invoice }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="customers">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.customersColumn' | translate }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.customers_served }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="rewards">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.discountTotal' | translate }}</th>
+              <td mat-cell *matCellDef="let row" dir="ltr">
+                {{ row.discount_total }}
+                <span class="text-xs text-slate-500">({{ row.redemption_count }})</span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="branchColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: branchColumns"></tr>
+          </table>
+        </div>
+      </mat-tab>
+
+      <!-- RPT-04 -->
+      <mat-tab [label]="'reports.tabs.rewards' | translate">
+        <div class="p-5">
+          @if (rewards(); as rewards) {
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="rounded-lg border border-slate-200 p-4">
+                <p class="text-xs text-slate-500">{{ 'reports.vouchersIssued' | translate }}</p>
+                <p class="text-lg font-semibold text-slate-900 mt-1" dir="ltr">
+                  {{ rewards.vouchers.issued_total }} ({{ rewards.vouchers.issued_count }})
+                </p>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-4">
+                <p class="text-xs text-slate-500">{{ 'reports.vouchersUsed' | translate }}</p>
+                <p class="text-lg font-semibold text-slate-900 mt-1" dir="ltr">
+                  {{ rewards.vouchers.used_total }} ({{ rewards.vouchers.used_count }})
+                </p>
+              </div>
+              <!-- Credit already promised and not yet spent: a liability. -->
+              <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p class="text-xs text-amber-900">{{ 'reports.vouchersOutstanding' | translate }}</p>
+                <p class="text-lg font-semibold text-amber-900 mt-1" dir="ltr">
+                  {{ rewards.vouchers.outstanding_total }} ({{ rewards.vouchers.outstanding_count }})
+                </p>
+                <p class="text-xs text-amber-800 mt-1">
+                  {{ 'reports.vouchersOutstandingHint' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-sm font-medium text-slate-700 mt-5 mb-2">
+              {{ 'reports.byRewardType' | translate }}
+            </h3>
+
+            @if (rewards.by_type.length === 0) {
+              <p class="text-sm text-slate-500">{{ 'reports.noRewards' | translate }}</p>
+            } @else {
+              <div class="flex flex-col gap-2">
+                @for (row of rewards.by_type; track row.reward_type) {
+                  <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2">
+                    <span class="text-sm text-slate-800">
+                      {{ 'reports.rewardTypes.' + row.reward_type | translate }}
+                      <span class="text-xs text-slate-500">({{ row.count }})</span>
+                    </span>
+                    <span class="text-sm font-medium text-slate-900" dir="ltr">
+                      {{ row.paid }} {{ currency() }}
+                      @if (row.computed !== row.paid) {
+                        <!-- BR-021: the cap bit, and the difference is what it saved. -->
+                        <span class="text-xs text-slate-500">
+                          {{ 'reports.beforeCap' | translate: { amount: row.computed } }}
+                        </span>
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (rewards.override_count > 0) {
+              <!-- BR-014: exceptions are meant to be rare, so they are called out. -->
+              <p class="text-xs text-amber-900 mt-4 rounded-lg bg-amber-50 p-3">
+                {{
+                  'reports.overrides'
+                    | translate: { count: rewards.override_count, amount: rewards.override_total }
+                }}
+              </p>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <!-- RPT-02 -->
+      <mat-tab [label]="'reports.tabs.customers' | translate">
+        <div class="p-5">
+          @if (customers(); as customers) {
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <div class="rounded-lg border border-slate-200 p-4">
+                <p class="text-xs text-slate-500">{{ 'reports.totalCustomers' | translate }}</p>
+                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.total_customers }}</p>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-4">
+                <p class="text-xs text-slate-500">{{ 'reports.inactive' | translate }}</p>
+                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.inactive }}</p>
+                <p class="text-xs text-slate-500 mt-1" dir="ltr">
+                  {{ 'reports.since' | translate }} {{ customers.inactive_since }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-4">
+                <p class="text-xs text-slate-500">{{ 'reports.neverBought' | translate }}</p>
+                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.never_bought }}</p>
+              </div>
+            </div>
+
+            <h3 class="text-sm font-medium text-slate-700 mb-2">
+              {{ 'reports.topCustomers' | translate }}
+            </h3>
+
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="customers.top_customers" class="w-full">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.customerName' | translate }}</th>
+                  <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="phone">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.phone' | translate }}</th>
+                  <td mat-cell *matCellDef="let row" dir="ltr">{{ row.phone }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'reports.salesTotal' | translate }}</th>
+                  <td mat-cell *matCellDef="let row" dir="ltr">{{ row.total }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="invoices">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoices' | translate }}</th>
+                  <td mat-cell *matCellDef="let row">{{ row.invoice_count }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="customerColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: customerColumns"></tr>
+              </table>
+            </div>
+
+            <!-- BR-019: no lists leave the building. -->
+            <p class="text-xs text-slate-500 mt-3">{{ 'lookup.noExportNote' | translate }}</p>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- RPT-05 -->
+      <mat-tab [label]="'reports.tabs.staff' | translate">
+        <div class="p-4 overflow-x-auto">
+          <table mat-table [dataSource]="staffRows()" class="w-full">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>{{ 'staff.title' | translate }}</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.name }}
+                <span class="text-xs text-slate-500">{{ 'roles.' + row.role | translate }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sales">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.salesTotal' | translate }}</th>
+              <td mat-cell *matCellDef="let row" dir="ltr">{{ row.sales_total }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="invoices">
+              <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoices' | translate }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.invoice_count }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="average">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.averageInvoice' | translate }}</th>
+              <td mat-cell *matCellDef="let row" dir="ltr">{{ row.average_invoice }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="customers">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.customersColumn' | translate }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.customers_served }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="corrections">
+              <th mat-header-cell *matHeaderCellDef>{{ 'reports.corrections' | translate }}</th>
+              <td mat-cell *matCellDef="let row">
+                <span [class]="row.correction_count > 0 ? 'text-amber-900' : 'text-slate-500'">
+                  {{ row.correction_count }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="staffColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: staffColumns"></tr>
+          </table>
+
+          <p class="text-xs text-slate-500 mt-3 px-1">{{ 'reports.correctionsHint' | translate }}</p>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

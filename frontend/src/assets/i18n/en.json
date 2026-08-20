@@ -81,7 +81,8 @@
     "loyaltyRule": "Loyalty rule",
     "pos": "Record a sale",
     "customers": "Customers",
-    "corrections": "Corrections"
+    "corrections": "Corrections",
+    "reports": "Reports"
   },
   "roles": {
     "platform_admin": "Platform supervisor",
@@ -159,17 +160,18 @@
     "invitationSent": "A new invitation has been emailed to the store owner."
   },
   "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Summary of the current session. Reports and KPIs arrive in a later phase.",
-    "session": "Session details",
-    "user": "User",
     "role": "Role",
     "branch": "Branch",
     "allBranches": "All branches",
-    "merchant": "Store",
     "currency": "Currency",
-    "permissions": "Permissions",
-    "permissionsHint": "Shown for reference only; the server re-checks every permission on each request."
+    "greeting": "Hello {{name}}",
+    "todayTitle": "Today",
+    "monthTitle": "This month",
+    "rewardsToday": "Rewards paid",
+    "costOfProgramme": "Cost of the programme",
+    "openReports": "Open the reports",
+    "posHint": "Record a sale and register a customer at the counter.",
+    "lookupHint": "Look a customer up by phone number and see where they stand."
   },
   "validation": {
     "required": "This field is required.",
@@ -403,5 +405,55 @@
     "approved": "The request has been approved and the balance corrected.",
     "rejected": "The request has been rejected and nothing has changed.",
     "noCustomer": "No customer attached"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Sales, rewards, branches and staff over a period you choose.",
+    "from": "From",
+    "to": "To",
+    "apply": "Show",
+    "days": "days",
+    "branchLocked": "These figures cover your branch. Only the store owner sees every branch.",
+    "presets": {
+      "week": "Last 7 days",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "year": "This year"
+    },
+    "salesTotal": "Sales",
+    "discountTotal": "Discounts paid",
+    "averageInvoice": "Average invoice",
+    "newCustomers": "New customers",
+    "invoiceCount": "{{count}} invoices",
+    "customersServed": "{{count}} customers served",
+    "rewardsPaid": "{{count}} rewards paid",
+    "ofSales": "of sales",
+    "customersColumn": "Customers",
+    "corrections": "Correction requests",
+    "correctionsHint": "Requests raised, including refused ones. An unusual number is worth a look before it becomes a pattern.",
+    "tabs": {
+      "branches": "Branches",
+      "rewards": "Rewards",
+      "customers": "Customers",
+      "staff": "Staff"
+    },
+    "rewardTypes": {
+      "percentage": "Percentage discount",
+      "fixed_amount": "Fixed discount",
+      "voucher": "Purchase voucher"
+    },
+    "byRewardType": "By reward type",
+    "noRewards": "No rewards were paid in this period.",
+    "beforeCap": "(calculated at {{amount}})",
+    "overrides": "{{count}} rewards were paid as an exception, worth {{amount}} in total.",
+    "vouchersIssued": "Vouchers issued",
+    "vouchersUsed": "Vouchers spent",
+    "vouchersOutstanding": "Vouchers outstanding",
+    "vouchersOutstandingHint": "Issued, unspent and still valid — credit you owe today.",
+    "totalCustomers": "Registered customers",
+    "inactive": "Stopped coming",
+    "neverBought": "Never bought",
+    "since": "since",
+    "topCustomers": "Top customers in this period"
   }
 }

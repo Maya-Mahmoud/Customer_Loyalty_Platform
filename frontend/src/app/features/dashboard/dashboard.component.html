@@ -1,52 +1,127 @@
-<div class="max-w-3xl">
+<div class="max-w-4xl">
   <h1 class="text-xl font-semibold text-slate-800 mb-1">
-    {{ 'dashboard.title' | translate }}
+    {{ 'dashboard.greeting' | translate: { name: user()?.name } }}
   </h1>
-  <p class="text-sm text-slate-500 mb-6">{{ 'dashboard.subtitle' | translate }}</p>
+  <p class="text-sm text-slate-500 mb-5">
+    {{ merchant()?.name }}
+    @if (branch()) {
+      · {{ branch()!.name }}
+    }
+  </p>
 
-  <mat-card class="p-5 mb-4">
-    <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'dashboard.session' | translate }}</h2>
+  <!-- What a manager or owner opens the app for (BRD FR-RPT-01) -->
+  @if (canSeeNumbers()) {
+    @if (today(); as today) {
+      <h2 class="text-sm font-medium text-slate-700 mb-2">{{ 'dashboard.todayTitle' | translate }}</h2>
 
-    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-      <div>
-        <dt class="text-slate-500">{{ 'dashboard.user' | translate }}</dt>
-        <dd class="text-slate-900">{{ user()?.name }}</dd>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</p>
+          <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+            {{ today.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          </p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</p>
+          <p class="text-2xl font-semibold text-slate-900 mt-1">{{ today.invoice_count }}</p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'reports.newCustomers' | translate }}</p>
+          <p class="text-2xl font-semibold text-slate-900 mt-1">{{ today.new_customers }}</p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'dashboard.rewardsToday' | translate }}</p>
+          <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+            {{ today.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          </p>
+          <p class="text-xs text-slate-500 mt-1">
+            {{ 'reports.rewardsPaid' | translate: { count: today.redemption_count } }}
+          </p>
+        </mat-card>
       </div>
-      <div>
-        <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
-        <dd class="text-slate-900" dir="ltr">{{ user()?.email }}</dd>
-      </div>
-      <div>
-        <dt class="text-slate-500">{{ 'dashboard.role' | translate }}</dt>
-        <dd class="text-slate-900">{{ 'roles.' + user()?.role | translate }}</dd>
-      </div>
-      <div>
-        <dt class="text-slate-500">{{ 'dashboard.branch' | translate }}</dt>
-        <dd class="text-slate-900">{{ branch()?.name ?? ('dashboard.allBranches' | translate) }}</dd>
-      </div>
-      @if (merchant()) {
-        <div>
-          <dt class="text-slate-500">{{ 'dashboard.merchant' | translate }}</dt>
-          <dd class="text-slate-900">{{ merchant()!.name }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'dashboard.currency' | translate }}</dt>
-          <dd class="text-slate-900" dir="ltr">{{ merchant()!.currency }}</dd>
-        </div>
+
+      @if (month(); as month) {
+        <mat-card class="p-5 mb-5">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-medium text-slate-700">{{ 'dashboard.monthTitle' | translate }}</h2>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ 'reports.invoiceCount' | translate: { count: month.invoice_count } }}
+                ·
+                {{ 'reports.customersServed' | translate: { count: month.customers_served } }}
+              </p>
+            </div>
+
+            <a mat-stroked-button routerLink="/reports">
+              {{ 'dashboard.openReports' | translate }}
+            </a>
+          </div>
+
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm">
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</dt>
+              <dd class="font-medium text-slate-900" dir="ltr">
+                {{ month.sales_total }} {{ currency() }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'reports.discountTotal' | translate }}</dt>
+              <dd class="font-medium text-slate-900" dir="ltr">
+                {{ month.discount_total }} {{ currency() }}
+              </dd>
+            </div>
+            <div>
+              <!-- The figure that says whether the programme is paying for itself. -->
+              <dt class="text-xs text-slate-500">{{ 'dashboard.costOfProgramme' | translate }}</dt>
+              <dd class="font-medium text-slate-900" dir="ltr">{{ month.discount_ratio }}%</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-slate-500">{{ 'reports.averageInvoice' | translate }}</dt>
+              <dd class="font-medium text-slate-900" dir="ltr">
+                {{ month.average_invoice }} {{ currency() }}
+              </dd>
+            </div>
+          </dl>
+        </mat-card>
       }
-    </dl>
-  </mat-card>
+    } @else if (loading()) {
+      <div class="flex justify-center py-8">
+        <mat-spinner diameter="32" />
+      </div>
+    }
+  }
 
-  <mat-card class="p-5">
-    <h2 class="text-sm font-medium text-slate-700 mb-1">
-      {{ 'dashboard.permissions' | translate }}
-    </h2>
-    <p class="text-xs text-slate-500 mb-3">{{ 'dashboard.permissionsHint' | translate }}</p>
+  <!-- Where the work actually happens. A rep sees only this. -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    @if (canSell()) {
+      <a routerLink="/pos" class="no-underline">
+        <mat-card class="p-5 h-full hover:!shadow-md transition-shadow">
+          <div class="flex items-start gap-3">
+            <mat-icon class="text-slate-700">point_of_sale</mat-icon>
+            <div>
+              <p class="text-sm font-medium text-slate-900">{{ 'nav.pos' | translate }}</p>
+              <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.posHint' | translate }}</p>
+            </div>
+          </div>
+        </mat-card>
+      </a>
+    }
 
-    <mat-chip-set>
-      @for (permission of user()?.permissions ?? []; track permission) {
-        <mat-chip disabled>{{ permission }}</mat-chip>
-      }
-    </mat-chip-set>
-  </mat-card>
+    @if (canLookup()) {
+      <a routerLink="/customers" class="no-underline">
+        <mat-card class="p-5 h-full hover:!shadow-md transition-shadow">
+          <div class="flex items-start gap-3">
+            <mat-icon class="text-slate-700">person_search</mat-icon>
+            <div>
+              <p class="text-sm font-medium text-slate-900">{{ 'nav.customers' | translate }}</p>
+              <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.lookupHint' | translate }}</p>
+            </div>
+          </div>
+        </mat-card>
+      </a>
+    }
+  </div>
 </div>

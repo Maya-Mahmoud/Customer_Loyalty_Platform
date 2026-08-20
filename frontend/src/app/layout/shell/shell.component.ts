@@ -74,6 +74,12 @@ export class ShellComponent {
       permissions: ['customers.lookup'],
     },
     {
+      route: '/reports',
+      labelKey: 'nav.reports',
+      icon: 'insights',
+      permissions: ['reports.view_own_branch'],
+    },
+    {
       route: '/corrections',
       labelKey: 'nav.corrections',
       icon: 'rule',

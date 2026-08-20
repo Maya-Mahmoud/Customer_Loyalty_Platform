@@ -70,6 +70,14 @@ export const routes: Routes = [
           ),
       },
       {
+        // The reports of BRD 9. One gate for all five; a branch manager reaches the
+        // same screen and the server answers with their own branch.
+        path: 'reports',
+        canActivate: [requirePermission('reports.view_own_branch')],
+        loadComponent: () =>
+          import('./features/reports/reports.component').then((m) => m.ReportsComponent),
+      },
+      {
         // Deciding on correction requests (BRD 8.7). Managers and the owner only;
         // a rep raises requests from the customer card instead.
         path: 'corrections',

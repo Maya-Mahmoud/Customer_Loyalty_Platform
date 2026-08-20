@@ -81,7 +81,8 @@
     "loyaltyRule": "قاعدة الولاء",
     "pos": "تسجيل بيع",
     "customers": "الزبائن",
-    "corrections": "التصحيحات"
+    "corrections": "التصحيحات",
+    "reports": "التقارير"
   },
   "roles": {
     "platform_admin": "مشرف المنصة",
@@ -159,17 +160,18 @@
     "invitationSent": "تم إرسال دعوة جديدة إلى بريد صاحب المحل."
   },
   "dashboard": {
-    "title": "لوحة المعلومات",
-    "subtitle": "ملخص الجلسة الحالية. التقارير والمؤشرات تُضاف في مرحلة لاحقة.",
-    "session": "بيانات الجلسة",
-    "user": "المستخدم",
     "role": "الدور",
     "branch": "الفرع",
     "allBranches": "كل الفروع",
-    "merchant": "المحل",
     "currency": "العملة",
-    "permissions": "الصلاحيات",
-    "permissionsHint": "هذه الصلاحيات للعرض فقط، والنظام يتحقق منها على الخادم عند كل عملية."
+    "greeting": "مرحباً {{name}}",
+    "todayTitle": "اليوم",
+    "monthTitle": "هذا الشهر",
+    "rewardsToday": "المكافآت المصروفة",
+    "costOfProgramme": "كلفة البرنامج",
+    "openReports": "فتح التقارير",
+    "posHint": "تسجيل فاتورة وتسجيل زبون على الصندوق.",
+    "lookupHint": "الاستعلام عن زبون برقم موبايله ومعرفة وضعه."
   },
   "validation": {
     "required": "هذا الحقل مطلوب.",
@@ -403,5 +405,55 @@
     "approved": "تم اعتماد الطلب وتصحيح الرصيد.",
     "rejected": "تم رفض الطلب ولم يتغيّر أي شيء.",
     "noCustomer": "بدون زبون"
+  },
+  "reports": {
+    "title": "التقارير",
+    "subtitle": "المبيعات والمكافآت والفروع والمستخدمين خلال فترة تختارها.",
+    "from": "من",
+    "to": "إلى",
+    "apply": "عرض",
+    "days": "يوم",
+    "branchLocked": "هذه الأرقام تخص فرعك. صاحب المحل وحده يرى كل الفروع.",
+    "presets": {
+      "week": "آخر ٧ أيام",
+      "month": "هذا الشهر",
+      "lastMonth": "الشهر الماضي",
+      "year": "هذه السنة"
+    },
+    "salesTotal": "المبيعات",
+    "discountTotal": "الحسومات المصروفة",
+    "averageInvoice": "متوسط الفاتورة",
+    "newCustomers": "زبائن جدد",
+    "invoiceCount": "{{count}} فاتورة",
+    "customersServed": "خدمة {{count}} زبون",
+    "rewardsPaid": "صرف {{count}} مكافأة",
+    "ofSales": "من المبيعات",
+    "customersColumn": "الزبائن",
+    "corrections": "طلبات التصحيح",
+    "correctionsHint": "الطلبات المقدَّمة، بما فيها المرفوضة. العدد غير المعتاد يستحق نظرة قبل أن يصير نمطاً.",
+    "tabs": {
+      "branches": "الفروع",
+      "rewards": "المكافآت",
+      "customers": "الزبائن",
+      "staff": "المستخدمون"
+    },
+    "rewardTypes": {
+      "percentage": "حسم نسبة مئوية",
+      "fixed_amount": "حسم مبلغ ثابت",
+      "voucher": "قسيمة شرائية"
+    },
+    "byRewardType": "حسب نوع المكافأة",
+    "noRewards": "لم تُصرف أي مكافأة في هذه الفترة.",
+    "beforeCap": "(المحسوب {{amount}})",
+    "overrides": "صُرفت {{count}} مكافأة استثناءً بقيمة {{amount}}.",
+    "vouchersIssued": "قسائم مُصدَرة",
+    "vouchersUsed": "قسائم مستخدمة",
+    "vouchersOutstanding": "قسائم قائمة",
+    "vouchersOutstandingHint": "مُصدَرة وغير مستخدمة وسارية — رصيد مستحق عليك اليوم.",
+    "totalCustomers": "الزبائن المسجّلون",
+    "inactive": "توقفوا عن الشراء",
+    "neverBought": "لم يشتروا أبداً",
+    "since": "منذ",
+    "topCustomers": "أعلى الزبائن في هذه الفترة"
   }
 }

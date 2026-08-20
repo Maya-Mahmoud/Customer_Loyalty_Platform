@@ -131,5 +131,8 @@
     "The request has been sent to the branch manager for a decision.": "تم إرسال الطلب إلى مدير الفرع لاتخاذ القرار.",
     "The request has been approved and the balance corrected.": "تم اعتماد الطلب وتصحيح الرصيد.",
     "The request has been rejected and nothing has changed.": "تم رفض الطلب ولم يتغيّر أي شيء.",
-    "Reversal of a cycle that had already been redeemed; carried into the open cycle.": "قيد معاكس على دورة مصروفة مسبقاً، تم تحميله على الدورة المفتوحة."
+    "Reversal of a cycle that had already been redeemed; carried into the open cycle.": "قيد معاكس على دورة مصروفة مسبقاً، تم تحميله على الدورة المفتوحة.",
+    "The start date has to come before the end date.": "تاريخ البداية يجب أن يكون قبل تاريخ النهاية.",
+    "Choose a range of a year or less.": "الرجاء اختيار فترة لا تتجاوز السنة.",
+    "This date is not valid.": "هذا التاريخ غير صالح."
 }

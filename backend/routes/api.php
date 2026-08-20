@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Merchant\LoyaltyRuleController;
 use App\Http\Controllers\Api\V1\Merchant\StaffController;
 use App\Http\Controllers\Api\V1\MerchantRegistrationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\Sales\CorrectionController;
 use App\Http\Controllers\Api\V1\Sales\CustomerController as SalesCustomerController;
 use App\Http\Controllers\Api\V1\Sales\InvoiceController;
@@ -121,6 +122,21 @@ Route::prefix('v1')->group(function () {
             Route::get('/customers/{customer}/redemptions/preview', [RedemptionController::class, 'preview']);
             Route::post('/customers/{customer}/redemptions', [RedemptionController::class, 'store']);
         });
+        /*
+         * The reports of BRD 9. One gate for all five: both the owner and a branch
+         * manager hold reports.view_own_branch, and what separates them is the
+         * branch the period resolves to, not the route.
+         */
+        Route::prefix('reports')
+            ->middleware('can:reports.view_own_branch')
+            ->group(function () {
+                Route::get('/summary', [ReportController::class, 'summary']);
+                Route::get('/customers', [ReportController::class, 'customers']);
+                Route::get('/branches', [ReportController::class, 'branches']);
+                Route::get('/rewards', [ReportController::class, 'rewards']);
+                Route::get('/staff', [ReportController::class, 'staff']);
+            });
+
         /*
          * The store owner's own setup (BRD 8.2). Each gate comes straight from the
          * matrix of BRD 7.2, and the tenant scope keeps every query and every route
