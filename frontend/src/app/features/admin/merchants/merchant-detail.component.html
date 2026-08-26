@@ -8,7 +8,8 @@
   @if (merchant(); as store) {
   <div class="max-w-4xl">
     <a mat-button routerLink="/admin/merchants" class="mb-2 -ms-2">
-      <mat-icon>arrow_back</mat-icon>
+      <!-- Mirrored in Arabic: "back" is the direction the reader came from. -->
+        <mat-icon class="rtl-flip">arrow_back</mat-icon>
       {{ 'admin.backToQueue' | translate }}
     </a>
 

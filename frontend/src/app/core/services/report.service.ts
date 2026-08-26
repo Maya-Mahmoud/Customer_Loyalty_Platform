@@ -1,7 +1,11 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
 
 import {
+  FraudSignal,
   Report,
   ReportBranchRow,
   ReportCustomers,
@@ -22,6 +26,7 @@ import { ApiService } from './api.service';
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
 
   summary(query: ReportQuery): Observable<Report<ReportSummary>> {
     return this.api.get<Report<ReportSummary>>('reports/summary', this.params(query));
@@ -43,6 +48,11 @@ export class ReportService {
     return this.api.get<Report<ReportStaffRow[]>>('reports/staff', this.params(query));
   }
 
+  /** The anti-fraud signals of BRD 12 — the owner alone reaches this. */
+  signals(query: ReportQuery): Observable<Report<FraudSignal[]>> {
+    return this.api.get<Report<FraudSignal[]>>('reports/signals', this.params(query));
+  }
+
   /** Empty values are dropped rather than sent as blanks the server has to ignore. */
   private params(query: ReportQuery): Record<string, string> {
     const params: Record<string, string> = {};
@@ -60,5 +70,36 @@ export class ReportService {
     }
 
     return params;
+  }
+
+  /**
+   * Exporting the customer base (BRD BR-019, customers.export).
+   *
+   * Fetched as a blob rather than opened as a link: the token lives in memory and
+   * travels on the Authorization header, so a plain href would arrive unauthenticated.
+   * The file is handed to the browser from the blob once it is here.
+   */
+  exportCustomers(query: ReportQuery & { only_consented?: boolean }): Observable<Blob> {
+    const params: Record<string, string> = {};
+
+    if (query.from) {
+      params['from'] = query.from;
+    }
+
+    if (query.to) {
+      params['to'] = query.to;
+    }
+
+    if (query.branch_id) {
+      params['branch_id'] = String(query.branch_id);
+    }
+
+    if (query.only_consented) {
+      params['only_consented'] = '1';
+    }
+
+    return this.http
+      .get(`${environment.apiUrl}/customers/export`, { params, responseType: 'blob' })
+      .pipe(map((blob) => blob as Blob));
   }
 }

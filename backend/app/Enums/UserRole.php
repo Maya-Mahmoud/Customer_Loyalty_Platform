@@ -24,6 +24,7 @@ enum UserRole: string
                 Permission::ViewAuditLog,
             ],
             self::MerchantOwner => [
+                Permission::ManageStoreProfile,
                 Permission::ManageBranches,
                 Permission::ManageUsers,
                 Permission::ManageLoyaltyRules,
@@ -38,6 +39,7 @@ enum UserRole: string
                 Permission::ViewOwnBranchReports,
                 Permission::ViewAuditLog,
                 Permission::ExportCustomers,
+                Permission::AnonymizeCustomer,
             ],
             self::BranchManager => [
                 Permission::RegisterCustomer,

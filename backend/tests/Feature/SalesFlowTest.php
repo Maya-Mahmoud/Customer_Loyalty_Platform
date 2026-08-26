@@ -316,6 +316,94 @@ class SalesFlowTest extends TestCase
     // The refusals
     // -----------------------------------------------------------------
 
+    // -----------------------------------------------------------------
+    // Numbering the sale (an amendment to FR-INV-01)
+    // -----------------------------------------------------------------
+
+    public function test_the_system_numbers_a_sale_when_no_receipt_number_is_given(): void
+    {
+        $this->publishRule();
+        $customerId = $this->registerCustomer();
+
+        $first = $this->recordSale(['customer_id' => $customerId, 'invoice_number' => null])
+            ->assertCreated()
+            ->json('data.invoice_number');
+
+        $second = $this->recordSale(['customer_id' => $customerId, 'invoice_number' => ''])
+            ->assertCreated()
+            ->json('data.invoice_number');
+
+        $year = now()->year;
+        $this->assertSame("INV-{$year}-00001", $first);
+        $this->assertSame("INV-{$year}-00002", $second);
+    }
+
+    public function test_a_receipt_number_is_still_used_when_it_is_given(): void
+    {
+        $this->publishRule();
+        $customerId = $this->registerCustomer();
+
+        // The shop with a till that prints numbers keeps the tie between the entry
+        // and a sale that demonstrably happened (AF-01).
+        $this->recordSale(['customer_id' => $customerId, 'invoice_number' => 'R-4471'])
+            ->assertCreated()
+            ->assertJsonPath('data.invoice_number', 'R-4471');
+    }
+
+    public function test_generated_numbers_carry_on_from_a_hand_typed_one(): void
+    {
+        $this->publishRule();
+        $customerId = $this->registerCustomer();
+
+        $year = now()->year;
+
+        // Somebody typed a number that happens to sit in the generated series.
+        $this->recordSale([
+            'customer_id' => $customerId,
+            'invoice_number' => "INV-{$year}-00009",
+        ])->assertCreated();
+
+        $next = $this->recordSale(['customer_id' => $customerId, 'invoice_number' => null])
+            ->assertCreated()
+            ->json('data.invoice_number');
+
+        // Continued rather than collided: the series reads the highest number that
+        // exists, whoever wrote it.
+        $this->assertSame("INV-{$year}-00010", $next);
+    }
+
+    public function test_each_store_runs_its_own_series(): void
+    {
+        /*
+         * Built before any request runs: once a request has pinned a merchant, the
+         * tenant guard rightly refuses to create another merchant's records, and the
+         * test would fail for the guard working rather than for the series.
+         */
+        $other = Merchant::factory()->create();
+        $otherBranch = Branch::factory()->for($other)->create();
+        $theirRep = User::factory()->salesRep($otherBranch)->create();
+
+        $this->publishRule();
+        $customerId = $this->registerCustomer();
+
+        $this->recordSale(['customer_id' => $customerId, 'invoice_number' => null])->assertCreated();
+        $this->recordSale(['customer_id' => $customerId, 'invoice_number' => null])->assertCreated();
+
+        $year = now()->year;
+
+        $theirs = $this->actingAs($theirRep, 'sanctum')
+            ->postJson('/api/v1/invoices', [
+                'amount' => 500,
+                'invoice_date' => now()->toDateString(),
+            ])
+            ->assertCreated()
+            ->json('data.invoice_number');
+
+        // Their first sale is their number one; neither shop can see the other's
+        // sequence, which is the tenant scope doing its job on a number people read.
+        $this->assertSame("INV-{$year}-00001", $theirs);
+    }
+
     public function test_a_duplicate_invoice_number_is_refused(): void
     {
         $this->publishRule();

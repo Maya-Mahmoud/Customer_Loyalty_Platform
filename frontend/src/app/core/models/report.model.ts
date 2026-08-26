@@ -102,3 +102,29 @@ export interface ReportStaffRow {
   customers_served: number;
   correction_count: number;
 }
+
+/**
+ * One anti-fraud signal (BRD 12).
+ *
+ * A signal, not a verdict: every pattern here has an innocent explanation, so the
+ * finding travels with the evidence that produced it and the owner decides what it
+ * means. `code` is the BRD control it answers to, so a finding on screen can be
+ * traced back to the document that asked for it.
+ */
+export interface FraudSignal {
+  code: string;
+  type:
+    | 'out_of_hours'
+    | 'frequent_corrections'
+    | 'backdated'
+    | 'repeated_redemptions'
+    | 'rep_customer_concentration';
+  severity: 'high' | 'medium';
+  subject: string | null;
+  subject_type: 'user' | 'customer';
+  subject_id: number;
+  count: number;
+  amount: string | null;
+  /** Shape differs per detector; the screen reads the keys it needs. */
+  detail: Record<string, string | number>;
+}

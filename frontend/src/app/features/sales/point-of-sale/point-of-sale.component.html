@@ -1,4 +1,4 @@
-<div class="max-w-xl">
+<div class="max-w-2xl">
   <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'pos.title' | translate }}</h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'pos.subtitle' | translate }}</p>
 
@@ -197,15 +197,22 @@
     <mat-card class="p-5">
       <form [formGroup]="saleForm" (ngSubmit)="recordSale()">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-          <mat-form-field appearance="outline">
-            <mat-label>{{ 'pos.invoiceNumber' | translate }}</mat-label>
-            <input #invoiceField matInput formControlName="invoice_number" dir="ltr" autocomplete="off" />
-            @if (saleForm.controls.invoice_number.hasError('server')) {
-              <mat-error>{{ saleForm.controls.invoice_number.getError('server') }}</mat-error>
-            } @else if (saleForm.controls.invoice_number.touched && saleForm.controls.invoice_number.invalid) {
-              <mat-error>{{ 'validation.required' | translate }}</mat-error>
-            }
-          </mat-form-field>
+          <!--
+            The number is the system's job unless the shop has a printed receipt to
+            copy it from. Hidden rather than pre-filled: a number shown before the
+            sale is saved is a promise this screen cannot keep, since the one that
+            ends up on the invoice is assigned when it is written.
+          -->
+          @if (numberFromReceipt()) {
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'pos.invoiceNumber' | translate }}</mat-label>
+              <input #invoiceField matInput formControlName="invoice_number" dir="ltr" autocomplete="off" />
+              <mat-hint>{{ 'pos.invoiceNumberHint' | translate }}</mat-hint>
+              @if (saleForm.controls.invoice_number.hasError('server')) {
+                <mat-error>{{ saleForm.controls.invoice_number.getError('server') }}</mat-error>
+              }
+            </mat-form-field>
+          }
 
           <mat-form-field appearance="outline">
             <mat-label>{{ 'pos.amount' | translate }}</mat-label>
@@ -244,6 +251,17 @@
             </mat-form-field>
           }
         </div>
+
+        @if (!numberFromReceipt()) {
+          <!-- Offered, not imposed: the shop that has a receipt number should still
+               use it, because sharing the number with the receipt is what ties the
+               entry to a sale that demonstrably happened (AF-01). -->
+          <button mat-button type="button" class="!px-2 -mt-1 mb-1"
+                  (click)="numberFromReceipt.set(true)">
+            <mat-icon class="!text-base !w-4 !h-4">receipt_long</mat-icon>
+            {{ 'pos.enterInvoiceNumber' | translate }}
+          </button>
+        }
 
         <div class="flex items-center gap-2 mt-2">
           <button mat-flat-button color="primary" type="submit" class="h-12 flex-1" [disabled]="saving()">

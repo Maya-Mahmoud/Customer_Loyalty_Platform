@@ -95,6 +95,22 @@
           @if (!card.cycle.is_eligible) {
             <span class="text-xs text-slate-500">{{ 'redeem.notEligibleHint' | translate }}</span>
           }
+
+          <!-- The owner's escape hatch (BRD 7.2, ledger.adjust). -->
+          @if (canAdjust()) {
+            <button mat-stroked-button type="button" class="ms-auto" (click)="adjust()">
+              <mat-icon class="!text-base !w-4 !h-4">tune</mat-icon>
+              {{ 'adjust.action' | translate }}
+            </button>
+          }
+
+          <!-- The erasure path of FR-CUS-10. Last, and quiet: it is not part of
+               anybody's daily work. -->
+          @if (canErase()) {
+            <button mat-button type="button" class="!text-red-800" (click)="erase()">
+              {{ 'erase.action' | translate }}
+            </button>
+          }
         </div>
       }
     </mat-card>
@@ -143,6 +159,30 @@
               </p>
             }
           </div>
+        </div>
+      </mat-card>
+    }
+
+    <!-- Manual corrections, so the same one is not entered twice -->
+    @if (adjustments().length > 0) {
+      <mat-card class="p-4 mb-4">
+        <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'adjust.history' | translate }}</h2>
+
+        <div class="flex flex-col gap-2">
+          @for (adjustment of adjustments(); track adjustment.id) {
+            <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2">
+              <div>
+                <p class="text-sm text-slate-800">{{ adjustment.note }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ adjustment.created_by }} · {{ adjustment.created_at?.slice(0, 10) }}
+                </p>
+              </div>
+              <span class="text-sm font-medium" dir="ltr"
+                    [class]="adjustment.amount.startsWith('-') ? 'text-red-800' : 'text-emerald-800'">
+                {{ adjustment.amount }} {{ currency() }}
+              </span>
+            </div>
+          }
         </div>
       </mat-card>
     }
@@ -236,7 +276,7 @@
                   <button mat-icon-button type="button"
                           [attr.aria-label]="'correction.title' | translate"
                           (click)="requestCorrection(invoice)">
-                    <mat-icon class="!text-base !w-4 !h-4">undo</mat-icon>
+                    <mat-icon class="!text-base !w-4 !h-4 rtl-flip">undo</mat-icon>
                   </button>
                 }
               </td>

@@ -182,3 +182,37 @@ export interface CorrectionResult {
   /** True when the person requesting could also approve, so it took effect at once. */
   applied: boolean;
 }
+
+/**
+ * Correcting a balance by hand (BRD 7.2, ledger.adjust). Negative deducts.
+ *
+ * The escape hatch the owner alone holds: without a legitimate way to put a number
+ * right, staff invent a fake invoice instead (AF-01).
+ */
+export interface AdjustmentForm {
+  amount: number;
+  reason: string;
+  branch_id?: number | null;
+}
+
+export interface AdjustmentResult {
+  message: string;
+  data: {
+    id: number;
+    amount: string;
+    note: string | null;
+    cycle_number: number;
+  };
+  /** The balance afterwards, which is the number the owner was aiming at. */
+  balance: number | null;
+}
+
+export interface Adjustment {
+  id: number;
+  amount: string;
+  note: string | null;
+  cycle_number: number;
+  branch: string | null;
+  created_by: string | null;
+  created_at: string | null;
+}

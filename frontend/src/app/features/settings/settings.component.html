@@ -1,0 +1,131 @@
+<div class="max-w-2xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'settings.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'settings.subtitle' | translate }}</p>
+
+  <!-- The logo (BRD FR-MER-06) -->
+  <mat-card class="p-5 mb-4">
+    <h2 class="text-sm font-medium text-slate-700 mb-4">{{ 'settings.logoTitle' | translate }}</h2>
+
+    <div class="flex flex-wrap items-center gap-4">
+      @if (merchant()?.logo_url) {
+        <img [src]="merchant()!.logo_url!" alt=""
+             class="w-24 h-24 rounded object-contain border border-slate-200 bg-white" />
+      } @else {
+        <div class="w-24 h-24 rounded bg-slate-100 text-slate-400 flex items-center justify-center">
+          <mat-icon class="!w-10 !h-10 !text-4xl">storefront</mat-icon>
+        </div>
+      }
+
+      <div class="flex-1">
+        <p class="text-base font-medium text-slate-900">
+          {{ merchant()?.trade_name || merchant()?.name }}
+        </p>
+        <p class="text-xs text-slate-500" dir="ltr">
+          {{ merchant()?.city }} · {{ currency() }}
+        </p>
+
+        <div class="flex flex-wrap items-center gap-2 mt-3">
+          <!-- A hidden input behind a real button: the native file control cannot be
+               styled, and this keeps it reachable by keyboard. -->
+          <button mat-stroked-button type="button" [disabled]="uploading()"
+                  (click)="logoInput.click()">
+            @if (uploading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              <mat-icon>image</mat-icon>
+              {{ 'settings.chooseLogo' | translate }}
+            }
+          </button>
+
+          @if (merchant()?.logo_url) {
+            <button mat-button type="button" [disabled]="uploading()" (click)="removeLogo()">
+              {{ 'settings.removeLogo' | translate }}
+            </button>
+          }
+        </div>
+
+        <p class="text-xs text-slate-500 mt-2">{{ 'settings.logoHint' | translate }}</p>
+      </div>
+
+      <input #logoInput type="file" class="hidden" accept="image/jpeg,image/png,image/webp"
+             (change)="pickLogo($event)" />
+    </div>
+  </mat-card>
+
+  <!-- The details (BRD FR-MER-05) -->
+  <mat-card class="p-5">
+    <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'settings.detailsTitle' | translate }}</h2>
+    <p class="text-xs text-slate-500 mb-4">{{ 'settings.detailsHint' | translate }}</p>
+
+    @if (loading()) {
+      <div class="flex justify-center py-6">
+        <mat-spinner diameter="32" />
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+        <!-- Verified at registration (BRD 8.1), so it is shown and not editable. -->
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ 'settings.registeredName' | translate }}</mat-label>
+          <input matInput [value]="merchant()?.name" disabled />
+          <mat-hint>{{ 'settings.registeredNameFixed' | translate }}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ 'register.tradeName' | translate }}</mat-label>
+          <input matInput formControlName="trade_name" />
+          <mat-hint>{{ 'settings.tradeNameHint' | translate }}</mat-hint>
+          @if (form.controls.trade_name.hasError('server')) {
+            <mat-error>{{ form.controls.trade_name.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'register.city' | translate }}</mat-label>
+            <input matInput formControlName="city" />
+            @if (form.controls.city.hasError('server')) {
+              <mat-error>{{ form.controls.city.getError('server') }}</mat-error>
+            } @else if (form.controls.city.touched && form.controls.city.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'pos.phone' | translate }}</mat-label>
+            <input matInput formControlName="phone" dir="ltr" inputmode="tel" />
+            @if (form.controls.phone.hasError('server')) {
+              <mat-error>{{ form.controls.phone.getError('server') }}</mat-error>
+            } @else if (form.controls.phone.touched && form.controls.phone.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="sm:w-44">
+          <mat-label>{{ 'settings.currency' | translate }}</mat-label>
+          <input matInput formControlName="currency" dir="ltr" maxlength="3" />
+          <mat-hint>{{ 'settings.currencyHint' | translate }}</mat-hint>
+          @if (form.controls.currency.hasError('server')) {
+            <mat-error>{{ form.controls.currency.getError('server') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- The currency prints on every figure in the app, so a change is felt
+             everywhere at once. -->
+        <p class="text-xs text-amber-900 rounded-lg bg-amber-50 p-3">
+          {{ 'settings.currencyNote' | translate }}
+        </p>
+
+        <div class="flex justify-end">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'common.save' | translate }}
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</div>

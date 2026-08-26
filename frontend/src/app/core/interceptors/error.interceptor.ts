@@ -63,6 +63,24 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
         return throwError(() => response);
       }
 
+      /*
+       * A failed download answers with JSON inside a Blob, because the request
+       * asked for a blob. Reading it back is what turns "something went wrong" into
+       * the sentence the server actually sent. Validation errors are reported here
+       * too: a download has no form to attach them to.
+       */
+      if (response.error instanceof Blob) {
+        void response.error.text().then((text) => {
+          try {
+            notify((JSON.parse(text) as ApiError).message ?? 'errors.unexpected');
+          } catch {
+            notify('errors.unexpected');
+          }
+        });
+
+        return throwError(() => response);
+      }
+
       if (response.status !== 422) {
         notify(body?.message ?? 'errors.unexpected');
       }

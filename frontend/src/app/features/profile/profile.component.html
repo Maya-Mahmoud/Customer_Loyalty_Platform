@@ -1,0 +1,137 @@
+<div class="max-w-2xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'profile.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'profile.subtitle' | translate }}</p>
+
+  <!-- The picture -->
+  <mat-card class="p-5 mb-4">
+    <div class="flex flex-wrap items-center gap-4">
+      @if (user()?.avatar_url) {
+        <img [src]="user()!.avatar_url!" alt=""
+             class="w-20 h-20 rounded-full object-cover border border-slate-200" />
+      } @else {
+        <!-- Initials beat a grey silhouette. -->
+        <div class="w-20 h-20 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xl font-medium">
+          {{ initials() }}
+        </div>
+      }
+
+      <div class="flex-1">
+        <p class="text-base font-medium text-slate-900">{{ user()?.name }}</p>
+        <p class="text-xs text-slate-500">{{ roleLabelKey() | translate }}</p>
+
+        <div class="flex flex-wrap items-center gap-2 mt-3">
+          <!-- A hidden input behind a real button: the native file control cannot be
+               styled, and this keeps it reachable by keyboard. -->
+          <button mat-stroked-button type="button" [disabled]="uploading()"
+                  (click)="avatarInput.click()">
+            @if (uploading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              <mat-icon>photo_camera</mat-icon>
+              {{ 'profile.choosePicture' | translate }}
+            }
+          </button>
+
+          @if (user()?.avatar_url) {
+            <button mat-button type="button" [disabled]="uploading()" (click)="removeAvatar()">
+              {{ 'profile.removePicture' | translate }}
+            </button>
+          }
+        </div>
+
+        <p class="text-xs text-slate-500 mt-2">{{ 'profile.pictureHint' | translate }}</p>
+      </div>
+
+      <input #avatarInput type="file" class="hidden" accept="image/jpeg,image/png,image/webp"
+             (change)="pickAvatar($event)" />
+    </div>
+  </mat-card>
+
+  <!-- Name, phone, email -->
+  <mat-card class="p-5 mb-4">
+    <h2 class="text-sm font-medium text-slate-700 mb-4">{{ 'profile.detailsTitle' | translate }}</h2>
+
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="flex flex-col gap-4">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'staff.name' | translate }}</mat-label>
+        <input matInput formControlName="name" />
+        @if (profileForm.controls.name.hasError('server')) {
+          <mat-error>{{ profileForm.controls.name.getError('server') }}</mat-error>
+        } @else if (profileForm.controls.name.touched && profileForm.controls.name.invalid) {
+          <mat-error>{{ 'validation.required' | translate }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'pos.phone' | translate }}</mat-label>
+        <input matInput formControlName="phone" dir="ltr" inputmode="tel" />
+        @if (profileForm.controls.phone.hasError('server')) {
+          <mat-error>{{ profileForm.controls.phone.getError('server') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- The email identifies the account and received the invitation, so it is
+           shown and not editable here. -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auth.email' | translate }}</mat-label>
+        <input matInput [value]="user()?.email" dir="ltr" disabled />
+        <mat-hint>{{ 'profile.emailFixed' | translate }}</mat-hint>
+      </mat-form-field>
+
+      <div class="flex justify-end">
+        <button mat-flat-button color="primary" type="submit" [disabled]="savingProfile()">
+          @if (savingProfile()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            {{ 'common.save' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <!-- Password (BRD FR-SEC-01) -->
+  <mat-card class="p-5">
+    <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'profile.passwordTitle' | translate }}</h2>
+    <p class="text-xs text-slate-500 mb-4">{{ 'profile.passwordHint' | translate }}</p>
+
+    <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="flex flex-col gap-4">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'profile.currentPassword' | translate }}</mat-label>
+        <input matInput type="password" formControlName="current_password"
+               autocomplete="current-password" />
+        @if (passwordForm.controls.current_password.hasError('server')) {
+          <mat-error>{{ passwordForm.controls.current_password.getError('server') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'profile.newPassword' | translate }}</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+        <mat-hint>{{ 'setPassword.policy' | translate }}</mat-hint>
+        @if (passwordForm.controls.password.hasError('server')) {
+          <mat-error>{{ passwordForm.controls.password.getError('server') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'profile.confirmPassword' | translate }}</mat-label>
+        <input matInput type="password" formControlName="password_confirmation"
+               autocomplete="new-password" />
+        @if (passwordForm.controls.password_confirmation.hasError('mismatch')) {
+          <mat-error>{{ 'setPassword.mismatch' | translate }}</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="flex justify-end">
+        <button mat-flat-button color="primary" type="submit" [disabled]="savingPassword()">
+          @if (savingPassword()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            {{ 'profile.changePassword' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>

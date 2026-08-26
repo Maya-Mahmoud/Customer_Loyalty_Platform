@@ -3,8 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -37,9 +37,9 @@ interface NavItem {
     MatDividerModule,
     MatIconModule,
     MatListModule,
-    MatMenuModule,
     MatSidenavModule,
     MatToolbarModule,
+    MatTooltipModule,
   ],
   templateUrl: './shell.component.html',
 })
@@ -51,6 +51,13 @@ export class ShellComponent {
   readonly merchant = this.auth.merchant;
   readonly branch = this.auth.branch;
   readonly currentLanguage = this.language.current;
+
+  /**
+   * Whether there is a store to configure at all. The settings icon is hidden from
+   * everyone else rather than disabled — a control that never does anything is worse
+   * than no control (BRD 7.2 gives merchant.profile to the owner alone).
+   */
+  readonly canEditStore = computed(() => this.auth.has('merchant.profile'));
 
   /**
    * Grows with each phase. Entries the role cannot use are hidden rather than
@@ -103,6 +110,18 @@ export class ShellComponent {
       labelKey: 'nav.staff',
       icon: 'group',
       permissions: ['users.manage'],
+    },
+    {
+      route: '/alerts',
+      labelKey: 'nav.alerts',
+      icon: 'shield',
+      permissions: ['reports.view_all_branches'],
+    },
+    {
+      route: '/audit-log',
+      labelKey: 'nav.auditLog',
+      icon: 'history',
+      permissions: ['audit_logs.view'],
     },
     {
       route: '/admin/merchants',

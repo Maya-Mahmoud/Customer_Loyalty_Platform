@@ -46,11 +46,27 @@ class PermissionMatrixTest extends TestCase
              * may accept one. Issuing a discount remains restricted (BR-013).
              */
             'accept a purchase voucher' => [Permission::AcceptVoucher, [$owner, $manager, $rep]],
+            /*
+             * Not a row in BRD 7.2 either — a second amendment, recorded the same
+             * way. FR-MER-06 asks for a store logo and FR-MER-05 for a currency, so
+             * something has to own those settings; the matrix names nobody. The
+             * owner holds it alone because these are the details a customer sees,
+             * and a branch manager editing the trade name would be editing the brand.
+             */
+            'edit the store profile and logo' => [Permission::ManageStoreProfile, [$owner]],
             'adjust a balance manually' => [Permission::AdjustBalance, [$owner]],
             'view reports for all branches' => [Permission::ViewAllBranchReports, [$owner]],
             'view reports for own branch' => [Permission::ViewOwnBranchReports, [$owner, $manager]],
             'view the audit log' => [Permission::ViewAuditLog, [$admin, $owner]],
             'export customer data' => [Permission::ExportCustomers, [$owner]],
+
+            /*
+             * A third amendment, on the same footing as the two above. FR-CUS-10 and
+             * section 16 require an erasure path and BRD 7.2 names nobody for it. The
+             * owner alone: the act cannot be undone, and a data subject request is
+             * answered by the business rather than at a till.
+             */
+            'erase a customer on request' => [Permission::AnonymizeCustomer, [$owner]],
         ];
     }
 

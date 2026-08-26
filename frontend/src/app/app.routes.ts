@@ -70,6 +70,37 @@ export const routes: Routes = [
           ),
       },
       {
+        // The anti-fraud signals of BRD 12. A tighter gate than the reports:
+        // reports.view_all_branches is the owner's alone, and a branch manager must
+        // not read a screen that examines them.
+        path: 'alerts',
+        canActivate: [requirePermission('reports.view_all_branches')],
+        loadComponent: () =>
+          import('./features/alerts/alerts.component').then((m) => m.AlertsComponent),
+      },
+      {
+        // The audit trail (BRD FR-SEC-02, section 20). Read-only, and by BRD 7.2
+        // only the owner and the platform supervisor reach it.
+        path: 'audit-log',
+        canActivate: [requirePermission('audit_logs.view')],
+        loadComponent: () =>
+          import('./features/audit/audit-log.component').then((m) => m.AuditLogComponent),
+      },
+      {
+        // The signed-in user's own account. No permission gate: everyone has one.
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then((m) => m.ProfileComponent),
+      },
+      {
+        // The store's own settings (BRD FR-MER-05, FR-MER-06) — the owner alone,
+        // since a branch manager editing the trade name would be editing the brand.
+        path: 'settings',
+        canActivate: [requirePermission('merchant.profile')],
+        loadComponent: () =>
+          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+      },
+      {
         // The reports of BRD 9. One gate for all five; a branch manager reaches the
         // same screen and the server answers with their own branch.
         path: 'reports',

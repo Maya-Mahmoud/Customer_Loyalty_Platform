@@ -3,17 +3,23 @@
 use App\Http\Controllers\Api\V1\Admin\MerchantController;
 use App\Http\Controllers\Api\V1\Admin\PlatformStatsController;
 use App\Http\Controllers\Api\V1\Admin\SubscriptionPlanController;
+use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\Merchant\BranchController;
+use App\Http\Controllers\Api\V1\Merchant\CustomerErasureController;
+use App\Http\Controllers\Api\V1\Merchant\CustomerExportController;
 use App\Http\Controllers\Api\V1\Merchant\LoyaltyRuleController;
 use App\Http\Controllers\Api\V1\Merchant\StaffController;
+use App\Http\Controllers\Api\V1\Merchant\StoreProfileController;
 use App\Http\Controllers\Api\V1\MerchantRegistrationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\Sales\CorrectionController;
 use App\Http\Controllers\Api\V1\Sales\CustomerController as SalesCustomerController;
 use App\Http\Controllers\Api\V1\Sales\InvoiceController;
+use App\Http\Controllers\Api\V1\Sales\LedgerAdjustmentController;
 use App\Http\Controllers\Api\V1\Sales\RedemptionController;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +84,45 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
 
+        /*
+         * The caller's own account. No permission gate and no user id in the path:
+         * these act on whoever is signed in, and changing your own password should
+         * not require the right to change anyone else's (BRD FR-SEC-01).
+         */
+        Route::put('/auth/profile', [ProfileController::class, 'update']);
+        Route::put('/auth/profile/password', [ProfileController::class, 'updatePassword']);
+        Route::post('/auth/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+        Route::delete('/auth/profile/avatar', [ProfileController::class, 'deleteAvatar']);
+
+        // The store's own profile (BRD FR-MER-05, FR-MER-06) — the owner alone.
+        Route::prefix('store')
+            ->middleware('can:merchant.profile')
+            ->group(function () {
+                Route::get('/', [StoreProfileController::class, 'show']);
+                Route::put('/', [StoreProfileController::class, 'update']);
+                Route::post('/logo', [StoreProfileController::class, 'uploadLogo']);
+                Route::delete('/logo', [StoreProfileController::class, 'deleteLogo']);
+            });
+
+
+        /*
+         * Taking the customer base out (BRD BR-019). The only route that returns
+         * more than one customer at a time, which is why the owner alone reaches it
+         * and why every use of it lands in the audit trail.
+         *
+         * Registered before /customers/{customer}: routes match in order, so the
+         * other way round the binding would look for a customer called "export".
+         */
+        Route::get('/customers/export', CustomerExportController::class)
+            ->middleware('can:customers.export');
+
+        /*
+         * Erasing a customer at their request (BRD FR-CUS-10, section 16). A POST,
+         * not a DELETE: the sales and the ledger stay exactly as they were, and it is
+         * the person who is removed from them.
+         */
+        Route::post('/customers/{customer}/anonymize', CustomerErasureController::class)
+            ->middleware('can:customers.anonymize');
 
         /*
          * The point of sale (BRD 8.4, 8.5) — used by every role that serves a
@@ -105,6 +150,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/invoices/{invoice}/corrections', [CorrectionController::class, 'store']);
         });
 
+        /*
+         * Correcting a balance by hand. BRD 7.2 gives ledger.adjust to the owner and
+         * to nobody else, which is why the escape hatch cannot be reached from a
+         * branch: without it, staff facing an unforeseen case invent a fake invoice
+         * instead (AF-01).
+         */
+        Route::middleware('can:ledger.adjust')->group(function () {
+            Route::get('/customers/{customer}/adjustments', [LedgerAdjustmentController::class, 'index']);
+            Route::post('/customers/{customer}/adjustments', [LedgerAdjustmentController::class, 'store']);
+        });
+
         // Deciding on a correction (BRD 8.7, FR-INV-08) — a manager or the owner.
         Route::middleware('can:invoices.amend')->group(function () {
             Route::get('/corrections', [CorrectionController::class, 'index']);
@@ -123,6 +179,21 @@ Route::prefix('v1')->group(function () {
             Route::post('/customers/{customer}/redemptions', [RedemptionController::class, 'store']);
         });
         /*
+         * The audit trail (BRD FR-SEC-02, section 20). Read-only: there is no route
+         * that writes, edits or deletes an entry, because a trail anyone could edit
+         * answers no question worth asking.
+         *
+         * By BRD 7.2 the owner and the platform supervisor hold this. What they see
+         * differs, and that is decided in the controller — the supervisor is entitled
+         * to the platform-level entries that belong to no merchant.
+         */
+        Route::middleware('can:audit_logs.view')->group(function () {
+            Route::get('/audit-logs', [AuditLogController::class, 'index']);
+            Route::get('/audit-logs/actions', [AuditLogController::class, 'actions']);
+            Route::get('/audit-logs/stats', [AuditLogController::class, 'stats']);
+        });
+
+        /*
          * The reports of BRD 9. One gate for all five: both the owner and a branch
          * manager hold reports.view_own_branch, and what separates them is the
          * branch the period resolves to, not the route.
@@ -136,6 +207,14 @@ Route::prefix('v1')->group(function () {
                 Route::get('/rewards', [ReportController::class, 'rewards']);
                 Route::get('/staff', [ReportController::class, 'staff']);
             });
+
+        /*
+         * The anti-fraud signals of BRD 12. A tighter gate than the reports above:
+         * reports.view_all_branches belongs to the owner alone, and a branch manager
+         * must not read a screen that examines them.
+         */
+        Route::get('/reports/signals', [ReportController::class, 'signals'])
+            ->middleware('can:reports.view_all_branches');
 
         /*
          * The store owner's own setup (BRD 8.2). Each gate comes straight from the

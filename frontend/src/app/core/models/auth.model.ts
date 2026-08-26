@@ -26,7 +26,13 @@ export type Permission =
   | 'reports.view_all_branches'
   | 'reports.view_own_branch'
   | 'audit_logs.view'
-  | 'customers.export';
+  | 'customers.export'
+  // An amendment to BRD 7.2: the store profile and logo of FR-MER-05 and FR-MER-06,
+  // which the matrix has no row for. The owner alone.
+  | 'merchant.profile'
+  // A third amendment: the erasure path of FR-CUS-10 and section 16, which the
+  // matrix has no row for. The owner alone, and it cannot be undone.
+  | 'customers.anonymize';
 
 export interface AuthMerchant {
   id: number;
@@ -35,6 +41,8 @@ export interface AuthMerchant {
   city: string;
   currency: string;
   logo_path: string | null;
+  /** Ready to use in an img tag; null when no logo was uploaded. */
+  logo_url: string | null;
   status: MerchantStatus;
   activated_at: string | null;
   subscription_ends_at: string | null;
@@ -54,6 +62,8 @@ export interface AuthUser {
   name: string;
   email: string;
   phone: string | null;
+  /** Ready to use in an img tag; null when no picture was uploaded. */
+  avatar_url: string | null;
   role: UserRole;
   status: UserStatus;
   merchant_id: number | null;

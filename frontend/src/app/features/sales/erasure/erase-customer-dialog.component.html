@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>{{ 'erase.title' | translate }}</h2>
+
+<mat-dialog-content class="!pt-2">
+  <p class="text-sm text-slate-600 mb-4">
+    {{ 'redeem.forCustomer' | translate: { name: data.customer.name ?? data.customer.phone } }}
+  </p>
+
+  <!-- What survives and what does not, stated plainly and before the fact. -->
+  <div class="rounded-lg border border-slate-200 p-4 mb-4 text-sm">
+    <p class="text-slate-800 font-medium mb-2">{{ 'erase.whatHappens' | translate }}</p>
+    <ul class="list-disc ps-5 space-y-1 text-slate-700">
+      <li>{{ 'erase.removed' | translate }}</li>
+      <li>{{ 'erase.kept' | translate }}</li>
+      @if (balance() > 0) {
+        <li class="text-amber-900">
+          {{ 'erase.balanceLost' | translate: { amount: balance(), currency: currency() } }}
+        </li>
+      }
+      <li>{{ 'erase.vouchersLost' | translate }}</li>
+    </ul>
+  </div>
+
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ 'erase.reason' | translate }}</mat-label>
+      <textarea matInput formControlName="reason" rows="3"></textarea>
+      <mat-hint>{{ 'erase.reasonHint' | translate }}</mat-hint>
+      @if (form.controls.reason.touched && form.controls.reason.invalid) {
+        <mat-error>{{ 'erase.reasonRequired' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- A confirm button on its own is too easy to press by accident, and this is
+         the one action nobody can walk back. -->
+    <mat-checkbox formControlName="acknowledged" color="warn">
+      {{ 'erase.acknowledge' | translate }}
+    </mat-checkbox>
+
+    @if (submitted() && form.controls.acknowledged.invalid) {
+      <p class="text-xs text-red-800">{{ 'erase.acknowledgeRequired' | translate }}</p>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close type="button">{{ 'common.cancel' | translate }}</button>
+  <button mat-flat-button color="warn" class="!bg-red-700 !text-white" type="button" (click)="confirm()">
+    <mat-icon>person_off</mat-icon>
+    {{ 'erase.confirm' | translate }}
+  </button>
+</mat-dialog-actions>

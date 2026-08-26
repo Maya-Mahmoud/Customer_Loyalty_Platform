@@ -281,8 +281,38 @@
               </table>
             </div>
 
-            <!-- BR-019: no lists leave the building. -->
-            <p class="text-xs text-slate-500 mt-3">{{ 'lookup.noExportNote' | translate }}</p>
+            @if (canExport()) {
+              <!-- BR-019: the owner alone, and the export is written to the audit
+                   trail with its row count. -->
+              <div class="mt-5 pt-4 border-t border-slate-100">
+                <h3 class="text-sm font-medium text-slate-700">{{ 'reports.exportTitle' | translate }}</h3>
+                <p class="text-xs text-slate-500 mt-0.5 mb-3">{{ 'reports.exportHint' | translate }}</p>
+
+                <div class="flex flex-wrap gap-2">
+                  <button mat-flat-button color="primary" type="button"
+                          [disabled]="exporting()" (click)="exportCustomers(false)">
+                    @if (exporting()) {
+                      <mat-spinner diameter="20" />
+                    } @else {
+                      <mat-icon>download</mat-icon>
+                      {{ 'reports.exportAll' | translate }}
+                    }
+                  </button>
+
+                  <button mat-stroked-button type="button"
+                          [disabled]="exporting()" (click)="exportCustomers(true)">
+                    {{ 'reports.exportConsented' | translate }}
+                  </button>
+                </div>
+
+                <p class="text-xs text-amber-900 mt-3 rounded-lg bg-amber-50 p-3">
+                  {{ 'reports.exportAuditNote' | translate }}
+                </p>
+              </div>
+            } @else {
+              <!-- BR-019: no lists leave the building. -->
+              <p class="text-xs text-slate-500 mt-3">{{ 'lookup.noExportNote' | translate }}</p>
+            }
           }
         </div>
       </mat-tab>

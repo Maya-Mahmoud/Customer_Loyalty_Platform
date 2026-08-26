@@ -28,9 +28,28 @@ enum Permission: string
      * rep too — otherwise every reward would need a manager at the counter.
      */
     case AcceptVoucher = 'vouchers.accept';
+    /**
+     * Editing the store's own profile — its trade name, city and logo.
+     *
+     * An amendment to BRD 7.2, which has no row for it although FR-MER-06 asks for
+     * the logo and FR-MER-05 for the currency. The owner alone holds it: these are
+     * the details a customer sees, and a branch manager changing the trade name
+     * would be changing the brand.
+     */
+    case ManageStoreProfile = 'merchant.profile';
     case AdjustBalance = 'ledger.adjust';
     case ViewAllBranchReports = 'reports.view_all_branches';
     case ViewOwnBranchReports = 'reports.view_own_branch';
     case ViewAuditLog = 'audit_logs.view';
     case ExportCustomers = 'customers.export';
+
+    /**
+     * Erasing a customer at their request (BRD FR-CUS-10, section 16).
+     *
+     * A third amendment to BRD 7.2: FR-CUS-10 requires the capability and the matrix
+     * names nobody for it. The owner alone, because the act cannot be undone — the
+     * only thing that could reverse it is the personal data it removes — and because
+     * a data subject request is answered by the business, not by a till.
+     */
+    case AnonymizeCustomer = 'customers.anonymize';
 }

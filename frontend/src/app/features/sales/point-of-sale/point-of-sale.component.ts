@@ -80,6 +80,15 @@ export class PointOfSaleComponent {
   readonly needsBranch = computed(() => this.auth.user()?.branch_id === null);
   readonly branches = signal<Branch[]>([]);
 
+  /**
+   * Whether the rep is copying a number off a printed receipt.
+   *
+   * Closed by default, because the common case at a small shop is a hand-written
+   * receipt with no number on it — and a field nobody needs is a field everybody
+   * still has to tab past.
+   */
+  readonly numberFromReceipt = signal(false);
+
   readonly phoneForm = this.fb.nonNullable.group({
     phone: ['', [Validators.required, Validators.pattern(/^\+?[\d\s-]{6,20}$/)]],
   });
@@ -91,7 +100,8 @@ export class PointOfSaleComponent {
   });
 
   readonly saleForm = this.fb.nonNullable.group({
-    invoice_number: ['', [Validators.required, Validators.maxLength(64)]],
+    // Optional: empty means the system numbers the sale (see InvoiceService).
+    invoice_number: ['', [Validators.maxLength(64)]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
     invoice_date: [this.today(), [Validators.required]],
     branch_id: [null as number | null],

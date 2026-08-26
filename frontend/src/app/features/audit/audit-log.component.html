@@ -1,0 +1,161 @@
+<div class="max-w-4xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'audit.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'audit.subtitle' | translate }}</p>
+
+  <mat-card class="p-5 mb-4">
+    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-start gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-56">
+        <mat-label>{{ 'audit.action' | translate }}</mat-label>
+        <mat-select formControlName="action">
+          <mat-option value="">{{ 'audit.allActions' | translate }}</mat-option>
+          <!-- Built from what actually happened, so a new audited action appears
+               the first time it occurs. -->
+          @for (action of actions(); track action) {
+            <mat-option [value]="action">{{ action }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.from' | translate }}</mat-label>
+        <input matInput type="date" formControlName="from" dir="ltr" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.to' | translate }}</mat-label>
+        <input matInput type="date" formControlName="to" dir="ltr" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" class="h-14" [disabled]="loading()">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          {{ 'audit.search' | translate }}
+        }
+      </button>
+
+      <button mat-button type="button" class="h-14" (click)="reset()">
+        {{ 'audit.clear' | translate }}
+      </button>
+    </form>
+
+    <p class="text-xs text-slate-500 mt-3">
+      {{ 'audit.total' | translate: { count: total() } }}
+    </p>
+  </mat-card>
+
+  <!--
+    The shape of the trail, above the entries.
+
+    A page of forty rows answers "what happened". It cannot answer "what is this
+    activity made of" or "when does the work happen", and those are the two questions
+    an owner opens an audit trail with.
+  -->
+  @if (hasCharts()) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+      <mat-card class="p-5">
+        <h2 class="text-sm font-medium text-slate-700 mb-4">{{ 'audit.byAction' | translate }}</h2>
+        <app-donut-chart [data]="actionSlices()" [totalLabel]="'audit.entries' | translate" />
+      </mat-card>
+
+      <mat-card class="p-5">
+        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'audit.byHour' | translate }}</h2>
+        <p class="text-xs text-slate-500 mb-3">{{ 'audit.byHourHint' | translate }}</p>
+
+        <app-hour-bars #hours [data]="stats()!.by_hour" />
+
+        <!-- The peak in words: the chart should not be the only way to read it. -->
+        @if (hours.peak(); as peak) {
+          <p class="text-xs text-slate-600 mt-1">
+            {{ 'audit.peakHour' | translate: { hour: hours.label(peak.hour), count: peak.total } }}
+          </p>
+        }
+      </mat-card>
+    </div>
+  }
+
+  @if (loading() && entries().length === 0) {
+    <div class="flex justify-center py-10">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else if (entries().length === 0) {
+    <mat-card class="p-8 text-center">
+      <mat-icon class="!w-10 !h-10 !text-4xl text-slate-400">history</mat-icon>
+      <p class="text-sm text-slate-600 mt-2">{{ 'audit.empty' | translate }}</p>
+    </mat-card>
+  } @else {
+    <div class="flex flex-col gap-3">
+      @for (entry of entries(); track entry.id) {
+        <mat-card class="p-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-slate-900" dir="ltr">{{ entry.action }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ entry.user?.name ?? ('audit.system' | translate) }}
+                @if (entry.user) {
+                  · {{ 'roles.' + entry.user.role | translate }}
+                }
+                @if (showsMerchant() && entry.merchant) {
+                  · {{ entry.merchant }}
+                }
+              </p>
+            </div>
+
+            <div class="text-end">
+              <p class="text-xs text-slate-600" dir="ltr">
+                {{ entry.created_at?.slice(0, 10) }} {{ entry.created_at?.slice(11, 16) }}
+              </p>
+              @if (entry.entity_type) {
+                <p class="text-xs text-slate-500" dir="ltr">
+                  {{ entry.entity_type }}#{{ entry.entity_id }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- Rendered generically: a trail that only showed the fields somebody
+               templated would hide the rest, and the unusual entries are the ones
+               worth finding. -->
+          @if (changes(entry).length > 0) {
+            <dl class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs">
+              @for (line of changes(entry); track line.key) {
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-500" dir="ltr">{{ line.key }}</dt>
+                  <dd class="text-slate-800 text-end" dir="ltr">
+                    @if (line.before !== null && line.after !== null && line.before !== line.after) {
+                      <span class="text-slate-400 line-through">{{ line.before }}</span>
+                      <span class="mx-1">→</span>
+                      <span>{{ line.after }}</span>
+                    } @else {
+                      {{ line.after ?? line.before }}
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
+          }
+
+          @if (entry.ip_address) {
+            <p class="text-xs text-slate-400 mt-2" dir="ltr">{{ entry.ip_address }}</p>
+          }
+        </mat-card>
+      }
+    </div>
+
+    @if (lastPage() > 1) {
+      <div class="flex items-center justify-center gap-3 mt-4">
+        <button mat-stroked-button type="button" [disabled]="page() === 1 || loading()"
+                (click)="load(page() - 1)">
+          {{ 'audit.previous' | translate }}
+        </button>
+
+        <span class="text-sm text-slate-600" dir="ltr">{{ page() }} / {{ lastPage() }}</span>
+
+        <button mat-stroked-button type="button" [disabled]="page() === lastPage() || loading()"
+                (click)="load(page() + 1)">
+          {{ 'audit.next' | translate }}
+        </button>
+      </div>
+    }
+  }
+</div>

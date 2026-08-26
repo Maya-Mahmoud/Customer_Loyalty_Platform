@@ -1,15 +1,111 @@
-<div class="max-w-4xl">
-  <h1 class="text-xl font-semibold text-slate-800 mb-1">
-    {{ 'dashboard.greeting' | translate: { name: user()?.name } }}
-  </h1>
-  <p class="text-sm text-slate-500 mb-5">
-    {{ merchant()?.name }}
-    @if (branch()) {
-      · {{ branch()!.name }}
-    }
-  </p>
+<div class="max-w-5xl">
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold text-slate-900">
+      {{ 'dashboard.greeting' | translate: { name: user()?.name } }}
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">
+      {{ merchant()?.trade_name || merchant()?.name || ('app.name' | translate) }}
+      @if (branch()) {
+        <span class="text-slate-400">&middot;</span> {{ branch()!.name }}
+      }
+    </p>
+  </header>
 
-  <!-- What a manager or owner opens the app for (BRD FR-RPT-01) -->
+  <!-- The platform supervisor (BRD FR-ADM-01) -->
+  @if (isPlatformAdmin()) {
+    @if (stats(); as stats) {
+      <!--
+        The queue first and largest. A pending registration is a person waiting for
+        an answer, and it is the only thing on this screen the supervisor acts on.
+      -->
+      <mat-card class="p-5 mb-4"
+                [class]="hasQueue() ? '!border !border-amber-300 !bg-amber-50' : ''">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <mat-icon [class]="hasQueue() ? 'text-amber-700' : 'text-emerald-600'">
+              {{ hasQueue() ? 'pending_actions' : 'check_circle' }}
+            </mat-icon>
+
+            <div>
+              <p class="text-sm font-medium"
+                 [class]="hasQueue() ? 'text-amber-900' : 'text-slate-800'">
+                @if (hasQueue()) {
+                  {{ 'dashboard.queueWaiting' | translate: { count: stats.awaiting_review } }}
+                } @else {
+                  {{ 'dashboard.queueEmpty' | translate }}
+                }
+              </p>
+              <p class="text-xs mt-0.5"
+                 [class]="hasQueue() ? 'text-amber-800' : 'text-slate-500'">
+                {{ (hasQueue() ? 'dashboard.queueHint' : 'dashboard.queueEmptyHint') | translate }}
+              </p>
+            </div>
+          </div>
+
+          <a mat-flat-button color="primary" routerLink="/admin/merchants">
+            {{ 'dashboard.openQueue' | translate }}
+          </a>
+        </div>
+      </mat-card>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'dashboard.storesTotal' | translate }}</p>
+          <p class="text-3xl font-semibold clp-figure mt-1">{{ stats.total }}</p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'status.active' | translate }}</p>
+          <p class="text-3xl font-semibold text-emerald-700 mt-1">{{ stats.merchants.active }}</p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <p class="text-xs text-slate-500">{{ 'status.suspended' | translate }}</p>
+          <p class="text-3xl font-semibold clp-figure mt-1">{{ stats.merchants.suspended }}</p>
+        </mat-card>
+
+        <mat-card class="p-4">
+          <!-- FR-ADM-05: the renewals to chase, before the access lapses. -->
+          <p class="text-xs text-slate-500">{{ 'dashboard.expiringSoon' | translate }}</p>
+          <p class="text-3xl font-semibold mt-1"
+             [class]="stats.expiring_soon > 0 ? 'text-amber-700' : 'text-slate-900'">
+            {{ stats.expiring_soon }}
+          </p>
+        </mat-card>
+      </div>
+
+      <mat-card class="p-5">
+        <h2 class="text-sm font-medium text-slate-700 mb-4">
+          {{ 'dashboard.storesByStatus' | translate }}
+        </h2>
+
+        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div>
+            <dt class="text-xs text-slate-500">{{ 'status.pending' | translate }}</dt>
+            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.pending }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">{{ 'status.active' | translate }}</dt>
+            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.active }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">{{ 'status.suspended' | translate }}</dt>
+            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.suspended }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">{{ 'status.rejected' | translate }}</dt>
+            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.rejected }}</dd>
+          </div>
+        </dl>
+      </mat-card>
+    } @else if (loading()) {
+      <div class="flex justify-center py-10">
+        <mat-spinner diameter="36" />
+      </div>
+    }
+  }
+
+  <!-- A store owner or branch manager (BRD FR-RPT-01) -->
   @if (canSeeNumbers()) {
     @if (today(); as today) {
       <h2 class="text-sm font-medium text-slate-700 mb-2">{{ 'dashboard.todayTitle' | translate }}</h2>
@@ -17,24 +113,24 @@
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <mat-card class="p-4">
           <p class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</p>
-          <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+          <p class="text-2xl font-semibold clp-figure mt-1" dir="ltr">
             {{ today.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
           </p>
         </mat-card>
 
         <mat-card class="p-4">
           <p class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</p>
-          <p class="text-2xl font-semibold text-slate-900 mt-1">{{ today.invoice_count }}</p>
+          <p class="text-2xl font-semibold clp-figure mt-1">{{ today.invoice_count }}</p>
         </mat-card>
 
         <mat-card class="p-4">
           <p class="text-xs text-slate-500">{{ 'reports.newCustomers' | translate }}</p>
-          <p class="text-2xl font-semibold text-slate-900 mt-1">{{ today.new_customers }}</p>
+          <p class="text-2xl font-semibold clp-figure mt-1">{{ today.new_customers }}</p>
         </mat-card>
 
         <mat-card class="p-4">
           <p class="text-xs text-slate-500">{{ 'dashboard.rewardsToday' | translate }}</p>
-          <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+          <p class="text-2xl font-semibold clp-figure mt-1" dir="ltr">
             {{ today.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
           </p>
           <p class="text-xs text-slate-500 mt-1">
@@ -50,7 +146,7 @@
               <h2 class="text-sm font-medium text-slate-700">{{ 'dashboard.monthTitle' | translate }}</h2>
               <p class="text-xs text-slate-500 mt-0.5">
                 {{ 'reports.invoiceCount' | translate: { count: month.invoice_count } }}
-                ·
+                <span class="text-slate-400">&middot;</span>
                 {{ 'reports.customersServed' | translate: { count: month.customers_served } }}
               </p>
             </div>
@@ -88,40 +184,46 @@
         </mat-card>
       }
     } @else if (loading()) {
-      <div class="flex justify-center py-8">
-        <mat-spinner diameter="32" />
+      <div class="flex justify-center py-10">
+        <mat-spinner diameter="36" />
       </div>
     }
   }
 
   <!-- Where the work actually happens. A rep sees only this. -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    @if (canSell()) {
-      <a routerLink="/pos" class="no-underline">
-        <mat-card class="p-5 h-full hover:!shadow-md transition-shadow">
-          <div class="flex items-start gap-3">
-            <mat-icon class="text-slate-700">point_of_sale</mat-icon>
-            <div>
-              <p class="text-sm font-medium text-slate-900">{{ 'nav.pos' | translate }}</p>
-              <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.posHint' | translate }}</p>
+  @if (canSell() || canLookup()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      @if (canSell()) {
+        <a routerLink="/pos" class="no-underline">
+          <mat-card class="p-5 h-full clp-action">
+            <div class="flex items-start gap-3">
+              <span class="rounded-xl clp-tile-icon p-2.5 flex">
+                <mat-icon>point_of_sale</mat-icon>
+              </span>
+              <div>
+                <p class="text-sm font-medium text-slate-900">{{ 'nav.pos' | translate }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.posHint' | translate }}</p>
+              </div>
             </div>
-          </div>
-        </mat-card>
-      </a>
-    }
+          </mat-card>
+        </a>
+      }
 
-    @if (canLookup()) {
-      <a routerLink="/customers" class="no-underline">
-        <mat-card class="p-5 h-full hover:!shadow-md transition-shadow">
-          <div class="flex items-start gap-3">
-            <mat-icon class="text-slate-700">person_search</mat-icon>
-            <div>
-              <p class="text-sm font-medium text-slate-900">{{ 'nav.customers' | translate }}</p>
-              <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.lookupHint' | translate }}</p>
+      @if (canLookup()) {
+        <a routerLink="/customers" class="no-underline">
+          <mat-card class="p-5 h-full clp-action">
+            <div class="flex items-start gap-3">
+              <span class="rounded-xl clp-tile-icon p-2.5 flex">
+                <mat-icon>person_search</mat-icon>
+              </span>
+              <div>
+                <p class="text-sm font-medium text-slate-900">{{ 'nav.customers' | translate }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.lookupHint' | translate }}</p>
+              </div>
             </div>
-          </div>
-        </mat-card>
-      </a>
-    }
-  </div>
+          </mat-card>
+        </a>
+      }
+    </div>
+  }
 </div>

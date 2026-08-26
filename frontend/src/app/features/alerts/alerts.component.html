@@ -1,0 +1,138 @@
+<div class="max-w-3xl">
+  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'alerts.title' | translate }}</h1>
+  <p class="text-sm text-slate-500 mb-5">{{ 'alerts.subtitle' | translate }}</p>
+
+  <mat-card class="p-5 mb-4">
+    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-start gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.from' | translate }}</mat-label>
+        <input matInput type="date" formControlName="from" dir="ltr" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+        <mat-label>{{ 'reports.to' | translate }}</mat-label>
+        <input matInput type="date" formControlName="to" dir="ltr" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" class="h-14" [disabled]="loading()">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          {{ 'audit.search' | translate }}
+        }
+      </button>
+    </form>
+
+    <!-- The framing, stated once and not repeated as a warning on every card. -->
+    <p class="text-xs text-slate-500 mt-3">{{ 'alerts.disclaimer' | translate }}</p>
+  </mat-card>
+
+  @if (loading() && signals().length === 0) {
+    <div class="flex justify-center py-10">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else if (signals().length === 0) {
+    <!-- The expected result. It says so plainly rather than looking broken. -->
+    <mat-card class="p-8 text-center">
+      <mat-icon class="!w-10 !h-10 !text-4xl text-emerald-600">check_circle</mat-icon>
+      <p class="text-sm font-medium text-slate-800 mt-2">{{ 'alerts.emptyTitle' | translate }}</p>
+      <p class="text-xs text-slate-500 mt-1">{{ 'alerts.emptyBody' | translate }}</p>
+    </mat-card>
+  } @else {
+    @if (highCount() > 0) {
+      <p class="text-sm text-slate-700 mb-3">
+        {{ 'alerts.summary' | translate: { total: signals().length, high: highCount() } }}
+      </p>
+    }
+
+    <div class="flex flex-col gap-3">
+      @for (signal of signals(); track $index) {
+        <mat-card class="p-4"
+                  [class]="signal.severity === 'high' ? '!border !border-amber-300' : ''">
+          <div class="flex items-start gap-3">
+            <mat-icon [class]="signal.severity === 'high' ? 'text-amber-700' : 'text-slate-500'">
+              {{ icon(signal.type) }}
+            </mat-icon>
+
+            <div class="flex-1">
+              <div class="flex flex-wrap items-baseline gap-2">
+                <p class="text-sm font-medium text-slate-900">
+                  {{ 'alerts.types.' + signal.type + '.title' | translate }}
+                </p>
+                <span class="text-xs rounded-full px-2 py-0.5"
+                      [class]="signal.severity === 'high'
+                        ? 'bg-amber-100 text-amber-900'
+                        : 'bg-slate-100 text-slate-600'">
+                  {{ 'alerts.severity.' + signal.severity | translate }}
+                </span>
+                <!-- The BRD reference, so a finding can be traced to the control
+                     that asked for it. -->
+                <span class="text-xs text-slate-400" dir="ltr">{{ signal.code }}</span>
+              </div>
+
+              <p class="text-sm text-slate-700 mt-1">
+                <span class="font-medium">{{ signal.subject }}</span>
+                &mdash;
+                @switch (signal.type) {
+                  @case ('out_of_hours') {
+                    {{
+                      'alerts.types.out_of_hours.body'
+                        | translate: {
+                            count: signal.count,
+                            from: signal.detail['from'],
+                            to: signal.detail['to']
+                          }
+                    }}
+                  }
+                  @case ('frequent_corrections') {
+                    {{
+                      'alerts.types.frequent_corrections.body'
+                        | translate: {
+                            count: signal.count,
+                            entries: signal.detail['entries'],
+                            share: signal.detail['share']
+                          }
+                    }}
+                  }
+                  @case ('backdated') {
+                    {{
+                      'alerts.types.backdated.body'
+                        | translate: { count: signal.count, days: signal.detail['worst_days'] }
+                    }}
+                  }
+                  @case ('repeated_redemptions') {
+                    {{ 'alerts.types.repeated_redemptions.body' | translate: { count: signal.count } }}
+                    @if (signal.detail['overrides']) {
+                      {{ 'alerts.types.repeated_redemptions.overrides' | translate: { count: signal.detail['overrides'] } }}
+                    }
+                  }
+                  @default {
+                    {{
+                      'alerts.types.rep_customer_concentration.body'
+                        | translate: {
+                            user: signal.detail['user'],
+                            count: signal.count,
+                            share: signal.detail['share']
+                          }
+                    }}
+                  }
+                }
+              </p>
+
+              @if (signal.amount) {
+                <p class="text-xs text-slate-500 mt-1" dir="ltr">
+                  {{ signal.amount }} {{ currency() }}
+                </p>
+              }
+
+              <!-- What to do about it, which is a conversation rather than a click. -->
+              <p class="text-xs text-slate-500 mt-2">
+                {{ 'alerts.types.' + signal.type + '.hint' | translate }}
+              </p>
+            </div>
+          </div>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

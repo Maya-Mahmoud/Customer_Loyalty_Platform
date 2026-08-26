@@ -82,7 +82,11 @@
     "pos": "Record a sale",
     "customers": "Customers",
     "corrections": "Corrections",
-    "reports": "Reports"
+    "reports": "Reports",
+    "settings": "Store settings",
+    "auditLog": "Audit trail",
+    "profile": "My account",
+    "alerts": "Things worth a look"
   },
   "roles": {
     "platform_admin": "Platform supervisor",
@@ -171,7 +175,15 @@
     "costOfProgramme": "Cost of the programme",
     "openReports": "Open the reports",
     "posHint": "Record a sale and register a customer at the counter.",
-    "lookupHint": "Look a customer up by phone number and see where they stand."
+    "lookupHint": "Look a customer up by phone number and see where they stand.",
+    "storesTotal": "Stores",
+    "expiringSoon": "Subscriptions ending soon",
+    "storesByStatus": "Stores by status",
+    "queueWaiting": "{{count}} registrations are waiting for a decision",
+    "queueHint": "Each one is somebody waiting for an answer.",
+    "queueEmpty": "The review queue is empty",
+    "queueEmptyHint": "Nothing is waiting on you right now.",
+    "openQueue": "Open the queue"
   },
   "validation": {
     "required": "This field is required.",
@@ -337,7 +349,9 @@
     "eligibleTitle": "This customer has earned a reward",
     "eligibleBody": "Tell them now. Paying it out needs a branch manager or the owner.",
     "remainingAmount": "{{amount}} {{currency}} to go for the reward.",
-    "remainingVisits": "{{count}} more visits for the reward."
+    "remainingVisits": "{{count}} more visits for the reward.",
+    "enterInvoiceNumber": "Enter the number from the receipt",
+    "invoiceNumberHint": "Leave empty and the system numbers the sale."
   },
   "lookup": {
     "title": "Customer lookup",
@@ -454,6 +468,132 @@
     "inactive": "Stopped coming",
     "neverBought": "Never bought",
     "since": "since",
-    "topCustomers": "Top customers in this period"
+    "topCustomers": "Top customers in this period",
+    "exportTitle": "Export the customer list",
+    "exportHint": "A CSV covering the period above, ready to open in Excel.",
+    "exportAll": "Export (CSV)",
+    "exportConsented": "Only those who agreed to be contacted",
+    "exportAuditNote": "Exports are recorded in the audit log with your name, the time and the number of records.",
+    "exportDone": "The file has been downloaded."
+  },
+  "adjust": {
+    "title": "Correct the balance",
+    "action": "Correct balance",
+    "submit": "Save the correction",
+    "currentBalance": "Balance now",
+    "add": "Add to the balance",
+    "deduct": "Deduct from the balance",
+    "tooMuch": "More than the customer has ({{balance}}).",
+    "reasonHint": "Say what happened and why. This is the entry an auditor stops at.",
+    "auditNote": "Recorded in the audit log under your name, with the reason and the amount.",
+    "history": "Manual corrections"
+  },
+  "settings": {
+    "title": "Store settings",
+    "subtitle": "Your name, logo, city and currency — what your customers see.",
+    "logoTitle": "The store logo",
+    "chooseLogo": "Choose a logo",
+    "removeLogo": "Remove the logo",
+    "logoHint": "JPG, PNG or WebP, up to 2 MB. It is resized on upload.",
+    "detailsTitle": "Store details",
+    "detailsHint": "The trade name, where you are, and the currency amounts are shown in.",
+    "registeredName": "Registered name",
+    "registeredNameFixed": "Verified at registration; contact platform support to change it.",
+    "tradeNameHint": "The name customers know you by, if it differs from the registered one.",
+    "currency": "Currency",
+    "currencyHint": "Three letters, e.g. USD or SYP.",
+    "currencyNote": "The currency labels every figure in the app. Changing it renames existing amounts; it does not convert them.",
+    "storeSaved": "The store details have been saved.",
+    "logoSaved": "The store logo has been updated."
+  },
+  "erase": {
+    "action": "Erase data",
+    "title": "Erase the customer at their request",
+    "whatHappens": "What this does",
+    "removed": "The name and phone number are removed and cannot be recovered.",
+    "kept": "The invoices, the ledger and the rewards stay as they are, for the accounts.",
+    "balanceLost": "The balance of {{amount}} {{currency}} is closed and cannot be claimed.",
+    "vouchersLost": "Unspent vouchers are withdrawn. Vouchers already used stay used.",
+    "reason": "The request",
+    "reasonHint": "What the customer asked for. Kept in the audit log without their details.",
+    "reasonRequired": "Write what the customer asked for, at least ten characters.",
+    "acknowledge": "I understand this cannot be undone.",
+    "acknowledgeRequired": "Confirm that you understand before continuing.",
+    "confirm": "Erase the data"
+  },
+  "audit": {
+    "title": "Audit trail",
+    "subtitle": "Who did what, and when. Entries are never edited or removed.",
+    "action": "Action",
+    "allActions": "All actions",
+    "search": "Search",
+    "clear": "Clear",
+    "total": "{{count}} entries",
+    "empty": "Nothing matches these filters.",
+    "system": "System",
+    "previous": "Previous",
+    "next": "Next",
+    "byAction": "What the activity is made of",
+    "byHour": "When the work happens",
+    "byHourHint": "Entries by hour of day.",
+    "entries": "entries",
+    "peakHour": "Busiest at {{hour}} — {{count}} entries."
+  },
+  "profile": {
+    "title": "My account",
+    "subtitle": "Your picture, your details and your password.",
+    "choosePicture": "Choose a picture",
+    "removePicture": "Remove",
+    "pictureHint": "JPG, PNG or WebP, up to 2 MB. It is resized on upload.",
+    "detailsTitle": "Your details",
+    "emailFixed": "The email identifies your account and cannot be changed here.",
+    "passwordTitle": "Password",
+    "passwordHint": "Changing it signs your other devices out. This one stays signed in.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm the new password",
+    "changePassword": "Change the password",
+    "detailsSaved": "Your details have been saved.",
+    "pictureSaved": "Your picture has been updated."
+  },
+  "alerts": {
+    "title": "Things worth a look",
+    "subtitle": "Patterns the system noticed in the chosen period.",
+    "disclaimer": "These are observations, not accusations. Every pattern here has an innocent explanation — read the evidence and judge for yourself.",
+    "emptyTitle": "Nothing stood out",
+    "emptyBody": "No unusual pattern was found in this period. This is the normal result.",
+    "summary": "{{total}} observations, {{high}} of them worth looking at first.",
+    "severity": {
+      "high": "worth a look",
+      "medium": "for information"
+    },
+    "types": {
+      "out_of_hours": {
+        "title": "Sales entered outside opening hours",
+        "body": "{{count}} entries recorded outside {{from}}:00–{{to}}:00.",
+        "hint": "A late stocktake explains this. So does an invoice with no customer standing there."
+      },
+      "frequent_corrections": {
+        "title": "Entries that keep being undone",
+        "body": "{{count}} correction requests out of {{entries}} entries ({{share}}%).",
+        "hint": "Ask what keeps going wrong. A rep cancelling their own entries is how a false one disappears."
+      },
+      "backdated": {
+        "title": "Sales entered long after they happened",
+        "body": "{{count}} entries keyed in, the latest {{days}} days after the sale date.",
+        "hint": "A busy till explains a day or two. A week fits a sale into a cycle that was already measured."
+      },
+      "repeated_redemptions": {
+        "title": "The same customer collecting reward after reward",
+        "body": "{{count}} rewards paid in this period.",
+        "overrides": "{{count}} of them were exceptions authorised by hand.",
+        "hint": "A genuinely loyal customer looks like this. So does a card being farmed."
+      },
+      "rep_customer_concentration": {
+        "title": "One employee and one customer",
+        "body": "{{user}} registered this customer and entered {{count}} of their purchases ({{share}}%).",
+        "hint": "A regular has a favourite cashier. A fabricated customer has only one."
+      }
+    }
   }
 }

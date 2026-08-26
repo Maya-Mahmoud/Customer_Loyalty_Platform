@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * App-wide styling.
+ *
+ * Almost everything here reaches the whole app through Material's own element names
+ * rather than through a class added to twenty templates. The look stays in one file —
+ * a change to card corners or to the rail happens once — and a screen written next
+ * month inherits it without anybody remembering to.
+ *
+ * The palette lives in custom-theme.scss, where Material can also read it. These
+ * variables mirror it for the places plain CSS has to reach.
+ */
+
+:root {
+  --clp-ink: #0b2f2d;
+  --clp-ink-soft: #14524e;
+  --clp-teal: #1d6660;
+  --clp-teal-bright: #47978f;
+  --clp-gold: #c28f2c;
+  --clp-gold-soft: #fdf7ea;
+
+  /* Paper, not grey. The canvas is the largest colour on the screen and the one
+     nobody notices until it is cold. */
+  --clp-canvas: #f7f6f3;
+  --clp-line: #e9e6e0;
+  --clp-text: #1f2d2c;
+  --clp-muted: #6b7a78;
+}
+
 html,
 body {
   height: 100%;
@@ -10,15 +38,381 @@ body {
 body {
   margin: 0;
   font-family: Tajawal, Roboto, 'Helvetica Neue', sans-serif;
-  background-color: #f5f6f8;
+  background-color: var(--clp-canvas);
+  color: var(--clp-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Material lays fields out with logical properties already; these few rules
-   cover the places where our own utility classes assume a direction. */
+/*
+ * The canvas.
+ *
+ * Three very faint washes over warm paper, not one gradient: a single ramp across a
+ * wide screen always shows its direction, and the moment a background has a
+ * direction it starts competing with the content for the reader's eye.
+ *
+ * The three are the same two hues the rest of the app uses — teal near the rail,
+ * gold at the far corner, a cool breath between them — so the page looks lit rather
+ * than painted. Everything is under 10% alpha, which is the whole discipline here: a
+ * white card must still read as white paper laid on top, and any stronger and it
+ * turns into a coloured panel.
+ *
+ * Fixed attachment, so the light stays put while the content scrolls under it. A
+ * background that scrolls with a long report makes the page feel like it is sliding
+ * out of a tunnel.
+ */
+.mat-drawer-content {
+  background:
+    radial-gradient(900px 480px at 2% -5%, rgb(13 148 136 / 22%), transparent 58%),
+    radial-gradient(760px 520px at 100% 104%, rgb(194 143 44 / 16%), transparent 58%),
+    radial-gradient(620px 420px at 72% 12%, rgb(71 151 143 / 10%), transparent 62%),
+    linear-gradient(165deg, #e9f3f1 0%, #f5f6f2 42%, #faf6ed 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100%;
+}
+
+/*
+ * Mirrored in Arabic, so the teal always pools on the same side as the rail. Light
+ * arriving from the navigation reads as one room; light arriving from the opposite
+ * corner reads as two different pages stitched together.
+ */
+[dir='rtl'] .mat-drawer-content {
+  background:
+    radial-gradient(900px 480px at 98% -5%, rgb(13 148 136 / 22%), transparent 58%),
+    radial-gradient(760px 520px at 0% 104%, rgb(194 143 44 / 16%), transparent 58%),
+    radial-gradient(620px 420px at 28% 12%, rgb(71 151 143 / 10%), transparent 62%),
+    linear-gradient(195deg, #e9f3f1 0%, #f5f6f2 42%, #faf6ed 100%) !important;
+  background-attachment: fixed !important;
+}
+
+
+/* Material lays fields out with logical properties already; these few rules cover
+   the places where our own utility classes assume a direction. */
 [dir='rtl'] .text-start {
   text-align: right;
 }
 
 [dir='rtl'] .text-end {
   text-align: left;
+}
+
+/* Icons that point somewhere have to point the other way in Arabic. An arrow leaving
+   through a door reads as "out" only when it travels in the direction the reader
+   travels; unmirrored, the sign-out arrow points back into the page. By class, not on
+   every icon: a gear has no direction to mirror and flipping it would look wrong. */
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* -------------------------------------------------------------------------
+   The rail
+   ------------------------------------------------------------------------- */
+
+/*
+ * Dark, and the only dark surface in the app.
+ *
+ * It does two things at once. It frames the working area, so the white of a card
+ * reads as paper on a desk rather than as one more grey panel among many. And it
+ * settles the question a light rail keeps re-asking — which part of this screen is
+ * navigation and which part is my work.
+ */
+.mat-drawer-inner-container {
+  background: linear-gradient(180deg, var(--clp-ink) 0%, #08201f 100%);
+  color: #d9e5e3;
+}
+
+.mat-drawer.mat-drawer-side {
+  border: 0 !important;
+}
+
+.mat-drawer .mat-divider {
+  border-top-color: rgb(255 255 255 / 10%) !important;
+}
+
+.mat-drawer .mat-mdc-list-item .mdc-list-item__primary-text,
+.mat-drawer .mat-mdc-list-item .mat-icon {
+  color: #b9cbc8 !important;
+}
+
+.mat-mdc-nav-list .mat-mdc-list-item {
+  border-radius: 10px;
+  margin: 3px 10px;
+  width: auto;
+  transition: background-color 140ms ease;
+}
+
+.mat-drawer .mat-mdc-list-item:hover {
+  background-color: rgb(255 255 255 / 6%) !important;
+}
+
+/*
+ * The current page, stated in one unmistakable way: a gold edge and a lifted
+ * background. Material's default selected state is a pale tint that disappears on a
+ * cheap shop monitor, and "which screen am I on" is the one question navigation must
+ * always answer.
+ */
+.mat-drawer .mat-mdc-list-item.mdc-list-item--activated {
+  background-color: rgb(255 255 255 / 10%) !important;
+  border-inline-start: 3px solid var(--clp-gold);
+}
+
+.mat-drawer .mat-mdc-list-item.mdc-list-item--activated .mdc-list-item__primary-text {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.mat-drawer .mat-mdc-list-item.mdc-list-item--activated .mat-icon {
+  color: var(--clp-gold) !important;
+}
+
+/* -------------------------------------------------------------------------
+   The top bar
+   ------------------------------------------------------------------------- */
+
+.mat-toolbar {
+  /* Material's toolbar is 64px of chrome on a screen whose content matters more. */
+  min-height: 60px !important;
+  height: 60px !important;
+  padding-inline: 1.25rem !important;
+  /*
+   * The bar floats on the same light instead of capping it with a white slab.
+   * Blurred rather than merely transparent, so a table scrolling underneath does
+   * not print itself through the toolbar.
+   */
+  background: rgb(255 255 255 / 82%) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgb(233 230 224 / 90%);
+  box-shadow: none;
+}
+
+.mat-toolbar .mat-mdc-icon-button {
+  color: var(--clp-muted);
+}
+
+.mat-toolbar .mat-mdc-icon-button:hover {
+  color: var(--clp-teal);
+}
+
+/* -------------------------------------------------------------------------
+   Cards
+   ------------------------------------------------------------------------- */
+
+/*
+ * A warm hairline and a whisper of shadow instead of Material's elevation. On a page
+ * of many small cards — which is what a dashboard and a report are — elevation
+ * shadows stack into grey mud, while a hairline keeps every edge exact.
+ */
+.mat-mdc-card {
+  border-radius: 16px !important;
+  border: 1px solid var(--clp-line);
+  box-shadow: 0 1px 2px rgb(11 47 45 / 4%) !important;
+  background: #ffffff;
+}
+
+/* Cards that are links have to look pressable. */
+.clp-action {
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.clp-action:hover {
+  border-color: var(--clp-teal-bright);
+  box-shadow: 0 10px 24px rgb(11 47 45 / 10%) !important;
+  transform: translateY(-2px);
+}
+
+/* The small tinted square behind an icon on a tile. */
+.clp-tile-icon {
+  background: linear-gradient(135deg, #eef6f5 0%, #d3e8e5 100%);
+  color: var(--clp-teal);
+}
+
+/* A figure that is the answer to the question the card asks. */
+.clp-figure {
+  color: var(--clp-ink);
+  font-feature-settings: 'tnum';
+  letter-spacing: -0.02em;
+}
+
+/* -------------------------------------------------------------------------
+   Page width
+   ------------------------------------------------------------------------- */
+
+/*
+ * Every screen caps its own reading width — a form does not become easier to read
+ * at 1900 pixels — but none of them said where that column should sit, so all of
+ * them hugged the start edge and left the rest of a wide monitor empty on one side.
+ *
+ * Centring is one rule here rather than an mx-auto added to eleven templates, and it
+ * means the twelfth screen is balanced the day it is written.
+ */
+main > * {
+  margin-inline: auto;
+}
+
+/* -------------------------------------------------------------------------
+   Headings
+   ------------------------------------------------------------------------- */
+
+h1 {
+  color: var(--clp-ink);
+  letter-spacing: -0.015em;
+}
+
+/* -------------------------------------------------------------------------
+   Inputs
+   ------------------------------------------------------------------------- */
+
+/*
+ * A pale green wash inside every field.
+ *
+ * It does more than liven the page up. An outlined Material field on a white card is
+ * a thin rectangle of nothing, and on a form of six the eye has to hunt for where the
+ * typing goes. A tinted interior makes the writable area a shape rather than an
+ * absence — and it deepens on focus, so "which field am I in" needs no second glance.
+ */
+.mat-mdc-form-field .mdc-text-field--outlined,
+.mat-mdc-form-field .mdc-text-field--filled {
+  background-color: #f2f8f6 !important;
+  border-radius: 10px;
+  transition: background-color 140ms ease;
+}
+
+.mat-mdc-form-field .mdc-text-field--outlined:hover {
+  background-color: #eaf4f1 !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-text-field--outlined {
+  background-color: #e6f2ee !important;
+}
+
+/* The resting outline is a hairline; the focused one is the brand colour, which is
+   the only moment the field should shout. */
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: #cfe2dc !important;
+}
+
+.mat-focused .mdc-notched-outline__leading,
+.mat-focused .mdc-notched-outline__notch,
+.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--clp-teal) !important;
+  border-width: 2px !important;
+}
+
+/* A disabled field states plainly that it is not for typing in. */
+.mat-mdc-form-field.mat-form-field-disabled .mdc-text-field--outlined {
+  background-color: #f4f4f2 !important;
+}
+
+/* An invalid field keeps its own colour: green would be the wrong reassurance. */
+.mat-form-field-invalid .mdc-notched-outline__leading,
+.mat-form-field-invalid .mdc-notched-outline__notch,
+.mat-form-field-invalid .mdc-notched-outline__trailing {
+  border-color: #b3261e !important;
+}
+
+.mat-mdc-form-field.mat-form-field-invalid .mdc-text-field--outlined {
+  background-color: #fdf3f2 !important;
+}
+
+/* -------------------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------------------- */
+
+.mat-mdc-table {
+  background: transparent;
+}
+
+.mat-mdc-header-row {
+  height: 44px !important;
+}
+
+.mat-mdc-header-cell {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: var(--clp-muted) !important;
+  background: #fbfaf8;
+  border-bottom-color: var(--clp-line) !important;
+  white-space: nowrap;
+}
+
+.mat-mdc-row:hover {
+  /* Scanning a wide row across a screen is where the eye loses its place. */
+  background-color: #fbfaf8;
+}
+
+.mat-mdc-cell {
+  border-bottom-color: #f1efeb !important;
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  padding-inline: 14px !important;
+}
+
+/* -------------------------------------------------------------------------
+   Buttons, tabs, dialogs
+   ------------------------------------------------------------------------- */
+
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button,
+.mat-mdc-button {
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+}
+
+.mat-mdc-unelevated-button {
+  box-shadow: 0 1px 2px rgb(11 47 45 / 12%) !important;
+}
+
+.mat-mdc-outlined-button {
+  border-color: var(--clp-line) !important;
+}
+
+/* Material upper-cases button labels in some locales. Arabic has no case, so the
+   transform only ever mangles the Latin half of a bilingual interface. */
+.mdc-button__label {
+  text-transform: none !important;
+}
+
+.mat-mdc-tab-header {
+  border-bottom: 1px solid var(--clp-line);
+}
+
+.mat-mdc-tab .mdc-tab__text-label {
+  font-weight: 500;
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: 18px !important;
+}
+
+/* A dialog on a phone at the till should not be a 320px column of wrapped words. */
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-max-width: 92vw;
+}
+
+/* -------------------------------------------------------------------------
+   Notifications
+   ------------------------------------------------------------------------- */
+
+.clp-snack-success .mdc-snackbar__surface {
+  background-color: var(--clp-ink-soft) !important;
+}
+
+.clp-snack-error .mdc-snackbar__surface {
+  background-color: #9f1239 !important;
+}
+
+/* -------------------------------------------------------------------------
+   Numbers
+   ------------------------------------------------------------------------- */
+
+/*
+ * Tabular figures, so a column of money lines up digit under digit. Applied to the
+ * elements already marked dir="ltr", which in this app is exactly the numbers, phone
+ * numbers and dates — the things that are never Arabic script.
+ */
+[dir='ltr'] {
+  font-variant-numeric: tabular-nums;
 }

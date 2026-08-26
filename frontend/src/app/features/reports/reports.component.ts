@@ -22,6 +22,7 @@ import {
 } from '../../core/models/report.model';
 import { Branch } from '../../core/models/staff.model';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ReportService } from '../../core/services/report.service';
 import { StaffService } from '../../core/services/staff.service';
 
@@ -59,6 +60,7 @@ export class ReportsComponent {
   private readonly reports = inject(ReportService);
   private readonly staff = inject(StaffService);
   private readonly auth = inject(AuthService);
+  private readonly notifications = inject(NotificationService);
 
   readonly branchColumns = ['branch', 'sales', 'invoices', 'average', 'customers', 'rewards'];
   readonly staffColumns = ['name', 'sales', 'invoices', 'average', 'customers', 'corrections'];
@@ -74,11 +76,14 @@ export class ReportsComponent {
   readonly staffRows = signal<ReportStaffRow[]>([]);
 
   readonly branches = signal<Branch[]>([]);
+  readonly exporting = signal(false);
 
   readonly currency = computed(() => this.auth.merchant()?.currency ?? 'USD');
 
   /** Only someone who can see every branch is offered the choice. */
   readonly canPickBranch = computed(() => this.auth.has('reports.view_all_branches'));
+  /** BR-019: the owner alone may take the list away, and it is logged when they do. */
+  readonly canExport = computed(() => this.auth.has('customers.export'));
 
   readonly form = this.fb.nonNullable.group({
     from: [this.startOfMonth()],
@@ -180,5 +185,43 @@ export class ReportsComponent {
     const day = `${date.getDate()}`.padStart(2, '0');
 
     return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  /**
+   * Exporting the customer base (BRD BR-019).
+   *
+   * The period on screen is the range exported, so what the owner sees and what they
+   * download cannot disagree. onlyConsented narrows it to the customers who agreed to
+   * be contacted, which is the file a campaign should be built from (section 16).
+   */
+  exportCustomers(onlyConsented: boolean): void {
+    if (this.exporting()) {
+      return;
+    }
+
+    this.exporting.set(true);
+
+    const query = { ...this.form.getRawValue(), only_consented: onlyConsented };
+
+    this.reports.exportCustomers(query).subscribe({
+      next: (blob) => {
+        this.save(blob, `customers-${this.form.controls.to.value}.csv`);
+        this.notifications.success('reports.exportDone');
+        this.exporting.set(false);
+      },
+      error: () => this.exporting.set(false),
+    });
+  }
+
+  /** Hands the blob to the browser as a download, then releases the object URL. */
+  private save(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
   }
 }

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 
 import {
+  AuthMerchant,
   AuthUser,
   LoginCredentials,
   LoginResponse,
@@ -77,6 +78,22 @@ export class AuthService {
     };
 
     this.api.post('auth/logout').subscribe({ next: finish, error: finish });
+  }
+
+  /**
+   * Replaces the held profile after the user edits their own account, so the name
+   * and picture in the toolbar change with the form rather than on the next reload.
+   */
+  setUser(user: AuthUser): void {
+    this.currentUser.set(user);
+  }
+
+  /**
+   * Same, for the store the user belongs to: its logo and currency appear on
+   * screens far away from the settings form.
+   */
+  setMerchant(merchant: AuthMerchant): void {
+    this.currentUser.update((user) => (user === null ? user : { ...user, merchant }));
   }
 
   /**

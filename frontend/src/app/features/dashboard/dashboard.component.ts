@@ -7,16 +7,21 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { ReportSummary } from '../../core/models/report.model';
+import { PlatformStats } from '../../core/models/merchant.model';
+import { AdminMerchantService } from '../../core/services/admin-merchant.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ReportService } from '../../core/services/report.service';
 
 /**
- * The home screen (BRD FR-RPT-01).
+ * The home screen (BRD FR-RPT-01, FR-ADM-01).
  *
- * Two audiences, one screen. A manager or owner opens the app to see today's
- * numbers, so those come first. A sales rep holds no reports permission and gets the
- * shortcut to the till instead — the same reason the navigation hides what a role
- * cannot use rather than disabling it.
+ * Three audiences, one route, and each gets the thing they opened the app for. A
+ * store owner or manager gets today's numbers. The platform supervisor gets the
+ * review queue, because a pending registration is somebody waiting. A sales rep holds
+ * neither permission and gets the shortcut to the till.
+ *
+ * Nothing here is fetched that the role cannot read: a rep's dashboard makes no
+ * requests at all, which is also why it is instant on a slow connection (RSK-04).
  */
 @Component({
   selector: 'app-dashboard',
@@ -34,6 +39,7 @@ import { ReportService } from '../../core/services/report.service';
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly reports = inject(ReportService);
+  private readonly admin = inject(AdminMerchantService);
 
   readonly user = this.auth.user;
   readonly merchant = this.auth.merchant;
@@ -42,20 +48,39 @@ export class DashboardComponent {
   readonly loading = signal(false);
   readonly today = signal<ReportSummary | null>(null);
   readonly month = signal<ReportSummary | null>(null);
+  readonly stats = signal<PlatformStats | null>(null);
 
   readonly currency = computed(() => this.auth.merchant()?.currency ?? 'USD');
 
   readonly canSeeNumbers = computed(() => this.auth.has('reports.view_own_branch'));
+  readonly isPlatformAdmin = computed(() => this.auth.has('merchants.manage_status'));
   readonly canSell = computed(() => this.auth.has('invoices.create'));
   readonly canLookup = computed(() => this.auth.has('customers.lookup'));
 
+  /** The queue is the supervisor's actual job, so it drives the whole panel. */
+  readonly hasQueue = computed(() => (this.stats()?.awaiting_review ?? 0) > 0);
+
   constructor() {
-    if (this.canSeeNumbers()) {
-      this.load();
+    if (this.isPlatformAdmin()) {
+      this.loadPlatform();
+    } else if (this.canSeeNumbers()) {
+      this.loadStore();
     }
   }
 
-  private load(): void {
+  private loadPlatform(): void {
+    this.loading.set(true);
+
+    this.admin.stats().subscribe({
+      next: (stats) => {
+        this.stats.set(stats);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  private loadStore(): void {
     const today = this.format(new Date());
     const now = new Date();
 
@@ -75,10 +100,7 @@ export class DashboardComponent {
     });
 
     this.reports
-      .summary({
-        from: this.format(new Date(now.getFullYear(), now.getMonth(), 1)),
-        to: today,
-      })
+      .summary({ from: this.format(new Date(now.getFullYear(), now.getMonth(), 1)), to: today })
       .subscribe({
         next: (report) => this.month.set(report.data),
         error: () => this.month.set(null),

@@ -1,0 +1,64 @@
+<h2 mat-dialog-title>{{ 'adjust.title' | translate }}</h2>
+
+<mat-dialog-content class="!pt-2">
+  <p class="text-sm text-slate-600 mb-1">
+    {{ 'redeem.forCustomer' | translate: { name: data.customer.name ?? data.customer.phone } }}
+  </p>
+  <p class="text-sm text-slate-800 mb-4" dir="ltr">
+    {{ 'adjust.currentBalance' | translate }}: {{ balance() }} {{ currency() }}
+  </p>
+
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <!-- A direction, not a minus sign: a mistyped sign on a balance is the mistake
+         nobody catches until the customer does. -->
+    <mat-radio-group formControlName="direction" class="flex flex-col gap-1">
+      <mat-radio-button value="add">{{ 'adjust.add' | translate }}</mat-radio-button>
+      <mat-radio-button value="deduct">{{ 'adjust.deduct' | translate }}</mat-radio-button>
+    </mat-radio-group>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ 'pos.amount' | translate }}</mat-label>
+      <input matInput type="number" formControlName="amount" dir="ltr" step="0.01" min="0.01" />
+      <span matTextSuffix>{{ currency() }}</span>
+      @if (form.controls.amount.touched && form.controls.amount.hasError('tooMuch')) {
+        <mat-error>{{ 'adjust.tooMuch' | translate: { balance: balance() } }}</mat-error>
+      } @else if (form.controls.amount.touched && form.controls.amount.invalid) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (needsBranch()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'dashboard.branch' | translate }}</mat-label>
+        <mat-select formControlName="branch_id">
+          @for (branch of branches(); track branch.id) {
+            <mat-option [value]="branch.id">{{ branch.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.branch_id.touched && form.controls.branch_id.invalid) {
+          <mat-error>{{ 'validation.required' | translate }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ 'correction.reason' | translate }}</mat-label>
+      <textarea matInput formControlName="reason" rows="3"></textarea>
+      <mat-hint>{{ 'adjust.reasonHint' | translate }}</mat-hint>
+      @if (form.controls.reason.touched && form.controls.reason.invalid) {
+        <mat-error>{{ 'correction.reasonRequired' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <p class="text-xs text-amber-900 rounded-lg bg-amber-50 p-3">
+      {{ 'adjust.auditNote' | translate }}
+    </p>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close type="button">{{ 'common.cancel' | translate }}</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()">
+    {{ 'adjust.submit' | translate }}
+  </button>
+</mat-dialog-actions>

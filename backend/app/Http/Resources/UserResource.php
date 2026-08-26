@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property-read \App\Models\User $resource
@@ -20,6 +21,14 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+
+            /*
+             * A URL rather than the stored path: the client should not have to know
+             * which disk it lives on or how to build a link to it.
+             */
+            'avatar_url' => $this->avatar_path === null
+                ? null
+                : Storage::disk('public')->url($this->avatar_path),
             'role' => $this->role->value,
             'status' => $this->status->value,
             'merchant_id' => $this->merchant_id,

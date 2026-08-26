@@ -2,6 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import {
+  Adjustment,
+  AdjustmentForm,
+  AdjustmentResult,
   CorrectionForm,
   CorrectionResult,
   CustomerCard,
@@ -110,5 +113,38 @@ export class SalesService {
         review_note: note,
       })
       .pipe(map((response) => response.data));
+  }
+
+  // ---------------------------------------------------------------
+  // Correcting a balance by hand (BRD 7.2, ledger.adjust)
+  // ---------------------------------------------------------------
+
+  adjustBalance(customerId: number, form: AdjustmentForm): Observable<AdjustmentResult> {
+    return this.api.post<AdjustmentResult>(`customers/${customerId}/adjustments`, form);
+  }
+
+  adjustments(customerId: number): Observable<Adjustment[]> {
+    return this.api
+      .get<{ data: Adjustment[] }>(`customers/${customerId}/adjustments`)
+      .pipe(map((response) => response.data));
+  }
+
+  // ---------------------------------------------------------------
+  // Erasing a customer at their request (BRD FR-CUS-10, section 16)
+  // ---------------------------------------------------------------
+
+  /**
+   * A POST, not a DELETE: the sales and the ledger stay exactly as they were, and
+   * it is the person who is removed from them.
+   */
+  anonymizeCustomer(
+    customerId: number,
+    reason: string
+  ): Observable<{ message: string; balance_written_off: number; vouchers_cancelled: number }> {
+    return this.api.post<{
+      message: string;
+      balance_written_off: number;
+      vouchers_cancelled: number;
+    }>(`customers/${customerId}/anonymize`, { reason });
   }
 }
