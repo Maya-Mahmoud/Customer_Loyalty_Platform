@@ -70,7 +70,9 @@ class MerchantRegistrationService
                 'email' => $data['email'],
                 'phone' => $data['phone'],
                 'city' => $data['city'],
-                'currency' => $data['currency'] ?? 'USD',
+                // FR-MER-05, amended: the Syrian pound, because that is what the
+                // shops this platform sells to price in (see config/clp.php).
+                'currency' => $data['currency'] ?? config('clp.default_currency'),
             ]);
 
             // A re-application starts over: previous verification and the

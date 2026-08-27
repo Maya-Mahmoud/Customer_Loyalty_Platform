@@ -143,6 +143,13 @@ Route::prefix('v1')->group(function () {
             Route::post('/invoices', [InvoiceController::class, 'store']);
 
             /*
+             * The caller's own entries from today, for the strip beside the till.
+             * Their own work only, and no customer names — anything wider would be
+             * the customer list BR-019 keeps away from a rep.
+             */
+            Route::get('/invoices/mine', [InvoiceController::class, 'mine']);
+
+            /*
              * BRD BR-012: raising a correction request needs only the right to
              * record a sale, so the person who made the mistake reports it. The
              * decision below needs invoices.amend.

@@ -12,6 +12,7 @@ import {
   InvoiceForm,
   InvoiceResult,
   LookupResult,
+  MyRecentInvoice,
   RedeemForm,
   RedeemResult,
   Redemption,
@@ -146,5 +147,12 @@ export class SalesService {
       balance_written_off: number;
       vouchers_cancelled: number;
     }>(`customers/${customerId}/anonymize`, { reason });
+  }
+
+  /** The caller's own entries from today (BR-019: their work, not a customer list). */
+  myRecentInvoices(): Observable<MyRecentInvoice[]> {
+    return this.api
+      .get<{ data: MyRecentInvoice[] }>('invoices/mine')
+      .pipe(map((response) => response.data));
   }
 }

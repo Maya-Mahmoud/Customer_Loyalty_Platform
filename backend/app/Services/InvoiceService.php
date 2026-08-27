@@ -135,6 +135,27 @@ class InvoiceService
     }
 
     /**
+     * What this user has entered today, for the strip beside the till.
+     *
+     * Deliberately narrow: their own entries, today only, and no customer names —
+     * the amount, the time, and whether it counted. That is enough to catch a
+     * mistyped figure or a sale entered twice, which is the whole purpose.
+     *
+     * It carries no customer names on purpose. BRD BR-019 keeps a rep from browsing
+     * the customer base, and a list of recent customers beside the busiest screen in
+     * the system would undo that more effectively than any export button.
+     */
+    public function recentFor(User $user, int $limit = 5)
+    {
+        return Invoice::query()
+            ->where('user_id', $user->getKey())
+            ->whereDate('created_at', now()->toDateString())
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'invoice_number', 'amount', 'status', 'qualifies_for_accumulation', 'created_at']);
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     private function createInvoice(array $attributes): Invoice

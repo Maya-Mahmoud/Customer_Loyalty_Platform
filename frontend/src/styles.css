@@ -219,6 +219,124 @@ body {
   transform: translateY(-2px);
 }
 
+/*
+ * Panels that carry a note rather than the main work: a tint drawn from the same two
+ * hues, so they read as an aside instead of as a second subject on the screen.
+ */
+/*
+ * A gradient you can actually see, but still an aside.
+ *
+ * The first attempt started at 3% tint and faded to white by the middle, which on a
+ * shop monitor is indistinguishable from a plain card — a gradient nobody can see is
+ * just a slower way of painting white. This one starts with real colour and holds it
+ * across the whole card, and the top-to-bottom direction gives the panel a light
+ * source that matches the page behind it.
+ */
+.clp-panel-teal {
+  background: linear-gradient(165deg, #d7ece8 0%, #eaf5f3 45%, #f7fcfb 100%) !important;
+  border-color: #b9dcd6 !important;
+}
+
+.clp-panel-gold {
+  background: linear-gradient(165deg, #f9ecd0 0%, #fdf6e8 45%, #fffdf8 100%) !important;
+  border-color: #ecd39c !important;
+}
+
+/*
+ * Icons shrunk below Material's own size.
+ *
+ * mat-icon is a 24px box with a 24px line-height and overflow hidden. Forcing the
+ * box down to 16px without touching the line-height leaves the glyph sitting on a
+ * 24-pixel line inside a 16-pixel window, so its bottom is cut off — which is why a
+ * small "not counted" mark looked broken while the same icon at full size did not.
+ *
+ * Matched on the class attribute rather than fixed per template, so every small icon
+ * in the app is right, including the ones written next month.
+ */
+.mat-icon[class*='w-4'],
+.mat-icon[class*='w-5'] {
+  line-height: inherit !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+/*
+ * A field with no box drawn around it.
+ *
+ * Used for the one search field at the till. An outline earns its place on a form of
+ * eight inputs, where it separates one from the next — but a single field alone on a
+ * card has nothing to be separated from, and the border only draws a rectangle around
+ * emptiness. The tinted ground still says "type here", which is all the box was
+ * doing.
+ */
+/* Removed outright rather than made transparent: left in place, the notch keeps
+   reserving the gap it cut for a label that is no longer there. */
+.clp-plain-field .mdc-notched-outline {
+  display: none !important;
+}
+
+.clp-plain-field .mat-mdc-text-field-wrapper {
+  background: #f4f7f6;
+  border-radius: 12px;
+  padding-inline: 0.75rem;
+}
+
+/* Without a label to make room for, the field sets its own comfortable height. */
+.clp-plain-field .mat-mdc-form-field-infix {
+  padding-top: 0.9rem !important;
+  padding-bottom: 0.9rem !important;
+  min-height: unset !important;
+}
+
+.clp-plain-field.mat-focused .mat-mdc-text-field-wrapper {
+  /* Focus still has to be visible — a keyboard user needs to know where they are. */
+  background: #eaf3f1;
+  box-shadow: inset 0 0 0 2px var(--clp-teal-bright);
+}
+
+/*
+ * Field labels in the rail's own dark green.
+ *
+ * Material's resting label is a mid grey chosen to stay quiet on a white form. On a
+ * tinted card it goes quiet enough to be hard to read, and these labels — the
+ * registered name, the trade name, the currency — are the part the owner is checking
+ * rather than filling in. The dark green also ties the card back to the navigation
+ * it sits beside.
+ *
+ * The focused label keeps the theme's own colour: it marks where the cursor is, and
+ * overwriting that would trade a working signal for a matching one.
+ */
+.clp-ink-labels .mat-mdc-form-field:not(.mat-focused) .mdc-floating-label,
+.clp-ink-labels .mat-mdc-form-field.mat-form-field-disabled .mdc-floating-label {
+  color: var(--clp-ink) !important;
+  font-weight: 500;
+  opacity: 1;
+}
+
+/*
+ * The customer card's figures.
+ *
+ * These four — accumulated, invoices, last purchase, previous rewards — are the
+ * reason the card exists, and they were being rendered at the size of a caption. The
+ * label carries the green so the eye can find the row it wants, and the value is
+ * near-black and large because it is the answer, read across a counter, sometimes
+ * over a customer's shoulder.
+ */
+.clp-stat-label {
+  font-size: 0.875rem;
+  color: var(--clp-teal);
+  font-weight: 500;
+}
+
+.clp-stat-value {
+  font-size: 1.125rem;
+  line-height: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 /* The small tinted square behind an icon on a tile. */
 .clp-tile-icon {
   background: linear-gradient(135deg, #eef6f5 0%, #d3e8e5 100%);

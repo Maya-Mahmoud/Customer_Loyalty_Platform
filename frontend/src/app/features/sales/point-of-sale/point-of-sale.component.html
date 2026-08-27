@@ -1,6 +1,9 @@
-<div class="max-w-2xl">
+<div class="max-w-5xl">
   <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'pos.title' | translate }}</h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'pos.subtitle' | translate }}</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 lg:gap-14 items-start">
+    <div>
 
   <!-- What the last save produced. Kept on screen while the rep talks to the
        customer, rather than a toast that disappears. -->
@@ -45,10 +48,16 @@
   @if (stage() === 'lookup') {
     <mat-card class="p-5">
       <form [formGroup]="phoneForm" (ngSubmit)="search()">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>{{ 'pos.phone' | translate }}</mat-label>
+        <!--
+          A placeholder rather than a floating label: the label is designed to sit
+          inside the notch of the outline, so with the outline gone it had nothing to
+          sit in. aria-label keeps the accessible name a label would have given.
+        -->
+        <mat-form-field appearance="outline" class="w-full clp-plain-field">
           <input #phoneField matInput formControlName="phone" dir="ltr" inputmode="tel"
-                 autocomplete="off" cdkFocusInitial />
+                 autocomplete="off" cdkFocusInitial
+                 [placeholder]="'pos.phone' | translate"
+                 [attr.aria-label]="'pos.phone' | translate" />
           <mat-icon matPrefix>search</mat-icon>
           @if (phoneForm.controls.phone.touched && phoneForm.controls.phone.invalid) {
             <mat-error>{{ 'validation.phone' | translate }}</mat-error>
@@ -151,16 +160,16 @@
 
           <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mt-4 text-sm">
             <div>
-              <dt class="text-xs text-slate-500">{{ 'pos.accumulated' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
+              <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
             </div>
             <div>
-              <dt class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</dt>
-              <dd class="font-medium text-slate-900">{{ cycle.invoice_count }}</dd>
+              <dt class="clp-stat-label">{{ 'pos.invoices' | translate }}</dt>
+              <dd class="clp-stat-value">{{ cycle.invoice_count }}</dd>
             </div>
             @if (cycle.amount_remaining !== null) {
               <div>
-                <dt class="text-xs text-slate-500">{{ 'pos.toReward' | translate }}</dt>
+                <dt class="clp-stat-label">{{ 'pos.toReward' | translate }}</dt>
                 <dd class="font-medium" [class]="cycle.is_eligible ? 'text-emerald-700' : 'text-slate-900'" dir="ltr">
                   {{ cycle.amount_remaining }} {{ currency() }}
                 </dd>
@@ -168,17 +177,17 @@
             }
             @if (cycle.invoices_remaining !== null) {
               <div>
-                <dt class="text-xs text-slate-500">{{ 'pos.visitsToReward' | translate }}</dt>
-                <dd class="font-medium text-slate-900">{{ cycle.invoices_remaining }}</dd>
+                <dt class="clp-stat-label">{{ 'pos.visitsToReward' | translate }}</dt>
+                <dd class="clp-stat-value">{{ cycle.invoices_remaining }}</dd>
               </div>
             }
             <div>
-              <dt class="text-xs text-slate-500">{{ 'pos.lastPurchase' | translate }}</dt>
-              <dd class="text-slate-700" dir="ltr">{{ card.last_purchase_at?.slice(0, 10) ?? '—' }}</dd>
+              <dt class="clp-stat-label">{{ 'pos.lastPurchase' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">{{ card.last_purchase_at?.slice(0, 10) ?? '—' }}</dd>
             </div>
             <div>
-              <dt class="text-xs text-slate-500">{{ 'pos.previousRewards' | translate }}</dt>
-              <dd class="text-slate-700">{{ card.redemptions_count }}</dd>
+              <dt class="clp-stat-label">{{ 'pos.previousRewards' | translate }}</dt>
+              <dd class="clp-stat-value">{{ card.redemptions_count }}</dd>
             </div>
           </dl>
         } @else {
@@ -279,4 +288,94 @@
       </form>
     </mat-card>
   }
+    </div>
+
+    <!--
+      The strip beside the till. Everything on it answers a question the person at
+      this screen actually has, and nothing on it competes with the sale being
+      entered — the busiest screen in the system is not the place for a dashboard.
+    -->
+    <aside class="flex flex-col gap-4">
+      <!-- Today's takings, for the roles that hold reports.view_own_branch. A rep
+           holds no report permission, so they never see branch performance here. -->
+      @if (canSeeTotals() && todayTotals(); as totals) {
+        <mat-card class="p-4 clp-panel-teal">
+          <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+            {{ 'dashboard.todayTitle' | translate }}
+          </p>
+
+          <p class="text-3xl font-semibold clp-figure mt-2" dir="ltr">
+            {{ totals.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          </p>
+
+          <dl class="grid grid-cols-2 gap-2 mt-4 text-sm">
+            <div>
+              <dt class="text-xs text-slate-9000">{{ 'pos.invoices' | translate }}</dt>
+              <dd class="font-medium" style="color: var(--clp-ink)">{{ totals.invoice_count }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-slate-9000">{{ 'reports.newCustomers' | translate }}</dt>
+              <dd class="font-medium" style="color: var(--clp-ink)">{{ totals.new_customers }}</dd>
+            </div>
+          </dl>
+        </mat-card>
+      }
+
+      <!-- BR-012: a request waiting on a decision is a rep standing still. -->
+      @if (canDecideCorrections() && pendingCorrections() > 0) {
+        <mat-card class="p-4 clp-panel-gold">
+          <div class="flex items-start gap-2">
+            <mat-icon class="!text-xl !w-5 !h-5" style="color: var(--clp-gold)">rule</mat-icon>
+            <div class="flex-1">
+              <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+                {{ 'pos.pendingCorrections' | translate: { count: pendingCorrections() } }}
+              </p>
+              <a mat-button class="!px-2 !-ms-2 mt-1" routerLink="/corrections">
+                {{ 'pos.reviewCorrections' | translate }}
+              </a>
+            </div>
+          </div>
+        </mat-card>
+      }
+
+      <!--
+        The rep's own entries from today: the amount, the time, and whether it
+        counted. It catches a mistyped figure and a sale entered twice, which is what
+        somebody standing here needs — and it carries no customer names, because a
+        list of recent customers beside this screen would undo BR-019 more
+        effectively than any export button.
+      -->
+      <mat-card class="p-4 clp-panel-teal">
+        <p class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+          {{ 'pos.myRecentTitle' | translate }}
+        </p>
+
+        @if (myRecent().length === 0) {
+          <p class="text-sm text-slate-500">{{ 'pos.myRecentEmpty' | translate }}</p>
+        } @else {
+          <ul class="flex flex-col gap-2.5">
+            @for (entry of myRecent(); track entry.id) {
+              <li class="flex items-center justify-between gap-2 text-sm border-b border-teal-100/70 pb-2.5 last:border-0 last:pb-0">
+                <span class="flex items-center gap-1.5">
+                  @if (entry.cancelled) {
+                    <mat-icon class="!text-base !w-4 !h-4 text-red-700">block</mat-icon>
+                  } @else if (entry.counted) {
+                    <mat-icon class="!text-base !w-4 !h-4" style="color: var(--clp-teal)">check_circle</mat-icon>
+                  } @else {
+                    <!-- Recorded and visibly not counted (BR-003, BR-022). -->
+                    <mat-icon class="!text-base !w-4 !h-4 text-slate-400">remove_circle_outline</mat-icon>
+                  }
+                  <span class="text-slate-500" dir="ltr">{{ entry.at }}</span>
+                </span>
+
+                <span class="font-medium" style="color: var(--clp-ink)" dir="ltr">
+                  {{ entry.amount }} {{ currency() }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+    </aside>
+  </div>
 </div>

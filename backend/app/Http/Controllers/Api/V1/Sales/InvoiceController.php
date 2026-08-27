@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Sales;
 
+use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Services\InvoiceService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Recording a sale (BRD 8.4) — the most frequent operation in the system.
@@ -51,6 +53,27 @@ class InvoiceController extends Controller
                 'progress' => round($snapshot->progress(), 4),
             ],
         ], 201);
+    }
+
+    /**
+     * The caller's own entries from today, for the strip beside the till.
+     *
+     * No customer names and no branch totals: a rep may see what they themselves
+     * keyed in, which is what catches a mistyped amount or a sale entered twice.
+     * Anything wider would be the customer list BRD BR-019 keeps away from them.
+     */
+    public function mine(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->invoices->recentFor($request->user())->map(fn ($invoice) => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $invoice->amount,
+                'counted' => $invoice->qualifies_for_accumulation,
+                'cancelled' => $invoice->status === InvoiceStatus::Cancelled,
+                'at' => $invoice->created_at?->format('H:i'),
+            ]),
+        ]);
     }
 
     /**

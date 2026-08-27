@@ -351,7 +351,11 @@
     "remainingAmount": "{{amount}} {{currency}} to go for the reward.",
     "remainingVisits": "{{count}} more visits for the reward.",
     "enterInvoiceNumber": "Enter the number from the receipt",
-    "invoiceNumberHint": "Leave empty and the system numbers the sale."
+    "invoiceNumberHint": "Leave empty and the system numbers the sale.",
+    "myRecentTitle": "My entries today",
+    "myRecentEmpty": "Nothing entered yet today.",
+    "pendingCorrections": "{{count}} correction requests are waiting for your decision",
+    "reviewCorrections": "Review them"
   },
   "lookup": {
     "title": "Customer lookup",
@@ -501,10 +505,10 @@
     "registeredNameFixed": "Verified at registration; contact platform support to change it.",
     "tradeNameHint": "The name customers know you by, if it differs from the registered one.",
     "currency": "Currency",
-    "currencyHint": "Three letters, e.g. USD or SYP.",
-    "currencyNote": "The currency labels every figure in the app. Changing it renames existing amounts; it does not convert them.",
     "storeSaved": "The store details have been saved.",
-    "logoSaved": "The store logo has been updated."
+    "logoSaved": "The store logo has been updated.",
+    "phone": "Store phone",
+    "noLogo": "No logo yet"
   },
   "erase": {
     "action": "Erase data",
@@ -595,5 +599,9 @@
         "hint": "A regular has a favourite cashier. A fabricated customer has only one."
       }
     }
+  },
+  "currencies": {
+    "SYP": "Syrian pound",
+    "USD": "US dollar"
   }
 }

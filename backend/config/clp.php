@@ -8,6 +8,19 @@ return [
     /** Base URL of the Angular app, used to build links inside emails. */
     'frontend_url' => rtrim(env('FRONTEND_URL', 'http://localhost:4200'), '/'),
 
+    /*
+     * The currency a new store starts on (BRD FR-MER-05).
+     *
+     * An amendment to the document, which names USD as the default. The platform
+     * sells to Syrian shops that price in Syrian pounds, and a default nobody wants
+     * is a setting every single owner has to find and change before their first
+     * sale. The list is what the settings screen offers; an owner is not typing a
+     * three-letter code from memory.
+     */
+    'default_currency' => env('DEFAULT_CURRENCY', 'SYP'),
+
+    'currencies' => ['SYP', 'USD'],
+
     /** How long a password-setting invitation stays valid (BRD FR-BRN-04). */
     'invitation_ttl_hours' => (int) env('INVITATION_TTL_HOURS', 72),
 

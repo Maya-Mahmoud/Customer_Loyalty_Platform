@@ -1,16 +1,18 @@
-<div class="max-w-2xl">
-  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'lookup.title' | translate }}</h1>
+<div class="max-w-5xl">
+  <h1 class="text-2xl font-semibold mb-1" style="color: var(--clp-ink)">
+    {{ 'lookup.title' | translate }}
+  </h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'lookup.subtitle' | translate }}</p>
 
   <mat-card class="p-5 mb-4">
-    <form [formGroup]="form" (ngSubmit)="search()" class="flex flex-col sm:flex-row sm:items-start gap-3">
+    <form [formGroup]="form" (ngSubmit)="search()" class="flex flex-col sm:flex-row sm:items-center gap-3">
       <mat-form-field appearance="outline" class="flex-1" subscriptSizing="dynamic">
         <mat-label>{{ 'pos.phone' | translate }}</mat-label>
         <input matInput formControlName="phone" dir="ltr" inputmode="tel" autocomplete="off" cdkFocusInitial />
         <mat-icon matPrefix>search</mat-icon>
       </mat-form-field>
 
-      <button mat-flat-button color="primary" type="submit" class="h-14" [disabled]="searching()">
+      <button mat-flat-button color="primary" type="submit" class="!h-10 !px-7" [disabled]="searching()">
         @if (searching()) {
           <mat-spinner diameter="20" />
         } @else {
@@ -24,7 +26,7 @@
     <mat-card class="p-5 mb-4">
       <div class="flex items-start justify-between gap-3 mb-3">
         <div>
-          <p class="text-base font-semibold text-slate-900">{{ card.name }}</p>
+          <p class="text-lg font-semibold" style="color: var(--clp-ink)">{{ card.name }}</p>
           <p class="text-xs text-slate-500" dir="ltr">{{ card.phone }}</p>
         </div>
 
@@ -56,20 +58,20 @@
 
         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mt-4 text-sm">
           <div>
-            <dt class="text-xs text-slate-500">{{ 'pos.accumulated' | translate }}</dt>
-            <dd class="font-medium text-slate-900" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
+            <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
+            <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</dt>
-            <dd class="font-medium text-slate-900">{{ cycle.invoice_count }}</dd>
+            <dt class="clp-stat-label">{{ 'pos.invoices' | translate }}</dt>
+            <dd class="clp-stat-value">{{ cycle.invoice_count }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'pos.lastPurchase' | translate }}</dt>
-            <dd class="text-slate-700" dir="ltr">{{ card.last_purchase_at?.slice(0, 10) ?? '—' }}</dd>
+            <dt class="clp-stat-label">{{ 'pos.lastPurchase' | translate }}</dt>
+            <dd class="clp-stat-value" dir="ltr">{{ card.last_purchase_at?.slice(0, 10) ?? '—' }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'pos.previousRewards' | translate }}</dt>
-            <dd class="text-slate-700">{{ card.redemptions_count }}</dd>
+            <dt class="clp-stat-label">{{ 'pos.previousRewards' | translate }}</dt>
+            <dd class="clp-stat-value">{{ card.redemptions_count }}</dd>
           </div>
         </dl>
       } @else {
@@ -163,14 +165,126 @@
       </mat-card>
     }
 
-    <!-- Manual corrections, so the same one is not entered twice -->
-    @if (adjustments().length > 0) {
-      <mat-card class="p-4 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'adjust.history' | translate }}</h2>
+    <!--
+      Two columns once a customer resolves: the card and their purchases are the
+      subject, and the notes about them — corrections, past rewards — sit beside it
+      instead of pushing the purchase history off the bottom of the screen.
+    -->
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 lg:gap-8 items-start">
+      <div class="flex flex-col gap-4">
+        @if (card.invoices && card.invoices.length > 0) {
+          <mat-card class="p-4">
+            <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+              {{ 'lookup.history' | translate }}
+            </h2>
+
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="card.invoices" class="w-full">
+                <ng-container matColumnDef="number">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoiceNumber' | translate }}</th>
+                  <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.invoice_number }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="amount">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.amount' | translate }}</th>
+                  <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.amount }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoiceDate' | translate }}</th>
+                  <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.invoice_date }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="counted">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'lookup.counted' | translate }}</th>
+                  <td mat-cell *matCellDef="let invoice">
+                    @if (invoice.status === 'cancelled') {
+                      <span class="text-xs text-red-800">{{ 'lookup.cancelled' | translate }}</span>
+                    } @else if (invoice.qualifies_for_accumulation) {
+                      <mat-icon class="!text-base !w-4 !h-4 text-emerald-600">check</mat-icon>
+                    } @else {
+                      <!-- Under the rule minimum when it was recorded (BR-003) -->
+                      <span class="text-xs text-slate-500">{{ 'lookup.notCounted' | translate }}</span>
+                    }
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let invoice">
+                    @if (invoice.pending_correction) {
+                      <!-- One open request at a time, so a second button would only
+                           lead to a refusal (BRD 8.7). -->
+                      <span class="text-xs text-amber-800">{{ 'correction.pending' | translate }}</span>
+                    } @else if (invoice.returned_amount && invoice.returned_amount !== '0.00') {
+                      <span class="text-xs text-slate-500" dir="ltr">
+                        -{{ invoice.returned_amount }}
+                      </span>
+                    } @else if (canRequestCorrection() && invoice.status === 'active') {
+                      <button mat-icon-button type="button"
+                              [attr.aria-label]="'correction.title' | translate"
+                              (click)="requestCorrection(invoice)">
+                        <mat-icon class="!text-base !w-4 !h-4 rtl-flip">undo</mat-icon>
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="invoiceColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: invoiceColumns"></tr>
+              </table>
+            </div>
+
+            <!-- BRD BR-019: no export, no printing, no lists. -->
+            <p class="text-xs text-slate-500 mt-3">{{ 'lookup.noExportNote' | translate }}</p>
+          </mat-card>
+        }
+      </div>
+
+      <aside class="flex flex-col gap-4">
+      <!-- Past rewards (BRD FR-RED-07) -->
+      @if (rewards().length > 0) {
+        <mat-card class="p-5 clp-panel-teal">
+          <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+            {{ 'redeem.history' | translate }}
+          </h2>
+
+          <ul class="flex flex-col gap-3">
+            @for (reward of rewards(); track reward.id) {
+              <li class="border-b border-teal-100/70 pb-3 last:border-0 last:pb-0">
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="text-sm font-semibold" style="color: var(--clp-ink)" dir="ltr">
+                    {{ reward.discount_amount }} {{ currency() }}
+                  </span>
+                  <span class="text-xs text-slate-500" dir="ltr">
+                    {{ reward.redeemed_at?.slice(0, 10) }}
+                  </span>
+                </div>
+
+                <p class="text-xs text-slate-600 mt-1">
+                  {{ 'redeem.cycleNumber' | translate }} {{ reward.cycle_number }}
+                  <span class="text-slate-400">&middot;</span> {{ reward.performed_by }}
+                  @if (reward.is_override) {
+                    <!-- BR-014: an exception is visible wherever the reward is. -->
+                    <span class="text-amber-800">({{ 'redeem.overrideShort' | translate }})</span>
+                  }
+                </p>
+              </li>
+            }
+          </ul>
+        </mat-card>
+      }
+
+      <!-- Manual corrections, so the same one is not entered twice -->
+      @if (adjustments().length > 0) {
+        <mat-card class="p-5 clp-panel-teal">
+          <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+            {{ 'adjust.history' | translate }}
+          </h2>
 
         <div class="flex flex-col gap-2">
           @for (adjustment of adjustments(); track adjustment.id) {
-            <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-teal-100/70 pb-2.5">
               <div>
                 <p class="text-sm text-slate-800">{{ adjustment.note }}</p>
                 <p class="text-xs text-slate-500">
@@ -185,112 +299,10 @@
           }
         </div>
       </mat-card>
-    }
+      }
 
-    <!-- Past rewards (BRD FR-RED-07) -->
-    @if (rewards().length > 0) {
-      <mat-card class="p-4 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'redeem.history' | translate }}</h2>
-
-        <div class="overflow-x-auto">
-          <table mat-table [dataSource]="rewards()" class="w-full">
-            <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoiceDate' | translate }}</th>
-              <td mat-cell *matCellDef="let reward" dir="ltr">{{ reward.redeemed_at?.slice(0, 10) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="amount">
-              <th mat-header-cell *matHeaderCellDef>{{ 'redeem.amountPaid' | translate }}</th>
-              <td mat-cell *matCellDef="let reward" dir="ltr">
-                {{ reward.discount_amount }}
-                @if (reward.is_override) {
-                  <span class="text-xs text-amber-800">({{ 'redeem.overrideShort' | translate }})</span>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="cycle">
-              <th mat-header-cell *matHeaderCellDef>{{ 'redeem.cycleNumber' | translate }}</th>
-              <td mat-cell *matCellDef="let reward">{{ reward.cycle_number }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="by">
-              <th mat-header-cell *matHeaderCellDef>{{ 'redeem.paidBy' | translate }}</th>
-              <td mat-cell *matCellDef="let reward" class="text-slate-600">{{ reward.performed_by }}</td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="rewardColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: rewardColumns"></tr>
-          </table>
-        </div>
-      </mat-card>
-    }
-
-    @if (card.invoices && card.invoices.length > 0) {
-      <mat-card class="p-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'lookup.history' | translate }}</h2>
-
-        <div class="overflow-x-auto">
-          <table mat-table [dataSource]="card.invoices" class="w-full">
-            <ng-container matColumnDef="number">
-              <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoiceNumber' | translate }}</th>
-              <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.invoice_number }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="amount">
-              <th mat-header-cell *matHeaderCellDef>{{ 'pos.amount' | translate }}</th>
-              <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.amount }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>{{ 'pos.invoiceDate' | translate }}</th>
-              <td mat-cell *matCellDef="let invoice" dir="ltr">{{ invoice.invoice_date }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="counted">
-              <th mat-header-cell *matHeaderCellDef>{{ 'lookup.counted' | translate }}</th>
-              <td mat-cell *matCellDef="let invoice">
-                @if (invoice.status === 'cancelled') {
-                  <span class="text-xs text-red-800">{{ 'lookup.cancelled' | translate }}</span>
-                } @else if (invoice.qualifies_for_accumulation) {
-                  <mat-icon class="!text-base !w-4 !h-4 text-emerald-600">check</mat-icon>
-                } @else {
-                  <!-- Under the rule minimum when it was recorded (BR-003) -->
-                  <span class="text-xs text-slate-500">{{ 'lookup.notCounted' | translate }}</span>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let invoice">
-                @if (invoice.pending_correction) {
-                  <!-- One open request at a time, so a second button would only
-                       lead to a refusal (BRD 8.7). -->
-                  <span class="text-xs text-amber-800">{{ 'correction.pending' | translate }}</span>
-                } @else if (invoice.returned_amount && invoice.returned_amount !== '0.00') {
-                  <span class="text-xs text-slate-500" dir="ltr">
-                    -{{ invoice.returned_amount }}
-                  </span>
-                } @else if (canRequestCorrection() && invoice.status === 'active') {
-                  <button mat-icon-button type="button"
-                          [attr.aria-label]="'correction.title' | translate"
-                          (click)="requestCorrection(invoice)">
-                    <mat-icon class="!text-base !w-4 !h-4 rtl-flip">undo</mat-icon>
-                  </button>
-                }
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="invoiceColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: invoiceColumns"></tr>
-          </table>
-        </div>
-
-        <!-- BRD BR-019: no export, no printing, no lists. -->
-        <p class="text-xs text-slate-500 mt-3">{{ 'lookup.noExportNote' | translate }}</p>
-      </mat-card>
-    }
+      </aside>
+    </div>
   } @else if (searched() && !searching()) {
     <mat-card class="p-8 text-center">
       <mat-icon class="!w-10 !h-10 !text-4xl text-slate-400">person_search</mat-icon>

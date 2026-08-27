@@ -216,3 +216,20 @@ export interface Adjustment {
   created_by: string | null;
   created_at: string | null;
 }
+
+/**
+ * One of the caller's own entries from today, for the strip beside the till.
+ *
+ * Carries no customer name on purpose: BRD BR-019 keeps a rep from browsing the
+ * customer base, and a list of recent customers beside the busiest screen in the
+ * system would undo that more effectively than any export button.
+ */
+export interface MyRecentInvoice {
+  id: number;
+  invoice_number: string;
+  amount: string;
+  counted: boolean;
+  cancelled: boolean;
+  /** HH:mm — the time is what the rep recognises an entry by. */
+  at: string | null;
+}

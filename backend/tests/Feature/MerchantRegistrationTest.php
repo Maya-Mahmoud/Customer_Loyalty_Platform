@@ -105,7 +105,14 @@ class MerchantRegistrationTest extends TestCase
         $this->assertNull($merchant->email_verified_at);
         // Not in the review queue until the code is confirmed.
         $this->assertNull($merchant->submitted_at);
-        $this->assertSame('USD', $merchant->currency);
+
+        /*
+         * An amendment to BRD FR-MER-05, which names USD. The shops this platform
+         * sells to price in Syrian pounds, and a default nobody wants is a setting
+         * every owner has to find and change before their first sale — the one who
+         * misses it prices their whole programme in a currency they never use.
+         */
+        $this->assertSame('SYP', $merchant->currency);
     }
 
     public function test_the_owner_keeps_the_password_they_chose_but_cannot_use_it_yet(): void

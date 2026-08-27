@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { applyServerErrors, clearServerErrors } from '../../core/forms/server-errors';
@@ -36,6 +37,7 @@ import { ProfileService } from '../../core/services/profile.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
   ],
   templateUrl: './settings.component.html',
 })
@@ -51,13 +53,21 @@ export class SettingsComponent {
   readonly uploading = signal(false);
   readonly loading = signal(true);
 
-  readonly currency = computed(() => this.merchant()?.currency ?? 'USD');
+  readonly currency = computed(() => this.merchant()?.currency ?? 'SYP');
+
+  /**
+   * The two currencies that actually circulate in a Syrian shop: the pound, and
+   * the dollar for the shops that price in it. A picker with four options invites a
+   * question nobody in the shop has. The server still accepts any three letters, so
+   * adding one later is a change to this line rather than to the model.
+   */
+  readonly currencies = ['SYP', 'USD'];
 
   readonly form = this.fb.nonNullable.group({
     trade_name: [''],
     city: ['', [Validators.required, Validators.maxLength(120)]],
     phone: ['', [Validators.required, Validators.pattern(/^\+?[\d\s-]{8,32}$/)]],
-    currency: ['USD', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
+    currency: ['SYP', [Validators.required]],
   });
 
   constructor() {

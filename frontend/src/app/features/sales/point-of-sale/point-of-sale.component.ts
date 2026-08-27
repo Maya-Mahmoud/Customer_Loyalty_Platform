@@ -11,12 +11,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { applyServerErrors, clearServerErrors } from '../../../core/forms/server-errors';
-import { CustomerCard, CycleState } from '../../../core/models/sales.model';
+import { CustomerCard, CycleState, MyRecentInvoice } from '../../../core/models/sales.model';
+import { ReportSummary } from '../../../core/models/report.model';
 import { Branch } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ReportService } from '../../../core/services/report.service';
 import { SalesService } from '../../../core/services/sales.service';
 import { StaffService } from '../../../core/services/staff.service';
 
@@ -37,6 +40,7 @@ import { StaffService } from '../../../core/services/staff.service';
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     TranslateModule,
     MatButtonModule,
     MatCardModule,
@@ -55,6 +59,7 @@ export class PointOfSaleComponent {
   private readonly fb = inject(FormBuilder);
   private readonly sales = inject(SalesService);
   private readonly staff = inject(StaffService);
+  private readonly reports = inject(ReportService);
   private readonly auth = inject(AuthService);
 
   private readonly phoneInput = viewChild<ElementRef<HTMLInputElement>>('phoneField');
@@ -89,6 +94,23 @@ export class PointOfSaleComponent {
    */
   readonly numberFromReceipt = signal(false);
 
+  /*
+   * The strip beside the till. What it shows depends on who opened the screen,
+   * because the people who stand here differ in what they are allowed to see —
+   * and the difference is enforced by the same permissions the server checks.
+   */
+
+  /** Everyone's own entries from today. Their work, never a customer list (BR-019). */
+  readonly myRecent = signal<MyRecentInvoice[]>([]);
+
+  /** Today's takings, for the roles that hold reports.view_own_branch. */
+  readonly todayTotals = signal<ReportSummary | null>(null);
+  readonly canSeeTotals = computed(() => this.auth.has('reports.view_own_branch'));
+
+  /** A correction waiting on a decision is a rep standing still (BR-012). */
+  readonly pendingCorrections = signal(0);
+  readonly canDecideCorrections = computed(() => this.auth.has('invoices.amend'));
+
   readonly phoneForm = this.fb.nonNullable.group({
     phone: ['', [Validators.required, Validators.pattern(/^\+?[\d\s-]{6,20}$/)]],
   });
@@ -116,6 +138,8 @@ export class PointOfSaleComponent {
   });
 
   constructor() {
+    this.loadPanel();
+
     if (this.needsBranch()) {
       this.staff.branches().subscribe({
         next: (branches) => this.branches.set(branches.filter((b) => b.is_active)),
@@ -239,7 +263,8 @@ export class PointOfSaleComponent {
       .subscribe({
         next: (result) => {
           this.saving.set(false);
-          this.lastResult.set({
+          this.loadPanel();
+        this.lastResult.set({
             counted: result.counted,
             cycle: result.cycle,
             message: result.message,
@@ -291,5 +316,37 @@ export class PointOfSaleComponent {
       String(now.getMonth() + 1).padStart(2, '0'),
       String(now.getDate()).padStart(2, '0'),
     ].join('-');
+  }
+
+  /**
+   * Fills the side strip, and refills it after every sale so the rep sees the entry
+   * they just made appear.
+   *
+   * Each request is guarded by the permission that would allow it anyway: a rep asks
+   * only for their own entries, and the server would refuse the rest. Asking and
+   * being refused would work too — it would just paint the screen with errors nobody
+   * can act on.
+   */
+  private loadPanel(): void {
+    this.sales.myRecentInvoices().subscribe({
+      next: (invoices) => this.myRecent.set(invoices),
+      error: () => this.myRecent.set([]),
+    });
+
+    if (this.canSeeTotals()) {
+      const today = this.today();
+
+      this.reports.summary({ from: today, to: today }).subscribe({
+        next: (report) => this.todayTotals.set(report.data),
+        error: () => this.todayTotals.set(null),
+      });
+    }
+
+    if (this.canDecideCorrections()) {
+      this.sales.pendingCorrections().subscribe({
+        next: (requests) => this.pendingCorrections.set(requests.length),
+        error: () => this.pendingCorrections.set(0),
+      });
+    }
   }
 }
