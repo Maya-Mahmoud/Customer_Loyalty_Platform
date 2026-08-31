@@ -1,8 +1,8 @@
-<div class="max-w-5xl">
+<div class="w-full">
   <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'pos.title' | translate }}</h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'pos.subtitle' | translate }}</p>
 
-  <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 lg:gap-14 items-start">
+  <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_24rem] gap-6 lg:gap-14 items-start">
     <div>
 
   <!-- What the last save produced. Kept on screen while the rep talks to the
@@ -158,7 +158,7 @@
           <mat-progress-bar mode="determinate" [value]="cycle.progress * 100"
                             [color]="cycle.is_eligible ? 'accent' : 'primary'" class="!h-2 !rounded" />
 
-          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mt-4 text-sm">
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm text-center">
             <div>
               <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
               <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>

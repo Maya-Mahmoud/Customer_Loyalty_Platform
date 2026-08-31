@@ -22,7 +22,7 @@ class UpdatePasswordRequest extends FormRequest
         return [
             'current_password' => ['required', 'string', 'current_password'],
             // Same strength as the rest of the system: one rule, one place.
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', Password::min(6)],
         ];
     }
 }

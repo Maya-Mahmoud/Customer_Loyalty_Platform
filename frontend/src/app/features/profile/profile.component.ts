@@ -72,7 +72,7 @@ export class ProfileComponent {
 
   readonly passwordForm = this.fb.nonNullable.group({
     current_password: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
     password_confirmation: ['', [Validators.required]],
   });
 

@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -51,6 +52,7 @@ import { RedeemDialogComponent } from '../redemption/redeem-dialog.component';
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatTableModule,
+    MatTooltipModule,
   ],
   templateUrl: './customer-lookup.component.html',
 })

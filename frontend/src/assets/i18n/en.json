@@ -66,7 +66,7 @@
     "subtitle": "Choose a password for this account:",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
-    "policy": "At least 10 characters, including an upper-case letter, a lower-case letter and a digit.",
+    "policy": "At least six characters.",
     "mismatch": "The two passwords do not match.",
     "submit": "Save and sign in",
     "invalidTitle": "Link is not valid",
@@ -422,7 +422,8 @@
     "reject": "Reject",
     "approved": "The request has been approved and the balance corrected.",
     "rejected": "The request has been rejected and nothing has changed.",
-    "noCustomer": "No customer attached"
+    "noCustomer": "No customer attached",
+    "requestTooltip": "Request a cancellation or return"
   },
   "reports": {
     "title": "Reports",

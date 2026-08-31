@@ -143,8 +143,8 @@ class MerchantRegistrationTest extends TestCase
 
     public function test_a_weak_password_is_refused(): void
     {
-        // BRD FR-SEC-03 applies here exactly as it does to an invitation.
-        foreach (['short', 'alllowercase123', 'NoDigitsAtAllHere'] as $weak) {
+        // The same six-character floor as an invitation, and nothing beyond it.
+        foreach (['abc', '12345'] as $weak) {
             $this->register(['password' => $weak, 'password_confirmation' => $weak])
                 ->assertStatus(422)
                 ->assertJsonValidationErrors('password');

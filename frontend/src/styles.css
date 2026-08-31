@@ -445,12 +445,20 @@ h1 {
   height: 44px !important;
 }
 
+/*
+ * Column headings in the same green the rest of the app uses for a label.
+ *
+ * They name what the column holds, which makes them labels — and a label is green
+ * everywhere else on the screen, from the customer card to the plan strip. Grey
+ * headings on a page whose every other label is green read as a leftover from a
+ * different design.
+ */
 .mat-mdc-header-cell {
-  font-size: 0.75rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 600 !important;
-  color: var(--clp-muted) !important;
-  background: #fbfaf8;
-  border-bottom-color: var(--clp-line) !important;
+  color: var(--clp-teal) !important;
+  background: #f2f8f7;
+  border-bottom: 1px solid #d3e8e5 !important;
   white-space: nowrap;
 }
 
@@ -493,12 +501,91 @@ h1 {
   text-transform: none !important;
 }
 
+/*
+ * The tab strip carries the same tint as the panels above it, so a card holding four
+ * tabbed tables reads as the bottom of one page rather than as a separate white slab
+ * that happens to sit underneath.
+ */
+/*
+ * Tabs as boxes rather than as words with a line under them.
+ *
+ * Material's underline is a hairline that has to be hunted for, and on a report where
+ * the four tabs are four different questions, "which one am I reading" should be
+ * answerable from across the desk. A filled box says it at a glance; the underline is
+ * removed because two signals for one state is one too many.
+ */
 .mat-mdc-tab-header {
-  border-bottom: 1px solid var(--clp-line);
+  border-bottom: 1px solid #d3e8e5;
+  background: linear-gradient(180deg, #eaf5f3 0%, #f7fcfb 100%);
+  border-start-start-radius: 16px;
+  border-start-end-radius: 16px;
+  padding: 0.6rem 0.6rem 0;
+}
+
+/*
+ * Both class names on purpose. MDC ships `.mdc-tab { border: none }` at the same
+ * specificity as `.mat-mdc-tab`, and it is loaded after this file — so a single-class
+ * rule was quietly losing, which is why the inactive tabs were reading as bare words
+ * rather than as things you can press.
+ */
+.mat-mdc-tab.mdc-tab {
+  border-radius: 12px 12px 0 0 !important;
+  margin-inline-end: 0.4rem;
+  background: rgb(255 255 255 / 70%) !important;
+  border: 1px solid #bcdcd7 !important;
+  border-bottom: 0 !important;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.mat-mdc-tab.mdc-tab:hover {
+  background: #ffffff !important;
+  border-color: var(--clp-teal-bright) !important;
 }
 
 .mat-mdc-tab .mdc-tab__text-label {
+  color: var(--clp-teal);
   font-weight: 500;
+}
+
+.mat-mdc-tab.mdc-tab.mdc-tab--active {
+  background: linear-gradient(180deg, var(--clp-teal) 0%, var(--clp-ink) 100%);
+  border-color: var(--clp-ink);
+}
+
+.mat-mdc-tab.mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* The ink bar would be a second, quieter answer to a question the fill has already
+   answered. */
+.mat-mdc-tab-header .mdc-tab-indicator__content--underline {
+  display: none;
+}
+
+
+/*
+ * Tooltips stand clear of what they describe.
+ *
+ * Material places them flush against the trigger, which on a table of tight rows puts
+ * the label on top of the icon it is explaining — and on top of the row above it. A
+ * few pixels of margin is the whole fix, applied per direction so it always moves
+ * away from the trigger rather than towards it.
+ */
+.mat-mdc-tooltip-panel-above .mat-mdc-tooltip {
+  margin-bottom: 10px;
+}
+
+.mat-mdc-tooltip-panel-below .mat-mdc-tooltip {
+  margin-top: 10px;
+}
+
+.mat-mdc-tooltip-panel-left .mat-mdc-tooltip {
+  margin-right: 10px;
+}
+
+.mat-mdc-tooltip-panel-right .mat-mdc-tooltip {
+  margin-left: 10px;
 }
 
 .mat-mdc-dialog-surface {

@@ -1,6 +1,6 @@
-<div class="max-w-5xl">
+<div class="w-full">
   <header class="mb-6">
-    <h1 class="text-2xl font-semibold text-slate-900">
+    <h1 class="text-2xl font-semibold" style="color: var(--clp-ink)">
       {{ 'dashboard.greeting' | translate: { name: user()?.name } }}
     </h1>
     <p class="text-sm text-slate-500 mt-1">
@@ -48,20 +48,20 @@
         </div>
       </mat-card>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'dashboard.storesTotal' | translate }}</p>
-          <p class="text-3xl font-semibold clp-figure mt-1">{{ stats.total }}</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'dashboard.storesTotal' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1">{{ stats.total }}</p>
         </mat-card>
 
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'status.active' | translate }}</p>
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'status.active' | translate }}</p>
           <p class="text-3xl font-semibold text-emerald-700 mt-1">{{ stats.merchants.active }}</p>
         </mat-card>
 
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'status.suspended' | translate }}</p>
-          <p class="text-3xl font-semibold clp-figure mt-1">{{ stats.merchants.suspended }}</p>
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'status.suspended' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1">{{ stats.merchants.suspended }}</p>
         </mat-card>
 
         <mat-card class="p-4">
@@ -74,27 +74,27 @@
         </mat-card>
       </div>
 
-      <mat-card class="p-5">
-        <h2 class="text-sm font-medium text-slate-700 mb-4">
+      <mat-card class="p-6 clp-panel-teal">
+        <h2 class="text-base font-semibold mb-4" style="color: var(--clp-ink)">
           {{ 'dashboard.storesByStatus' | translate }}
         </h2>
 
         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
-            <dt class="text-xs text-slate-500">{{ 'status.pending' | translate }}</dt>
-            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.pending }}</dd>
+            <dt class="clp-stat-label">{{ 'status.pending' | translate }}</dt>
+            <dd class="clp-stat-value">{{ stats.merchants.pending }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'status.active' | translate }}</dt>
-            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.active }}</dd>
+            <dt class="clp-stat-label">{{ 'status.active' | translate }}</dt>
+            <dd class="clp-stat-value">{{ stats.merchants.active }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'status.suspended' | translate }}</dt>
-            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.suspended }}</dd>
+            <dt class="clp-stat-label">{{ 'status.suspended' | translate }}</dt>
+            <dd class="clp-stat-value">{{ stats.merchants.suspended }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-slate-500">{{ 'status.rejected' | translate }}</dt>
-            <dd class="text-lg font-medium text-slate-900">{{ stats.merchants.rejected }}</dd>
+            <dt class="clp-stat-label">{{ 'status.rejected' | translate }}</dt>
+            <dd class="clp-stat-value">{{ stats.merchants.rejected }}</dd>
           </div>
         </dl>
       </mat-card>
@@ -108,29 +108,29 @@
   <!-- A store owner or branch manager (BRD FR-RPT-01) -->
   @if (canSeeNumbers()) {
     @if (today(); as today) {
-      <h2 class="text-sm font-medium text-slate-700 mb-2">{{ 'dashboard.todayTitle' | translate }}</h2>
+      <h2 class="text-base font-semibold mb-3" style="color: var(--clp-ink)">{{ 'dashboard.todayTitle' | translate }}</h2>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</p>
-          <p class="text-2xl font-semibold clp-figure mt-1" dir="ltr">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
             {{ today.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
           </p>
         </mat-card>
 
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'pos.invoices' | translate }}</p>
-          <p class="text-2xl font-semibold clp-figure mt-1">{{ today.invoice_count }}</p>
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'pos.invoices' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1">{{ today.invoice_count }}</p>
         </mat-card>
 
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'reports.newCustomers' | translate }}</p>
-          <p class="text-2xl font-semibold clp-figure mt-1">{{ today.new_customers }}</p>
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'reports.newCustomers' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1">{{ today.new_customers }}</p>
         </mat-card>
 
-        <mat-card class="p-4">
-          <p class="text-xs text-slate-500">{{ 'dashboard.rewardsToday' | translate }}</p>
-          <p class="text-2xl font-semibold clp-figure mt-1" dir="ltr">
+        <mat-card class="p-5 clp-panel-teal">
+          <p class="clp-stat-label">{{ 'dashboard.rewardsToday' | translate }}</p>
+          <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
             {{ today.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
           </p>
           <p class="text-xs text-slate-500 mt-1">
@@ -140,10 +140,10 @@
       </div>
 
       @if (month(); as month) {
-        <mat-card class="p-5 mb-5">
+        <mat-card class="p-6 mb-5 clp-panel-teal">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 class="text-sm font-medium text-slate-700">{{ 'dashboard.monthTitle' | translate }}</h2>
+              <h2 class="text-base font-semibold" style="color: var(--clp-ink)">{{ 'dashboard.monthTitle' | translate }}</h2>
               <p class="text-xs text-slate-500 mt-0.5">
                 {{ 'reports.invoiceCount' | translate: { count: month.invoice_count } }}
                 <span class="text-slate-400">&middot;</span>
@@ -151,32 +151,32 @@
               </p>
             </div>
 
-            <a mat-stroked-button routerLink="/reports">
+            <a mat-flat-button color="primary" class="!h-10 !px-5" routerLink="/reports">
               {{ 'dashboard.openReports' | translate }}
             </a>
           </div>
 
           <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm">
             <div>
-              <dt class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">
+              <dt class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">
                 {{ month.sales_total }} {{ currency() }}
               </dd>
             </div>
             <div>
-              <dt class="text-xs text-slate-500">{{ 'reports.discountTotal' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">
+              <dt class="clp-stat-label">{{ 'reports.discountTotal' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">
                 {{ month.discount_total }} {{ currency() }}
               </dd>
             </div>
             <div>
               <!-- The figure that says whether the programme is paying for itself. -->
-              <dt class="text-xs text-slate-500">{{ 'dashboard.costOfProgramme' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">{{ month.discount_ratio }}%</dd>
+              <dt class="clp-stat-label">{{ 'dashboard.costOfProgramme' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">{{ month.discount_ratio }}%</dd>
             </div>
             <div>
-              <dt class="text-xs text-slate-500">{{ 'reports.averageInvoice' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">
+              <dt class="clp-stat-label">{{ 'reports.averageInvoice' | translate }}</dt>
+              <dd class="clp-stat-value" dir="ltr">
                 {{ month.average_invoice }} {{ currency() }}
               </dd>
             </div>

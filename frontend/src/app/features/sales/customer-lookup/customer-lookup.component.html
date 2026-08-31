@@ -1,10 +1,10 @@
-<div class="max-w-5xl">
+<div class="w-full">
   <h1 class="text-2xl font-semibold mb-1" style="color: var(--clp-ink)">
     {{ 'lookup.title' | translate }}
   </h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'lookup.subtitle' | translate }}</p>
 
-  <mat-card class="p-5 mb-4">
+  <mat-card class="p-5 mb-4 max-w-2xl mx-auto">
     <form [formGroup]="form" (ngSubmit)="search()" class="flex flex-col sm:flex-row sm:items-center gap-3">
       <mat-form-field appearance="outline" class="flex-1" subscriptSizing="dynamic">
         <mat-label>{{ 'pos.phone' | translate }}</mat-label>
@@ -56,7 +56,7 @@
           }
         </p>
 
-        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mt-4 text-sm">
+        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm text-center">
           <div>
             <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
             <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
@@ -221,8 +221,11 @@
                         -{{ invoice.returned_amount }}
                       </span>
                     } @else if (canRequestCorrection() && invoice.status === 'active') {
+                      <!-- An icon alone tells nobody what it does; the tooltip is
+                           the label this control never had room for. -->
                       <button mat-icon-button type="button"
                               [attr.aria-label]="'correction.title' | translate"
+                              [matTooltip]="'correction.requestTooltip' | translate" matTooltipPosition="above"
                               (click)="requestCorrection(invoice)">
                         <mat-icon class="!text-base !w-4 !h-4 rtl-flip">undo</mat-icon>
                       </button>

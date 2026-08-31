@@ -65,9 +65,15 @@ export class ShellComponent {
    */
   private readonly navItems: NavItem[] = [
     /*
-     * The till comes first: it is the screen a sales rep spends their whole day
-     * in, and the only one some roles ever need.
+     * The home screen first, then the till.
+     *
+     * A rail whose first entry is not the landing page sends the user hunting for
+     * the screen they were just looking at. The till follows immediately, because it
+     * is where a sales rep spends the whole day and the only screen some roles ever
+     * need — and a rep, who has no dashboard figures to read, still lands on it
+     * directly at sign-in (see AuthService.homeRoute).
      */
+    { route: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
     {
       route: '/pos',
       labelKey: 'nav.pos',
@@ -92,7 +98,6 @@ export class ShellComponent {
       icon: 'rule',
       permissions: ['invoices.amend'],
     },
-    { route: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard' },
     {
       route: '/branches',
       labelKey: 'nav.branches',

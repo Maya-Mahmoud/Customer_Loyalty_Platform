@@ -122,8 +122,13 @@ class InvitationTest extends TestCase
     {
         [, $token] = $this->invitedOwner();
 
-        // BRD FR-SEC-03 requires a strong password policy.
-        foreach (['short', 'alllowercase123', 'NoDigitsAtAllHere'] as $weak) {
+        /*
+         * Six characters, and nothing about their shape — an amendment to BRD
+         * FR-SEC-03, decided by the product owner. Composition rules push people
+         * towards one predictable pattern and towards writing the result down, so
+         * the length is the part still worth enforcing.
+         */
+        foreach (['abc', '12345'] as $weak) {
             $this->postJson("/api/v1/invitations/{$token}", [
                 'password' => $weak,
                 'password_confirmation' => $weak,

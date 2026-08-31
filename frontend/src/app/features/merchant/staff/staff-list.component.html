@@ -1,7 +1,9 @@
 <div>
   <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
     <div>
-      <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'staff.title' | translate }}</h1>
+      <h1 class="text-2xl font-semibold mb-1" style="color: var(--clp-ink)">
+        {{ 'staff.title' | translate }}
+      </h1>
       <p class="text-sm text-slate-500">{{ 'staff.subtitle' | translate }}</p>
     </div>
 
@@ -25,24 +27,24 @@
   }
 
   @if (usage(); as limits) {
-    <mat-card class="p-4 mb-4">
+    <mat-card class="p-5 mb-4 clp-panel-teal">
       <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
         <div>
-          <span class="text-slate-500">{{ 'staff.used' | translate }}</span>
-          <span class="ms-2 font-medium text-slate-900">
+          <span class="clp-stat-label">{{ 'staff.used' | translate }}</span>
+          <span class="ms-2 clp-stat-value">
             {{ limits.users.used }}
             @if (limits.users.max !== null) {
               / {{ limits.users.max }}
             } @else {
-              <span class="text-slate-500">({{ 'admin.unlimited' | translate }})</span>
+              <span class="clp-stat-label">({{ 'admin.unlimited' | translate }})</span>
             }
           </span>
         </div>
 
         @if (limits.plan) {
           <div>
-            <span class="text-slate-500">{{ 'admin.plan' | translate }}</span>
-            <span class="ms-2 font-medium text-slate-900">{{ limits.plan }}</span>
+            <span class="clp-stat-label">{{ 'admin.plan' | translate }}</span>
+            <span class="ms-2 clp-stat-value">{{ limits.plan }}</span>
           </div>
         }
       </div>

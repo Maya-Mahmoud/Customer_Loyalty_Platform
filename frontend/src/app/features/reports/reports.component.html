@@ -1,9 +1,11 @@
-<div class="max-w-5xl">
-  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'reports.title' | translate }}</h1>
-  <p class="text-sm text-slate-500 mb-5">{{ 'reports.subtitle' | translate }}</p>
+<div class="w-full">
+  <h1 class="text-2xl font-semibold mb-1" style="color: var(--clp-ink)">
+    {{ 'reports.title' | translate }}
+  </h1>
+  <p class="text-sm text-slate-500 mb-6">{{ 'reports.subtitle' | translate }}</p>
 
   <!-- One period for all five reports, so the figures can be read against each other -->
-  <mat-card class="p-5 mb-4">
+  <mat-card class="p-5 mb-4 clp-panel-teal clp-ink-labels">
     <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-center gap-3">
       <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
         <mat-label>{{ 'reports.from' | translate }}</mat-label>
@@ -66,10 +68,10 @@
 
   <!-- RPT-01 -->
   @if (summary(); as summary) {
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-      <mat-card class="p-4">
-        <p class="text-xs text-slate-500">{{ 'reports.salesTotal' | translate }}</p>
-        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <mat-card class="p-5 clp-panel-teal">
+        <p class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</p>
+        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
           {{ summary.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
         <p class="text-xs text-slate-500 mt-1">
@@ -77,9 +79,9 @@
         </p>
       </mat-card>
 
-      <mat-card class="p-4">
-        <p class="text-xs text-slate-500">{{ 'reports.discountTotal' | translate }}</p>
-        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+      <mat-card class="p-5 clp-panel-teal">
+        <p class="clp-stat-label">{{ 'reports.discountTotal' | translate }}</p>
+        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
           {{ summary.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
         <!-- The one figure that answers whether the programme is worth running. -->
@@ -88,9 +90,9 @@
         </p>
       </mat-card>
 
-      <mat-card class="p-4">
-        <p class="text-xs text-slate-500">{{ 'reports.averageInvoice' | translate }}</p>
-        <p class="text-2xl font-semibold text-slate-900 mt-1" dir="ltr">
+      <mat-card class="p-5 clp-panel-teal">
+        <p class="clp-stat-label">{{ 'reports.averageInvoice' | translate }}</p>
+        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
           {{ summary.average_invoice }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
         <p class="text-xs text-slate-500 mt-1">
@@ -98,9 +100,9 @@
         </p>
       </mat-card>
 
-      <mat-card class="p-4">
-        <p class="text-xs text-slate-500">{{ 'reports.newCustomers' | translate }}</p>
-        <p class="text-2xl font-semibold text-slate-900 mt-1">{{ summary.new_customers }}</p>
+      <mat-card class="p-5 clp-panel-teal">
+        <p class="clp-stat-label">{{ 'reports.newCustomers' | translate }}</p>
+        <p class="clp-stat-value !text-3xl mt-1">{{ summary.new_customers }}</p>
         <p class="text-xs text-slate-500 mt-1">
           {{ 'reports.rewardsPaid' | translate: { count: summary.redemption_count } }}
         </p>

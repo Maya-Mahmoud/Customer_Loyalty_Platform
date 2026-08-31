@@ -40,7 +40,7 @@ class RegisterMerchantRequest extends FormRequest
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(10)->letters()->mixedCase()->numbers(),
+                Password::min(6),
             ],
 
             // BRD 8.1 step 2. Section 16 makes the data processing agreement the

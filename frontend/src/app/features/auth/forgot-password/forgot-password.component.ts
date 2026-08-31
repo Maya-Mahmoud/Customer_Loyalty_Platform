@@ -75,8 +75,7 @@ export class ForgotPasswordComponent {
       '',
       [
         Validators.required,
-        Validators.minLength(10),
-        Validators.pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/),
+        Validators.minLength(6),
       ],
     ],
     password_confirmation: ['', [Validators.required]],

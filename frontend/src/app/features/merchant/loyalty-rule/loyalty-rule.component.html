@@ -1,5 +1,7 @@
-<div class="max-w-4xl">
-  <h1 class="text-xl font-semibold text-slate-800 mb-1">{{ 'loyaltyRule.title' | translate }}</h1>
+<div class="w-full">
+  <h1 class="text-2xl font-semibold mb-1" style="color: var(--clp-ink)">
+    {{ 'loyaltyRule.title' | translate }}
+  </h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'loyaltyRule.subtitle' | translate }}</p>
 
   @if (loading()) {
@@ -35,8 +37,9 @@
       <!-- ============================================================ -->
       <!-- Threshold — FR-LOY-01                                        -->
       <!-- ============================================================ -->
-      <mat-card class="p-5 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'loyaltyRule.thresholdTitle' | translate }}</h2>
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+      <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+        <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.thresholdTitle' | translate }}</h2>
         <p class="text-xs text-slate-500 mb-4">{{ 'loyaltyRule.thresholdHint' | translate }}</p>
 
         <mat-radio-group formControlName="threshold_type" class="flex flex-col gap-1 mb-4">
@@ -76,8 +79,8 @@
       <!-- ============================================================ -->
       <!-- Reward — FR-LOY-02, FR-LOY-03                                -->
       <!-- ============================================================ -->
-      <mat-card class="p-5 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'loyaltyRule.rewardTitle' | translate }}</h2>
+      <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+        <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.rewardTitle' | translate }}</h2>
         <p class="text-xs text-slate-500 mb-4">{{ 'loyaltyRule.rewardHint' | translate }}</p>
 
         <mat-radio-group formControlName="reward_type" class="flex flex-col gap-1 mb-4">
@@ -131,8 +134,10 @@
       <!-- ============================================================ -->
       <!-- Counting rules — FR-LOY-04, 05, 06, 07                       -->
       <!-- ============================================================ -->
-      <mat-card class="p-5 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-4">{{ 'loyaltyRule.countingTitle' | translate }}</h2>
+      </div>
+
+      <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+        <h2 class="text-base font-semibold mb-4" style="color: var(--clp-ink)">{{ 'loyaltyRule.countingTitle' | translate }}</h2>
 
         <mat-form-field appearance="outline" class="w-full sm:w-1/2">
           <mat-label>{{ 'loyaltyRule.minInvoice' | translate }}</mat-label>
@@ -169,8 +174,8 @@
       <!-- What this would actually pay                                 -->
       <!-- ============================================================ -->
       @if (example(); as ex) {
-        <mat-card class="p-5 mb-4 bg-slate-50">
-          <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'loyaltyRule.exampleTitle' | translate }}</h2>
+        <mat-card class="p-6 clp-panel-gold">
+          <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.exampleTitle' | translate }}</h2>
           <p class="text-xs text-slate-500 mb-4">{{ 'loyaltyRule.exampleHint' | translate }}</p>
 
           <dl class="text-sm space-y-2">
@@ -212,8 +217,8 @@
       <!-- ============================================================ -->
       <!-- Publishing — BR-015                                          -->
       <!-- ============================================================ -->
-      <mat-card class="p-5 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'loyaltyRule.publishTitle' | translate }}</h2>
+      <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+        <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.publishTitle' | translate }}</h2>
         <p class="text-xs text-slate-500 mb-4">
           {{ (hasCurrent() ? 'loyaltyRule.publishReplaceHint' : 'loyaltyRule.publishFirstHint') | translate }}
         </p>
