@@ -160,23 +160,13 @@ class InvoiceService
      */
     private function createInvoice(array $attributes): Invoice
     {
-        $supplied = trim((string) ($attributes['invoice_number'] ?? '')) !== '';
-
         /*
-         * An amendment to BRD FR-INV-01, which assumes the number is copied from the
-         * paper receipt. It stays possible — and for a shop with a till that prints
-         * one it is still the better answer, because a number shared with the receipt
-         * is what ties a loyalty entry to a sale that demonstrably happened (AF-01).
-         *
-         * But most small shops write receipts by hand, and there the typed number
-         * bought nothing while costing a field at the counter and every typo that
-         * came with it. So the number is now optional: type the receipt number if
-         * there is one, and the system numbers the sale if there is not.
+         * No system-assigned fallback. The number is the customer's proof that a card
+         * is theirs (FR-CUS-12): they quote it from the receipt in their hand, and a
+         * number this application invented for itself would prove nothing to anybody.
+         * So it is required at the till, and the uniqueness below is what makes it
+         * usable as proof at all.
          */
-        if (! $supplied) {
-            return $this->createNumbered($attributes);
-        }
-
         try {
             return Invoice::create($attributes);
         } catch (UniqueConstraintViolationException) {
@@ -192,59 +182,6 @@ class InvoiceService
                 'invoice_number' => __('This invoice number has already been recorded.'),
             ]);
         }
-    }
-
-    /**
-     * Numbers the sale itself.
-     *
-     * Retried rather than locked: two tills asking for the next number at the same
-     * instant both compute the same one, and exactly one of them loses the unique
-     * index (BR-004). Losing means asking again, which is cheaper than a lock held
-     * across a transaction on the busiest table in the system — and correct even if a
-     * number is somehow taken by hand in between.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    private function createNumbered(array $attributes): Invoice
-    {
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            try {
-                return Invoice::create([
-                    ...$attributes,
-                    'invoice_number' => $this->nextNumber($attempt),
-                ]);
-            } catch (UniqueConstraintViolationException) {
-                continue;
-            }
-        }
-
-        throw ValidationException::withMessages([
-            'invoice_number' => __('Could not assign an invoice number. Please try again.'),
-        ]);
-    }
-
-    /**
-     * The next number in this merchant's own series, reset each year.
-     *
-     * Scoped by the tenant like every other query, so two shops both run from 1 and
-     * neither can see the other's sequence. The year in the prefix keeps the numbers
-     * short and makes a stack of them sortable by eye, which is what a shop owner
-     * actually does with a list of invoice numbers.
-     */
-    private function nextNumber(int $offset = 0): string
-    {
-        $prefix = 'INV-' . now()->year . '-';
-
-        $last = Invoice::query()
-            ->where('invoice_number', 'like', $prefix . '%')
-            ->orderByDesc('invoice_number')
-            ->value('invoice_number');
-
-        $sequence = $last === null
-            ? 0
-            : (int) substr((string) $last, strlen($prefix));
-
-        return $prefix . str_pad((string) ($sequence + 1 + $offset), 5, '0', STR_PAD_LEFT);
     }
 
     private function resolveCustomer(mixed $customerId): ?Customer

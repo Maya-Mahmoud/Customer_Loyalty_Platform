@@ -99,3 +99,31 @@ export interface InvitationDetails {
   role: UserRole;
   merchant_name: string | null;
 }
+
+/**
+ * The platform's own settings (BRD FR-ADM-04).
+ *
+ * The currency and the price list travel together because a price is meaningless
+ * without the money it is in, and the list of allowed currencies comes from the
+ * server rather than the client so that adding one is a back-end change only.
+ */
+export interface PlatformSettings {
+  billing_currency: string;
+  currencies: string[];
+  plans: SubscriptionPlan[];
+}
+
+/** What the supervisor may change about a plan: its price and its ceilings. */
+export interface PlanPricing {
+  monthly_price: number;
+  max_branches: number | null;
+  max_users: number | null;
+  max_monthly_invoices: number | null;
+}
+
+/** A plan being created. The code identifies it everywhere afterwards; the name is
+    the part that gets to be Arabic and spaced. */
+export interface NewPlan extends PlanPricing {
+  code: string;
+  name: string;
+}

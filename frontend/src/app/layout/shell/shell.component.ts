@@ -53,11 +53,30 @@ export class ShellComponent {
   readonly currentLanguage = this.language.current;
 
   /**
-   * Whether there is a store to configure at all. The settings icon is hidden from
-   * everyone else rather than disabled — a control that never does anything is worse
-   * than no control (BRD 7.2 gives merchant.profile to the owner alone).
+   * Where the settings icon in the toolbar goes, or null when this account has
+   * nothing to configure.
+   *
+   * Two different screens behind one icon, because "settings" means the thing the
+   * signed-in person actually administers: their shop if they own one, the platform
+   * itself if they run it. No account holds both permissions — by BRD 7.2 the
+   * supervisor has no merchant — so the order below never has to arbitrate.
+   *
+   * Hidden rather than disabled for everyone else: a control that never does
+   * anything is worse than no control at all.
    */
-  readonly canEditStore = computed(() => this.auth.has('merchant.profile'));
+  readonly settingsRoute = computed<string | null>(() => {
+    if (this.auth.has('merchants.manage_status')) {
+      return '/admin/settings';
+    }
+
+    return this.auth.has('merchant.profile') ? '/settings' : null;
+  });
+
+  /** Names the screen the icon opens, rather than saying "settings" twice for two
+      different things. */
+  readonly settingsLabelKey = computed(() =>
+    this.settingsRoute() === '/admin/settings' ? 'nav.platformSettings' : 'nav.settings'
+  );
 
   /**
    * Grows with each phase. Entries the role cannot use are hidden rather than

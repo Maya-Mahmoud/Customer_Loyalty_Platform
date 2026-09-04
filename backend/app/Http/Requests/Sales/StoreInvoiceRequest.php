@@ -22,13 +22,14 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             /*
-             * Optional, an amendment to FR-INV-01. A shop with a till that prints
-             * receipt numbers should still type one — it ties the entry to a sale
-             * that demonstrably happened (AF-01) — but a shop writing receipts by
-             * hand gained nothing from the field except typos, so the system numbers
-             * the sale when it is left empty.
+             * Required, and unique inside the merchant (BR-004, AF-01).
+             *
+             * It carries a second job now: the customer proves a card is theirs by
+             * quoting the number from their own receipt (FR-CUS-12), so a number the
+             * system invented would prove nothing — only a number that was printed
+             * and handed over can.
              */
-            'invoice_number' => ['nullable', 'string', 'max:64'],
+            'invoice_number' => ['required', 'string', 'max:64'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999'],
             // Not in the future: a sale cannot have happened yet. Backdating is
             // allowed, and is governed by the rule in force on that date.

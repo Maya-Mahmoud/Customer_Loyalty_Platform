@@ -4,31 +4,50 @@
   </h1>
   <p class="text-sm text-slate-500 mb-5">{{ 'audit.subtitle' | translate }}</p>
 
-  <mat-card class="p-5 mb-4 max-w-4xl mx-auto clp-panel-teal clp-ink-labels">
-    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-center gap-3">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-56">
+  <!--
+    The filter bar is white and hairlined, not tinted.
+
+    Green is this app's colour for a panel that holds an answer — a figure, a record,
+    a card. These are controls that go and fetch one, and giving them the same ground
+    made the tools look like part of the result.
+  -->
+  <mat-card class="p-4 mb-5 clp-ink-labels"
+            style="background: #ffffff; border: 1px solid #e5e7eb">
+    <form [formGroup]="form" (ngSubmit)="load()"
+          class="flex flex-wrap items-end gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-64">
         <mat-label>{{ 'audit.action' | translate }}</mat-label>
         <mat-select formControlName="action">
           <mat-option value="">{{ 'audit.allActions' | translate }}</mat-option>
           <!-- Built from what actually happened, so a new audited action appears
-               the first time it occurs. -->
+               the first time it occurs — named, not printed as its identifier. -->
           @for (action of actions(); track action) {
-            <mat-option [value]="action">{{ action }}</mat-option>
+            <mat-option [value]="action">{{ actionLabel(action) }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+      <!--
+        Material's datepicker rather than a native date input. The native control
+        renders in the browser's own locale, so an Arabic screen was showing an empty
+        "mm/dd/yyyy" in Latin script with the month before the day.
+      -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
         <mat-label>{{ 'reports.from' | translate }}</mat-label>
-        <input matInput type="date" formControlName="from" dir="ltr" />
+        <input matInput [matDatepicker]="fromPicker" formControlName="from" />
+        <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+        <mat-datepicker #fromPicker />
       </mat-form-field>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
         <mat-label>{{ 'reports.to' | translate }}</mat-label>
-        <input matInput type="date" formControlName="to" dir="ltr" />
+        <input matInput [matDatepicker]="toPicker" formControlName="to" />
+        <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+        <mat-datepicker #toPicker />
       </mat-form-field>
 
-      <button mat-flat-button color="primary" type="submit" class="!h-10 !px-7" [disabled]="loading()">
+      <button mat-flat-button color="primary" type="submit" class="!h-11 !px-6"
+              [disabled]="loading()">
         @if (loading()) {
           <mat-spinner diameter="20" />
         } @else {
@@ -36,14 +55,16 @@
         }
       </button>
 
-      <button mat-button type="button" class="!h-10 !px-7" (click)="reset()">
+      <button mat-stroked-button type="button" class="!h-11 !px-5" (click)="reset()">
         {{ 'audit.clear' | translate }}
       </button>
-    </form>
 
-    <p class="text-xs text-slate-500 mt-3">
-      {{ 'audit.total' | translate: { count: total() } }}
-    </p>
+      <!-- How much the filter matched, at the end of the same line: it is the
+           answer to the controls beside it, not a separate statement. -->
+      <p class="text-xs text-slate-500 ms-auto">
+        {{ 'audit.total' | translate: { count: total() } }}
+      </p>
+    </form>
   </mat-card>
 
   <!--
@@ -86,63 +107,126 @@
       <p class="text-sm text-slate-600 mt-2">{{ 'audit.empty' | translate }}</p>
     </mat-card>
   } @else {
-    <div class="flex flex-col gap-3">
-      @for (entry of entries(); track entry.id) {
-        <mat-card class="p-4">
-          <div class="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p class="text-sm font-medium text-slate-900" dir="ltr">{{ entry.action }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">
-                {{ entry.user?.name ?? ('audit.system' | translate) }}
-                @if (entry.user) {
-                  · {{ 'roles.' + entry.user.role | translate }}
-                }
-                @if (showsMerchant() && entry.merchant) {
-                  · {{ entry.merchant }}
-                }
-              </p>
-            </div>
+    <!--
+      A table, not a card per entry.
 
-            <div class="text-end">
-              <p class="text-xs text-slate-600" dir="ltr">
-                {{ entry.created_at?.slice(0, 10) }} {{ entry.created_at?.slice(11, 16) }}
-              </p>
-              @if (entry.entity_type) {
-                <p class="text-xs text-slate-500" dir="ltr">
-                  {{ entry.entity_type }}#{{ entry.entity_id }}
-                </p>
-              }
-            </div>
-          </div>
+      Each entry was its own card, so forty of them filled several screens with the
+      same six labels repeated forty times and the reader scrolling to compare two
+      rows. A table states each label once, in a heading, and puts the rows where
+      they can be scanned down a column.
 
-          <!-- Rendered generically: a trail that only showed the fields somebody
-               templated would hide the rest, and the unusual entries are the ones
-               worth finding. -->
-          @if (changes(entry).length > 0) {
-            <dl class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs">
-              @for (line of changes(entry); track line.key) {
-                <div class="flex justify-between gap-2">
-                  <dt class="text-slate-500" dir="ltr">{{ line.key }}</dt>
-                  <dd class="text-slate-800 text-end" dir="ltr">
-                    @if (line.before !== null && line.after !== null && line.before !== line.after) {
-                      <span class="text-slate-400 line-through">{{ line.before }}</span>
-                      <span class="mx-1">→</span>
-                      <span>{{ line.after }}</span>
-                    } @else {
-                      {{ line.after ?? line.before }}
+      The before/after is the one part that will not fit a column — it is a different
+      shape for every action — so it opens as a second row underneath, one at a time.
+    -->
+    <mat-card class="p-0 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="clp-table">
+          <thead>
+            <tr>
+              <th>{{ 'audit.colTime' | translate }}</th>
+              <th>{{ 'audit.colActor' | translate }}</th>
+              <th>{{ 'audit.colAction' | translate }}</th>
+              <th>{{ 'audit.colTarget' | translate }}</th>
+              <th>{{ 'audit.colIp' | translate }}</th>
+              <th>{{ 'audit.colDetails' | translate }}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (entry of entries(); track entry.id) {
+              <tr class="clp-row">
+                <td class="whitespace-nowrap" dir="ltr">
+                  <span class="font-medium">{{ entry.created_at?.slice(11, 16) }}</span>
+                  <span class="text-slate-500 ms-1">{{ entry.created_at?.slice(0, 10) }}</span>
+                </td>
+
+                <td>
+                  <p class="font-medium">
+                    {{ entry.user?.name ?? ('audit.system' | translate) }}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    @if (entry.user) {
+                      {{ 'roles.' + entry.user.role | translate }}
                     }
-                  </dd>
-                </div>
-              }
-            </dl>
-          }
+                    @if (showsMerchant() && entry.merchant) {
+                      <span class="text-slate-400">&middot;</span> {{ entry.merchant }}
+                    }
+                  </p>
+                </td>
 
-          @if (entry.ip_address) {
-            <p class="text-xs text-slate-400 mt-2" dir="ltr">{{ entry.ip_address }}</p>
-          }
-        </mat-card>
-      }
-    </div>
+                <td>
+                  <!-- A badge in the state's own colour, so refusals and erasures
+                       can be found by scanning rather than by reading. -->
+                  <span class="clp-badge" [class]="actionTone(entry.action)">
+                    {{ actionLabel(entry.action) }}
+                  </span>
+                </td>
+
+                <td>
+                  @if (entry.entity_type) {
+                    {{ entityLabel(entry.entity_type) }}
+                    <span class="text-slate-500" dir="ltr">#{{ entry.entity_id }}</span>
+                  } @else {
+                    <span class="text-slate-400">—</span>
+                  }
+                </td>
+
+                <td class="text-slate-500 whitespace-nowrap" dir="ltr">
+                  {{ entry.ip_address ?? '—' }}
+                </td>
+
+                <td>
+                  @if (changes(entry).length > 0) {
+                    <button mat-button type="button" class="!min-w-0 !px-2"
+                            (click)="toggle(entry.id)"
+                            [matTooltip]="(expanded() === entry.id
+                              ? 'audit.hideDetails'
+                              : 'audit.showDetails') | translate">
+                      <span class="text-xs">
+                        {{ 'audit.detailsCount' | translate: { count: changes(entry).length } }}
+                      </span>
+                      <mat-icon class="!w-4 !h-4 !text-base" iconPositionEnd>
+                        {{ expanded() === entry.id ? 'expand_less' : 'expand_more' }}
+                      </mat-icon>
+                    </button>
+                  } @else {
+                    <span class="text-slate-400">{{ 'audit.noDetails' | translate }}</span>
+                  }
+                </td>
+              </tr>
+
+              @if (expanded() === entry.id) {
+                <tr class="clp-detail-row">
+                  <td colspan="6">
+                    <!-- Rendered generically: a trail that only showed the fields
+                         somebody templated would hide the rest, and the unusual
+                         entries are the ones worth finding. -->
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-xs
+                               rounded-lg px-3 py-2" style="background: #f7faf9">
+                      @for (line of changes(entry); track line.key) {
+                        <div class="flex justify-between gap-3">
+                          <dt class="text-slate-500 shrink-0" dir="ltr">{{ line.key }}</dt>
+                          <dd class="text-slate-800 text-end break-all" dir="ltr">
+                            @if (line.before !== null && line.after !== null
+                                 && line.before !== line.after) {
+                              <span class="text-slate-400 line-through">{{ line.before }}</span>
+                              <span class="mx-1">&rarr;</span>
+                              <span>{{ line.after }}</span>
+                            } @else {
+                              {{ line.after ?? line.before }}
+                            }
+                          </dd>
+                        </div>
+                      }
+                    </dl>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </mat-card>
 
     @if (lastPage() > 1) {
       <div class="flex items-center justify-center gap-3 mt-4">

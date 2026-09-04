@@ -21,6 +21,20 @@ return [
 
     'currencies' => ['SYP', 'USD'],
 
+    /*
+     * Sign-in attempts allowed per minute from one address.
+     *
+     * Login is the one endpoint an attacker can call freely — no token, no account —
+     * so some ceiling has to exist: an account guessed open makes every separation of
+     * duties and every audit entry behind it worthless. The default is set high
+     * enough that no person testing the app will ever meet it, and low enough that a
+     * script cannot work through a password list.
+     *
+     * Counted per address rather than per account on purpose. Per account, six wrong
+     * guesses would let anybody lock a store owner out of their own shop.
+     */
+    'login_attempts_per_minute' => (int) env('LOGIN_ATTEMPTS_PER_MINUTE', 60),
+
     /** How long a password-setting invitation stays valid (BRD FR-BRN-04). */
     'invitation_ttl_hours' => (int) env('INVITATION_TTL_HOURS', 72),
 

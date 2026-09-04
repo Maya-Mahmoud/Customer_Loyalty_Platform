@@ -7,6 +7,15 @@ import { ShellComponent } from './layout/shell/shell.component';
 
 export const routes: Routes = [
   {
+    /*
+     * The customer's own balance (BRD FR-CUS-12). Outside the shell and behind no
+     * guard: the person asking has no account and never will (BR-001).
+     */
+    path: 'my-balance',
+    loadComponent: () =>
+      import('./features/public/balance-lookup.component').then((m) => m.BalanceLookupComponent),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>
@@ -152,6 +161,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/merchants/merchant-list.component').then(
             (m) => m.MerchantListComponent
+          ),
+      },
+      {
+        /*
+         * The platform's own settings (BRD FR-ADM-04) — what it bills in and what
+         * each plan costs. A different screen from '/settings', which belongs to a
+         * shop owner and describes their shop; the two never overlap because no
+         * account holds both permissions.
+         */
+        path: 'admin/settings',
+        canActivate: [requirePermission('merchants.manage_status')],
+        loadComponent: () =>
+          import('./features/admin/settings/platform-settings.component').then(
+            (m) => m.PlatformSettingsComponent
           ),
       },
       {

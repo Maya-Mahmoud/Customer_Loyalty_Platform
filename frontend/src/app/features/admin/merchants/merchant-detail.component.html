@@ -6,236 +6,322 @@
   <!-- Nested rather than an @else if, because an `as` alias is only allowed on a
        primary @if block. -->
   @if (merchant(); as store) {
-  <div class="max-w-4xl">
-    <a mat-button routerLink="/admin/merchants" class="mb-2 -ms-2">
-      <!-- Mirrored in Arabic: "back" is the direction the reader came from. -->
+    <div class="w-full">
+      <a mat-button routerLink="/admin/merchants" class="mb-2 -ms-2">
+        <!-- Mirrored in Arabic: "back" is the direction the reader came from. -->
         <mat-icon class="rtl-flip">arrow_back</mat-icon>
-      {{ 'admin.backToQueue' | translate }}
-    </a>
+        {{ 'admin.backToQueue' | translate }}
+      </a>
 
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
-      <div>
-        <h1 class="text-xl font-semibold text-slate-800">{{ store.name }}</h1>
-        <p class="text-sm text-slate-500" dir="ltr">{{ store.commercial_register }}</p>
-      </div>
+      <!--
+        The identity of the account, on the green ground the rest of the console
+        uses. The register number sits with the name because together they are what
+        the supervisor checks against the paperwork in front of them.
+      -->
+      <mat-card class="p-6 mb-5 clp-panel-teal">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="flex items-start gap-4 min-w-0">
+            <span class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 clp-tint-teal">
+              <mat-icon class="!w-8 !h-8 !text-3xl">storefront</mat-icon>
+            </span>
 
-      <span class="inline-block rounded-full px-3 py-1 text-sm font-medium"
-            [class]="statusClass(store.status)">
-        {{ 'status.' + store.status | translate }}
-      </span>
-    </div>
-
-    <!-- Why the account is in its current state (BRD FR-ADM-02) -->
-    @if (store.status_reason) {
-      <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
-        <strong class="block text-xs mb-0.5">{{ 'admin.reason' | translate }}</strong>
-        {{ store.status_reason }}
-      </div>
-    }
-
-    <!-- BRD BR-020: nothing may be archived before this date -->
-    @if (store.retention_floor) {
-      <div class="mb-4 rounded-md bg-slate-100 border border-slate-200 px-3 py-2 text-sm text-slate-700">
-        <mat-icon class="!text-base !w-4 !h-4 align-middle">inventory_2</mat-icon>
-        {{ 'admin.retentionNotice' | translate: { date: store.retention_floor } }}
-      </div>
-    }
-
-    <mat-card class="p-5 mb-4">
-      <h2 class="text-sm font-medium text-slate-700 mb-3">{{ 'admin.registrationDetails' | translate }}</h2>
-
-      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <div>
-          <dt class="text-slate-500">{{ 'register.tradeName' | translate }}</dt>
-          <dd class="text-slate-900">{{ store.trade_name ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'register.ownerName' | translate }}</dt>
-          <dd class="text-slate-900">{{ store.owner_name }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
-          <dd class="text-slate-900 flex items-center gap-1" dir="ltr">
-            {{ store.email }}
-            @if (store.email_verified_at) {
-              <mat-icon class="!text-base !w-4 !h-4 text-emerald-600"
-                        [matTooltip]="'admin.verified' | translate">verified</mat-icon>
-            }
-          </dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'register.phone' | translate }}</dt>
-          <dd class="text-slate-900 flex items-center gap-1" dir="ltr">
-            {{ store.phone }}
-            @if (store.phone_verified_at) {
-              <mat-icon class="!text-base !w-4 !h-4 text-emerald-600"
-                        [matTooltip]="'admin.verified' | translate">verified</mat-icon>
-            }
-          </dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'register.city' | translate }}</dt>
-          <dd class="text-slate-900">{{ store.city }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'dashboard.currency' | translate }}</dt>
-          <dd class="text-slate-900" dir="ltr">{{ store.currency }}</dd>
-        </div>
-      </dl>
-
-      <mat-divider class="!my-4" />
-
-      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <div>
-          <dt class="text-slate-500">{{ 'admin.submitted' | translate }}</dt>
-          <dd class="text-slate-900" dir="ltr">{{ store.submitted_at?.slice(0, 10) ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'admin.reviewedAt' | translate }}</dt>
-          <dd class="text-slate-900" dir="ltr">{{ store.reviewed_at?.slice(0, 10) ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'admin.reviewedBy' | translate }}</dt>
-          <dd class="text-slate-900">{{ store.reviewed_by ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'admin.activatedAt' | translate }}</dt>
-          <dd class="text-slate-900" dir="ltr">{{ store.activated_at?.slice(0, 10) ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">{{ 'admin.size' | translate }}</dt>
-          <dd class="text-slate-900">
-            {{ 'admin.branchesCount' | translate: { count: store.branches_count ?? 0 } }}
-            &middot;
-            {{ 'admin.usersCount' | translate: { count: store.users_count ?? 0 } }}
-          </dd>
-        </div>
-      </dl>
-    </mat-card>
-
-    <!-- Decisions (BRD 8.1 step 5, FR-ADM-02) -->
-    <mat-card class="p-5 mb-4">
-      <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.decision' | translate }}</h2>
-
-      @if (blockedByVerification()) {
-        <p class="text-xs text-amber-800 mb-3">{{ 'admin.notVerified' | translate }}</p>
-      } @else {
-        <p class="text-xs text-slate-500 mb-3">{{ 'admin.decisionHint' | translate }}</p>
-      }
-
-      <div class="flex flex-wrap gap-2">
-        @if (canActivate()) {
-          <button mat-flat-button color="primary" type="button"
-                  [disabled]="working() || blockedByVerification()" (click)="activate()">
-            <mat-icon>check_circle</mat-icon>
-            {{ (store.status === 'suspended' ? 'admin.restore' : 'admin.activate') | translate }}
-          </button>
-        }
-
-        @if (canReject()) {
-          <button mat-stroked-button type="button" [disabled]="working()" (click)="reject()">
-            <mat-icon>cancel</mat-icon>
-            {{ 'admin.reject' | translate }}
-          </button>
-        }
-
-        @if (canSuspend()) {
-          <button mat-stroked-button type="button" [disabled]="working()" (click)="suspend()">
-            <mat-icon>pause_circle</mat-icon>
-            {{ 'admin.suspend' | translate }}
-          </button>
-        }
-
-        @if (!canActivate() && !canReject() && !canSuspend()) {
-          <p class="text-sm text-slate-500">{{ 'admin.noActions' | translate }}</p>
-        }
-      </div>
-    </mat-card>
-
-    <!-- Owner access. An activated store whose owner never followed the
-         invitation is open but unusable, so it is called out explicitly. -->
-    @if (store.owner; as owner) {
-      <mat-card class="p-5 mb-4">
-        <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.ownerAccess' | translate }}</h2>
-
-        @if (ownerCannotSignIn()) {
-          <p class="text-xs text-amber-800 mb-3">{{ 'admin.ownerPending' | translate }}</p>
-        } @else {
-          <p class="text-xs text-slate-500 mb-3">{{ 'admin.ownerReady' | translate }}</p>
-        }
-
-        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
-          <div>
-            <dt class="text-slate-500">{{ 'auth.email' | translate }}</dt>
-            <dd class="text-slate-900" dir="ltr">{{ owner.email }}</dd>
-          </div>
-          <div>
-            <dt class="text-slate-500">{{ 'admin.canSignIn' | translate }}</dt>
-            <dd [class]="owner.has_password ? 'text-emerald-700' : 'text-amber-800'">
-              {{ (owner.has_password ? 'common.yes' : 'common.no') | translate }}
-            </dd>
-          </div>
-          @if (!owner.has_password && owner.invitation_expires_at) {
-            <div>
-              <dt class="text-slate-500">{{ 'admin.invitationExpires' | translate }}</dt>
-              <dd class="text-slate-900" dir="ltr">{{ owner.invitation_expires_at.slice(0, 10) }}</dd>
+            <div class="min-w-0">
+              <h1 class="text-2xl font-semibold" style="color: var(--clp-ink)">{{ store.name }}</h1>
+              <p class="text-sm text-slate-600 mt-0.5">
+                {{ store.city }}
+                <span class="text-slate-400">&middot;</span>
+                <span dir="ltr">{{ store.commercial_register }}</span>
+              </p>
             </div>
-          }
-        </dl>
+          </div>
 
-        @if (ownerCannotSignIn()) {
-          <button mat-stroked-button type="button" [disabled]="working()" (click)="resendInvitation()">
-            <mat-icon>forward_to_inbox</mat-icon>
-            {{ 'admin.resendInvitation' | translate }}
-          </button>
-          <p class="text-xs text-slate-500 mt-2">{{ 'admin.resendInvitationHint' | translate }}</p>
-        }
+          <span class="inline-block rounded-full px-3 py-1 text-sm font-medium shrink-0"
+                [class]="statusClass(store.status)">
+            {{ 'status.' + store.status | translate }}
+          </span>
+        </div>
       </mat-card>
-    }
 
-    <!-- Subscription plan (BRD FR-ADM-04) -->
-    <mat-card class="p-5">
-      <h2 class="text-sm font-medium text-slate-700 mb-1">{{ 'admin.subscription' | translate }}</h2>
-      <p class="text-xs text-slate-500 mb-3">{{ 'admin.subscriptionHint' | translate }}</p>
-
-      <form [formGroup]="planForm" (ngSubmit)="savePlan()"
-            class="flex flex-col sm:flex-row sm:items-start gap-3">
-        <mat-form-field appearance="outline" class="sm:w-64">
-          <mat-label>{{ 'admin.plan' | translate }}</mat-label>
-          <mat-select formControlName="subscription_plan_id">
-            @for (plan of plans(); track plan.id) {
-              <mat-option [value]="plan.id">
-                {{ plan.name }} — {{ plan.monthly_price }} {{ store.currency }}
-              </mat-option>
-            }
-          </mat-select>
-          @if (planForm.controls.subscription_plan_id.touched && planForm.controls.subscription_plan_id.invalid) {
-            <mat-error>{{ 'validation.required' | translate }}</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="sm:w-56">
-          <mat-label>{{ 'admin.endsAt' | translate }}</mat-label>
-          <input matInput [matDatepicker]="endsPicker" formControlName="subscription_ends_at" />
-          <mat-datepicker-toggle matIconSuffix [for]="endsPicker" />
-          <mat-datepicker #endsPicker />
-          @if (planForm.controls.subscription_ends_at.touched && planForm.controls.subscription_ends_at.invalid) {
-            <mat-error>{{ 'validation.required' | translate }}</mat-error>
-          }
-        </mat-form-field>
-
-        <button mat-flat-button color="primary" type="submit" class="h-14 sm:mt-1"
-                [disabled]="working()">
-          {{ 'common.save' | translate }}
-        </button>
-      </form>
-
-      @if (store.subscription_plan; as plan) {
-        <p class="text-xs text-slate-500 mt-2">
-          {{ 'admin.currentCaps' | translate: capsFor(plan) }}
-        </p>
+      <!-- Why the account is in its current state (BRD FR-ADM-02) -->
+      @if (store.status_reason) {
+        <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
+          <strong class="block text-xs mb-0.5">{{ 'admin.reason' | translate }}</strong>
+          {{ store.status_reason }}
+        </div>
       }
-    </mat-card>
-  </div>
+
+      <!-- BRD BR-020: nothing may be archived before this date -->
+      @if (store.retention_floor) {
+        <div class="mb-4 rounded-md bg-slate-100 border border-slate-200 px-3 py-2 text-sm text-slate-700">
+          <mat-icon class="!text-base !w-4 !h-4 align-middle">inventory_2</mat-icon>
+          {{ 'admin.retentionNotice' | translate: { date: store.retention_floor } }}
+        </div>
+      }
+
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_24rem] gap-6 lg:gap-8 items-start">
+        <!-- The record read to decide (BRD 8.1 step 5) -->
+        <mat-card class="p-6 clp-panel-teal">
+          <h2 class="text-base font-semibold mb-4" style="color: var(--clp-ink)">
+            {{ 'admin.registrationDetails' | translate }}
+          </h2>
+
+          <!--
+            Each field is its own tile rather than a caption over a line. On a
+            two-column record the pairs shared one gap, and a label with its value
+            underneath read as two loose items — worse in Arabic, where the columns
+            mirror and the gap lands where the next word is expected.
+          -->
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="clp-pair">
+              <dt>{{ 'register.tradeName' | translate }}</dt>
+              <dd>{{ store.trade_name ?? '—' }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'register.ownerName' | translate }}</dt>
+              <dd>{{ store.owner_name }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'auth.email' | translate }}</dt>
+              <dd class="flex items-center gap-1" dir="ltr">
+                <span class="truncate">{{ store.email }}</span>
+                @if (store.email_verified_at) {
+                  <mat-icon class="!text-base !w-4 !h-4 text-emerald-600 shrink-0"
+                            [matTooltip]="'admin.verified' | translate">verified</mat-icon>
+                }
+              </dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'register.phone' | translate }}</dt>
+              <dd class="flex items-center gap-1" dir="ltr">
+                <span class="truncate">{{ store.phone }}</span>
+                @if (store.phone_verified_at) {
+                  <mat-icon class="!text-base !w-4 !h-4 text-emerald-600 shrink-0"
+                            [matTooltip]="'admin.verified' | translate">verified</mat-icon>
+                }
+              </dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'register.city' | translate }}</dt>
+              <dd>{{ store.city }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'dashboard.currency' | translate }}</dt>
+              <!-- Named, not coded. "USD" is not a word in either language, and this
+                   is a record being read rather than a unit beside a figure. -->
+              <dd>{{ 'currencies.' + store.currency | translate }}</dd>
+            </div>
+          </dl>
+
+          <h3 class="text-sm font-semibold mt-6 mb-3" style="color: var(--clp-ink)">
+            {{ 'admin.reviewTrail' | translate }}
+          </h3>
+
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="clp-pair">
+              <dt>{{ 'admin.submitted' | translate }}</dt>
+              <dd dir="ltr">{{ store.submitted_at?.slice(0, 10) ?? '—' }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'admin.reviewedAt' | translate }}</dt>
+              <dd dir="ltr">{{ store.reviewed_at?.slice(0, 10) ?? '—' }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'admin.reviewedBy' | translate }}</dt>
+              <dd>{{ store.reviewed_by ?? '—' }}</dd>
+            </div>
+            <div class="clp-pair">
+              <dt>{{ 'admin.activatedAt' | translate }}</dt>
+              <dd dir="ltr">{{ store.activated_at?.slice(0, 10) ?? '—' }}</dd>
+            </div>
+            <div class="clp-pair sm:col-span-2">
+              <dt>{{ 'admin.size' | translate }}</dt>
+              <dd>
+                {{ 'admin.branchesCount' | translate: { count: store.branches_count ?? 0 } }}
+                <span class="text-slate-400">&middot;</span>
+                {{ 'admin.usersCount' | translate: { count: store.users_count ?? 0 } }}
+              </dd>
+            </div>
+          </dl>
+        </mat-card>
+
+        <!-- The decision itself (BRD 8.1 step 5, FR-ADM-02) and owner access. -->
+        <aside class="flex flex-col gap-5">
+          <mat-card class="p-6 clp-panel-gold">
+            <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">
+              {{ 'admin.decision' | translate }}
+            </h2>
+
+            @if (blockedByVerification()) {
+              <p class="text-xs text-amber-800 mb-3">{{ 'admin.notVerified' | translate }}</p>
+            } @else {
+              <p class="text-xs text-slate-600 mb-3">{{ 'admin.decisionHint' | translate }}</p>
+            }
+
+            <div class="flex flex-wrap gap-2">
+              @if (canActivate()) {
+                <button mat-flat-button color="primary" type="button" class="!h-10"
+                        [disabled]="working() || blockedByVerification()" (click)="activate()">
+                  <mat-icon>check_circle</mat-icon>
+                  {{ (store.status === 'suspended' ? 'admin.restore' : 'admin.activate') | translate }}
+                </button>
+              }
+
+              @if (canReject()) {
+                <button mat-stroked-button type="button" class="!h-10"
+                        [disabled]="working()" (click)="reject()">
+                  <mat-icon>cancel</mat-icon>
+                  {{ 'admin.reject' | translate }}
+                </button>
+              }
+
+              @if (canSuspend()) {
+                <button mat-stroked-button type="button" class="!h-10"
+                        [disabled]="working()" (click)="suspend()">
+                  <mat-icon>pause_circle</mat-icon>
+                  {{ 'admin.suspend' | translate }}
+                </button>
+              }
+
+              @if (!canActivate() && !canReject() && !canSuspend()) {
+                <p class="text-sm text-slate-600">{{ 'admin.noActions' | translate }}</p>
+              }
+            </div>
+          </mat-card>
+
+          <!-- Owner access. An activated store whose owner never followed the
+               invitation is open but unusable, so it is called out explicitly. -->
+          @if (store.owner; as owner) {
+            <mat-card class="p-6 clp-panel-teal">
+              <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">
+                {{ 'admin.ownerAccess' | translate }}
+              </h2>
+
+              @if (ownerCannotSignIn()) {
+                <p class="text-xs text-amber-800 mb-4">{{ 'admin.ownerPending' | translate }}</p>
+              } @else {
+                <p class="text-xs text-slate-600 mb-4">{{ 'admin.ownerReady' | translate }}</p>
+              }
+
+              <dl class="grid grid-cols-1 gap-3 mb-4">
+                <div class="clp-pair">
+                  <dt>{{ 'auth.email' | translate }}</dt>
+                  <dd class="truncate" dir="ltr">{{ owner.email }}</dd>
+                </div>
+                <div class="clp-pair">
+                  <dt>{{ 'admin.canSignIn' | translate }}</dt>
+                  <dd [class]="owner.has_password ? 'text-emerald-700' : 'text-amber-800'">
+                    {{ (owner.has_password ? 'common.yes' : 'common.no') | translate }}
+                  </dd>
+                </div>
+                @if (!owner.has_password && owner.invitation_expires_at) {
+                  <div class="clp-pair">
+                    <dt>{{ 'admin.invitationExpires' | translate }}</dt>
+                    <dd dir="ltr">{{ owner.invitation_expires_at.slice(0, 10) }}</dd>
+                  </div>
+                }
+              </dl>
+
+              @if (ownerCannotSignIn()) {
+                <button mat-stroked-button type="button" class="!h-10"
+                        [disabled]="working()" (click)="resendInvitation()">
+                  <mat-icon>forward_to_inbox</mat-icon>
+                  {{ 'admin.resendInvitation' | translate }}
+                </button>
+                <p class="text-xs text-slate-600 mt-2">{{ 'admin.resendInvitationHint' | translate }}</p>
+              }
+            </mat-card>
+          }
+        </aside>
+      </div>
+
+      <!--
+        The subscription, across the whole width (BRD FR-ADM-04).
+
+        It was in the 24rem column beside the record, where a plan picker, a date
+        picker and a save button had to share one narrow strip and none of the three
+        was readable. It is also not part of the approve/decline decision, so putting
+        it under the record rather than beside it says so.
+      -->
+      <mat-card class="p-6 mt-5 clp-panel-teal clp-ink-labels">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold" style="color: var(--clp-ink)">
+              {{ 'admin.subscription' | translate }}
+            </h2>
+            <p class="text-xs text-slate-600 mt-1">{{ 'admin.subscriptionHint' | translate }}</p>
+          </div>
+
+          <!-- How long is left, in words. A date on its own makes the reader do the
+               arithmetic, and the arithmetic is the question FR-ADM-05 asks. -->
+          @if (subscription(); as term) {
+            <span class="text-xs px-3 py-1.5 rounded-full font-medium shrink-0"
+                  [style.background]="term.expired || term.expiringSoon ? '#f6e3b8' : '#d7ece8'"
+                  [style.color]="term.expired || term.expiringSoon ? '#855d1b' : '#14524e'">
+              @if (term.expired) {
+                {{ 'admin.subscriptionExpired' | translate: { days: -term.days } }}
+              } @else {
+                {{ 'admin.subscriptionRemaining' | translate: { days: term.days } }}
+              }
+            </span>
+          }
+        </div>
+
+        <!--
+          No read-only summary of the plan and the date above the form.
+
+          There was one — three tiles naming the plan, its price and the expiry — and
+          it restated what the two controls below it already show, since both are
+          filled with the values currently in force. Two copies of the same fact only
+          invite the reader to look for the difference between them; what the summary
+          alone could say, the badge above now says in words.
+        -->
+        @if (store.subscription_plan; as plan) {
+          <p class="text-xs text-slate-600 mt-3">{{ 'admin.currentCaps' | translate: capsFor(plan) }}</p>
+        }
+
+        <form [formGroup]="planForm" (ngSubmit)="savePlan()"
+              class="mt-5 grid grid-cols-1 sm:grid-cols-[minmax(0,22rem)_minmax(0,16rem)_auto] gap-4 items-end">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'admin.plan' | translate }}</mat-label>
+            <mat-select formControlName="subscription_plan_id">
+              @for (plan of plans(); track plan.id) {
+                <mat-option [value]="plan.id">
+                  <!--
+                    Priced in the platform's money, not the shop's. The shop's
+                    currency labels its own sales; what it pays for the subscription
+                    is set once for every shop on the platform, and showing a
+                    subscription price against the shop's currency read as a claim
+                    that the two were the same money.
+                  -->
+                  {{ plan.name }} —
+                  <span dir="ltr">{{ plan.monthly_price }}</span>
+                  {{ 'currencies.' + billingCurrency() | translate }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (planForm.controls.subscription_plan_id.touched
+                 && planForm.controls.subscription_plan_id.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'admin.endsAt' | translate }}</mat-label>
+            <input matInput [matDatepicker]="endsPicker" formControlName="subscription_ends_at" />
+            <mat-datepicker-toggle matIconSuffix [for]="endsPicker" />
+            <mat-datepicker #endsPicker />
+            @if (planForm.controls.subscription_ends_at.touched
+                 && planForm.controls.subscription_ends_at.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" class="!h-11 !px-6"
+                  [disabled]="working()">
+            {{ 'common.save' | translate }}
+          </button>
+        </form>
+      </mat-card>
+    </div>
   }
 }

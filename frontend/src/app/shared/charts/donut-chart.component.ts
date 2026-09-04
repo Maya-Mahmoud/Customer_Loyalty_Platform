@@ -83,10 +83,22 @@ export class DonutChartComponent {
   readonly active = signal<string | null>(null);
 
   /**
-   * Validated for contrast and colour-blind separation before being written down;
-   * the last slot is a neutral, because "other" is a leftover rather than a member.
+   * The app's own two hues, alternating dark-teal, gold, mid-teal, olive-gold,
+   * pale-teal, and a neutral last.
+   *
+   * The previous palette reached for magenta, blue and orange — six unrelated hues
+   * that made a chart nothing else on the screen shared, and read as decoration on a
+   * page whose whole identity is teal and gold.
+   *
+   * Alternating the two hues is what keeps adjacent slices apart, and each hue is
+   * then stepped in lightness (roughly L 38, 55, 70) so the separation survives
+   * greyscale and both common forms of colour blindness — neither of which can tell
+   * teal from gold by hue, and both of which can tell dark from pale.
+   *
+   * Assigned in order and never cycled: a slice keeps its colour when the filter
+   * above narrows the list, so the reader is not re-learning the chart each time.
    */
-  private readonly palette = ['#0d9488', '#b5851c', '#9c3d6b', '#3f6fb5', '#c0562f', '#94a3a1'];
+  private readonly palette = ['#1d6660', '#c28f2c', '#3f9189', '#8a6a2a', '#79bfb4', '#94a3a1'];
 
   readonly total = computed(() => this.data().reduce((sum, slice) => sum + slice.value, 0));
 

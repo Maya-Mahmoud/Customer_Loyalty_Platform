@@ -1,0 +1,282 @@
+<div class="w-full">
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold" style="color: var(--clp-ink)">
+      {{ 'platformSettings.title' | translate }}
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">{{ 'platformSettings.subtitle' | translate }}</p>
+  </header>
+
+  @if (loading()) {
+    <div class="flex justify-center py-12">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else {
+    <!--
+      The currency first, and alone in its own panel. Every figure below is read in
+      this money, so it is stated once at the top rather than repeated in each row.
+    -->
+    <mat-card class="p-6 mb-5 clp-panel-teal clp-ink-labels">
+      <div class="flex flex-wrap items-start justify-between gap-6">
+        <div class="min-w-0">
+          <h2 class="text-base font-semibold" style="color: var(--clp-ink)">
+            {{ 'platformSettings.currencyTitle' | translate }}
+          </h2>
+          <p class="text-xs text-slate-600 mt-1 max-w-xl">
+            {{ 'platformSettings.currencyHint' | translate }}
+          </p>
+        </div>
+
+        <form [formGroup]="currencyForm" (ngSubmit)="saveCurrency()"
+              class="flex items-end gap-3">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-52">
+            <mat-label>{{ 'platformSettings.billingCurrency' | translate }}</mat-label>
+            <mat-select formControlName="billing_currency">
+              @for (code of currencies(); track code) {
+                <mat-option [value]="code">
+                  {{ 'currencies.' + code | translate }} <span dir="ltr">({{ code }})</span>
+                </mat-option>
+              }
+            </mat-select>
+            @if (currencyForm.controls.billing_currency.hasError('server')) {
+              <mat-error>
+                {{ currencyForm.controls.billing_currency.getError('server') }}
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" class="!h-11 !px-6"
+                  [disabled]="savingCurrency()">
+            @if (savingCurrency()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              {{ 'common.save' | translate }}
+            }
+          </button>
+        </form>
+      </div>
+    </mat-card>
+
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+      <div>
+        <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">
+          {{ 'platformSettings.plansTitle' | translate }}
+        </h2>
+        <p class="text-xs text-slate-600 max-w-2xl">
+          {{ 'platformSettings.plansHint' | translate }}
+        </p>
+      </div>
+
+      <button mat-flat-button color="primary" type="button" class="!h-10 !px-5 shrink-0"
+              (click)="toggleAdding()">
+        <mat-icon>{{ adding() ? 'close' : 'add' }}</mat-icon>
+        {{ (adding() ? 'common.cancel' : 'platformSettings.addPlan') | translate }}
+      </button>
+    </div>
+
+    <!--
+      Closed by default. The price list is what this screen is for, and a blank form
+      standing above it every visit would compete with the thing being read.
+    -->
+    @if (adding()) {
+      <mat-card class="p-6 mb-5 clp-panel-gold clp-ink-labels">
+        <h3 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">
+          {{ 'platformSettings.addPlan' | translate }}
+        </h3>
+        <p class="text-xs text-slate-600 mb-4">{{ 'platformSettings.addPlanHint' | translate }}</p>
+
+        <form [formGroup]="newPlanForm" (ngSubmit)="addPlan()" class="flex flex-col gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.planName' | translate }}</mat-label>
+              <input matInput formControlName="name" />
+              @if (newPlanForm.controls.name.hasError('server')) {
+                <mat-error>{{ newPlanForm.controls.name.getError('server') }}</mat-error>
+              } @else if (newPlanForm.controls.name.touched && newPlanForm.controls.name.invalid) {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.planCode' | translate }}</mat-label>
+              <input matInput formControlName="code" dir="ltr" />
+              <!-- An identifier, not a label: the name above is the field that gets
+                   to be Arabic and spaced. -->
+              <mat-hint>{{ 'platformSettings.planCodeHint' | translate }}</mat-hint>
+              @if (newPlanForm.controls.code.hasError('server')) {
+                <mat-error>{{ newPlanForm.controls.code.getError('server') }}</mat-error>
+              } @else if (newPlanForm.controls.code.touched && newPlanForm.controls.code.invalid) {
+                <mat-error>{{ 'platformSettings.planCodeInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.monthlyPriceIn' | translate: { currency: ('currencies.' + currencyForm.controls.billing_currency.value | translate) } }}</mat-label>
+              <input matInput type="number" min="0" step="0.01" dir="ltr"
+                     formControlName="monthly_price" />
+              @if (newPlanForm.controls.monthly_price.hasError('server')) {
+                <mat-error>{{ newPlanForm.controls.monthly_price.getError('server') }}</mat-error>
+              } @else if (newPlanForm.controls.monthly_price.touched
+                          && newPlanForm.controls.monthly_price.invalid) {
+                <mat-error>{{ 'platformSettings.priceInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <p class="text-xs text-slate-600">{{ 'platformSettings.capsHint' | translate }}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.maxBranches' | translate }}</mat-label>
+              <input matInput type="number" min="1" dir="ltr" formControlName="max_branches"
+                     [placeholder]="'platformSettings.unlimited' | translate" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.maxUsers' | translate }}</mat-label>
+              <input matInput type="number" min="1" dir="ltr" formControlName="max_users"
+                     [placeholder]="'platformSettings.unlimited' | translate" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'platformSettings.maxInvoices' | translate }}</mat-label>
+              <input matInput type="number" min="1" dir="ltr"
+                     formControlName="max_monthly_invoices"
+                     [placeholder]="'platformSettings.unlimited' | translate" />
+            </mat-form-field>
+          </div>
+
+          <div class="flex justify-end">
+            <button mat-flat-button color="primary" type="submit" class="!h-10 !px-6"
+                    [disabled]="savingNew()">
+              @if (savingNew()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                {{ 'platformSettings.addPlan' | translate }}
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card>
+    }
+
+    <!--
+      One card per plan, each saving on its own. A single button over the whole price
+      list would let a mistyped figure in one plan reject the correct figures in the
+      others, with nothing on the screen to say which row was at fault.
+    -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      @for (row of rows(); track row.plan.id) {
+        <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+          <div class="flex items-center justify-between gap-3 mb-1">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 clp-tint-teal">
+                <mat-icon>workspace_premium</mat-icon>
+              </span>
+
+              <div class="min-w-0">
+                <p class="text-base font-semibold truncate" style="color: var(--clp-ink)">
+                  {{ row.plan.name }}
+                </p>
+                <p class="text-xs text-slate-600" dir="ltr">{{ row.plan.code }}</p>
+              </div>
+            </div>
+
+            @if (!row.plan.is_active) {
+              <!-- Retired, but still shown: shops remain on it, and what they are
+                   being charged still has to be correctable. -->
+              <span class="text-xs px-2 py-1 rounded-full shrink-0"
+                    style="background: #f6e3b8; color: #855d1b">
+                {{ 'platformSettings.retired' | translate }}
+              </span>
+            }
+          </div>
+
+          <!-- What this plan costs today, in words before it is in a field. -->
+          <p class="text-sm mt-3 mb-4" style="color: var(--clp-ink)">
+            <span class="clp-stat-value !text-2xl" dir="ltr">{{ row.plan.monthly_price }}</span>
+            <span class="text-xs text-slate-600 ms-1">
+              {{ 'currencies.' + currencyForm.controls.billing_currency.value | translate }}
+              &middot; {{ 'platformSettings.perMonth' | translate }}
+            </span>
+          </p>
+
+          <form [formGroup]="row.form" (ngSubmit)="savePlan(row)" class="flex flex-col gap-3">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="sm:w-56">
+              <mat-label>{{ 'platformSettings.monthlyPriceIn' | translate: { currency: ('currencies.' + currencyForm.controls.billing_currency.value | translate) } }}</mat-label>
+              <input matInput type="number" min="0" step="0.01" dir="ltr"
+                     formControlName="monthly_price" />
+              @if (row.form.controls.monthly_price.hasError('server')) {
+                <mat-error>{{ row.form.controls.monthly_price.getError('server') }}</mat-error>
+              } @else if (row.form.controls.monthly_price.touched
+                          && row.form.controls.monthly_price.invalid) {
+                <mat-error>{{ 'platformSettings.priceInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <p class="text-xs text-slate-600 mt-1">{{ 'platformSettings.capsHint' | translate }}</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>{{ 'platformSettings.maxBranches' | translate }}</mat-label>
+                <input matInput type="number" min="1" dir="ltr" formControlName="max_branches"
+                       [placeholder]="'platformSettings.unlimited' | translate" />
+                @if (row.form.controls.max_branches.hasError('server')) {
+                  <mat-error>{{ row.form.controls.max_branches.getError('server') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>{{ 'platformSettings.maxUsers' | translate }}</mat-label>
+                <input matInput type="number" min="1" dir="ltr" formControlName="max_users"
+                       [placeholder]="'platformSettings.unlimited' | translate" />
+                @if (row.form.controls.max_users.hasError('server')) {
+                  <mat-error>{{ row.form.controls.max_users.getError('server') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>{{ 'platformSettings.maxInvoices' | translate }}</mat-label>
+                <input matInput type="number" min="1" dir="ltr"
+                       formControlName="max_monthly_invoices"
+                       [placeholder]="'platformSettings.unlimited' | translate" />
+                @if (row.form.controls.max_monthly_invoices.hasError('server')) {
+                  <mat-error>
+                    {{ row.form.controls.max_monthly_invoices.getError('server') }}
+                  </mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+              <!-- Withdrawing a plan, never deleting it: shops point at it by
+                   foreign key, so it leaves registration and stays here. -->
+              <button mat-stroked-button type="button" class="!h-10"
+                      [disabled]="savingPlan() !== null" (click)="toggleActive(row)"
+                      [matTooltip]="(row.plan.is_active
+                        ? 'platformSettings.retireHint'
+                        : 'platformSettings.resumeHint') | translate">
+                <mat-icon>{{ row.plan.is_active ? 'pause_circle' : 'play_circle' }}</mat-icon>
+                {{ (row.plan.is_active
+                    ? 'platformSettings.retire'
+                    : 'platformSettings.resume') | translate }}
+              </button>
+
+              <button mat-flat-button color="primary" type="submit" class="!h-10 !px-6"
+                      [disabled]="savingPlan() !== null">
+                @if (savingPlan() === row.plan.id) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  {{ 'common.save' | translate }}
+                }
+              </button>
+            </div>
+          </form>
+        </mat-card>
+      } @empty {
+        <mat-card class="p-8 text-center text-sm text-slate-500">
+          {{ 'platformSettings.noPlans' | translate }}
+        </mat-card>
+      }
+    </div>
+  }
+</div>

@@ -435,7 +435,14 @@ class FraudSignalTest extends TestCase
             'is_override' => $override,
             'override_reason' => $override ? 'Authorised by the owner.' : null,
             'override_approved_by' => $override ? $this->owner->id : null,
-            'redeemed_at' => now()->subDays($cycle),
+            /*
+             * Hours, not days. The default window starts at the first of the month,
+             * so rewards dated a few days back fell outside it on the first — a test
+             * that passed all August and failed on the 1st of September. Placing them
+             * within today keeps the case about the detector rather than the date the
+             * suite happens to run.
+             */
+            'redeemed_at' => now()->subHours($cycle),
         ]);
     }
 }

@@ -61,11 +61,11 @@
           account, and signing out. Each is one tap, and none of them hides behind
           another.
         -->
-        @if (canEditStore()) {
-          <a mat-icon-button routerLink="/settings"
+        @if (settingsRoute(); as settingsRoute) {
+          <a mat-icon-button [routerLink]="settingsRoute"
              routerLinkActive #settingsActive="routerLinkActive"
-             [attr.aria-label]="'nav.settings' | translate"
-             [matTooltip]="'nav.settings' | translate"
+             [attr.aria-label]="settingsLabelKey() | translate"
+             [matTooltip]="settingsLabelKey() | translate"
              [class.text-slate-900]="settingsActive.isActive"
              [attr.aria-current]="settingsActive.isActive ? 'page' : null">
             <mat-icon>settings</mat-icon>

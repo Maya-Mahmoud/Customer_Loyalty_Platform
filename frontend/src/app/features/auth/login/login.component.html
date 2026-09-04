@@ -60,6 +60,17 @@
       </form>
     </mat-card>
 
+    <!--
+      The staff door and the customer door on the same page. A customer who lands
+      here has no account to sign in with, and without this they would be stuck at a
+      form that will never accept them.
+    -->
+    <a routerLink="/my-balance"
+       class="flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-3 mt-4 no-underline">
+      <mat-icon style="color: var(--clp-teal)">loyalty</mat-icon>
+      <span class="text-sm" style="color: var(--clp-ink)">{{ 'balance.customerEntry' | translate }}</span>
+    </a>
+
     <p class="mt-4 text-center text-sm text-slate-600">
       {{ 'auth.noAccount' | translate }}
       <a routerLink="/register" class="text-blue-700 hover:underline">

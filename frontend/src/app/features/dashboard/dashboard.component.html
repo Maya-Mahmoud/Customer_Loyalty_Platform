@@ -15,89 +15,159 @@
   @if (isPlatformAdmin()) {
     @if (stats(); as stats) {
       <!--
-        The queue first and largest. A pending registration is a person waiting for
-        an answer, and it is the only thing on this screen the supervisor acts on.
-      -->
-      <mat-card class="p-5 mb-4"
-                [class]="hasQueue() ? '!border !border-amber-300 !bg-amber-50' : ''">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-start gap-3">
-            <mat-icon [class]="hasQueue() ? 'text-amber-700' : 'text-emerald-600'">
-              {{ hasQueue() ? 'pending_actions' : 'check_circle' }}
-            </mat-icon>
+        The two jobs, side by side.
 
-            <div>
-              <p class="text-sm font-medium"
-                 [class]="hasQueue() ? 'text-amber-900' : 'text-slate-800'">
+        Each of these was a full-width band: an icon against one edge, a button
+        against the other, and a stretch of nothing in between. Halving the width
+        closes that gap and puts both jobs in one glance, which is what somebody
+        opening this screen came for. The button sits under the words it belongs to
+        rather than across the card from them.
+      -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <mat-card class="p-5" [class]="hasQueue() ? 'clp-panel-gold' : 'clp-panel-teal'">
+          <div class="flex items-start gap-4">
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                  [class]="hasQueue() ? 'clp-tint-amber' : 'clp-tint-teal'">
+              <mat-icon>{{ hasQueue() ? 'pending_actions' : 'verified' }}</mat-icon>
+            </span>
+
+            <div class="min-w-0">
+              <p class="text-base font-semibold" style="color: var(--clp-ink)">
                 @if (hasQueue()) {
                   {{ 'dashboard.queueWaiting' | translate: { count: stats.awaiting_review } }}
                 } @else {
                   {{ 'dashboard.queueEmpty' | translate }}
                 }
               </p>
-              <p class="text-xs mt-0.5"
-                 [class]="hasQueue() ? 'text-amber-800' : 'text-slate-500'">
+              <p class="text-xs text-slate-600 mt-1">
                 {{ (hasQueue() ? 'dashboard.queueHint' : 'dashboard.queueEmptyHint') | translate }}
               </p>
+
+              <a mat-flat-button color="primary" class="!h-10 !px-5 mt-4"
+                 routerLink="/admin/merchants">
+                {{ 'dashboard.openQueue' | translate }}
+              </a>
             </div>
           </div>
-
-          <a mat-flat-button color="primary" routerLink="/admin/merchants">
-            {{ 'dashboard.openQueue' | translate }}
-          </a>
-        </div>
-      </mat-card>
-
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <mat-card class="p-5 clp-panel-teal">
-          <p class="clp-stat-label">{{ 'dashboard.storesTotal' | translate }}</p>
-          <p class="clp-stat-value !text-3xl mt-1">{{ stats.total }}</p>
         </mat-card>
 
-        <mat-card class="p-5 clp-panel-teal">
-          <p class="clp-stat-label">{{ 'status.active' | translate }}</p>
-          <p class="text-3xl font-semibold text-emerald-700 mt-1">{{ stats.merchants.active }}</p>
-        </mat-card>
+        <!--
+          The renewals to chase (FR-ADM-05). Gold only when there is something to do:
+          a zero here is good news, so it is said in a line rather than printed as a
+          nought in large type.
+        -->
+        <mat-card class="p-5"
+                  [class]="stats.expiring_soon > 0 ? 'clp-panel-gold' : 'clp-panel-teal'">
+          <div class="flex items-start gap-4">
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                  [class]="stats.expiring_soon > 0 ? 'clp-tint-amber' : 'clp-tint-teal'">
+              <mat-icon>event_repeat</mat-icon>
+            </span>
 
-        <mat-card class="p-5 clp-panel-teal">
-          <p class="clp-stat-label">{{ 'status.suspended' | translate }}</p>
-          <p class="clp-stat-value !text-3xl mt-1">{{ stats.merchants.suspended }}</p>
-        </mat-card>
+            <div class="min-w-0">
+              <p class="text-base font-semibold" style="color: var(--clp-ink)">
+                @if (stats.expiring_soon > 0) {
+                  {{ 'dashboard.expiringCount' | translate: { count: stats.expiring_soon } }}
+                } @else {
+                  {{ 'dashboard.expiringNone' | translate }}
+                }
+              </p>
+              <p class="text-xs text-slate-600 mt-1">{{ 'dashboard.expiringHint' | translate }}</p>
 
-        <mat-card class="p-4">
-          <!-- FR-ADM-05: the renewals to chase, before the access lapses. -->
-          <p class="text-xs text-slate-500">{{ 'dashboard.expiringSoon' | translate }}</p>
-          <p class="text-3xl font-semibold mt-1"
-             [class]="stats.expiring_soon > 0 ? 'text-amber-700' : 'text-slate-900'">
-            {{ stats.expiring_soon }}
-          </p>
+              @if (stats.expiring_soon > 0) {
+                <a mat-stroked-button class="!h-10 !px-5 mt-4" routerLink="/admin/merchants">
+                  {{ 'dashboard.reviewStores' | translate }}
+                </a>
+              }
+            </div>
+          </div>
         </mat-card>
       </div>
 
-      <mat-card class="p-6 clp-panel-teal">
-        <h2 class="text-base font-semibold mb-4" style="color: var(--clp-ink)">
-          {{ 'dashboard.storesByStatus' | translate }}
-        </h2>
+      <h2 class="text-base font-semibold mb-3" style="color: var(--clp-ink)">
+        {{ 'dashboard.accountsTitle' | translate }}
+      </h2>
 
-        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-          <div>
-            <dt class="clp-stat-label">{{ 'status.pending' | translate }}</dt>
-            <dd class="clp-stat-value">{{ stats.merchants.pending }}</dd>
+      <!--
+        One figure per state, and each state stated once.
+
+        The label and the icon share the top line, the figure sits under them, and
+        the note is pinned to the bottom of every card — so the four read as a row
+        of the same object rather than four boxes of differing emptiness. The figure
+        is smaller than it was: five stores is not a headline, and a count set in
+        display type made the card look mostly blank around it.
+      -->
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <mat-card class="p-5 clp-panel-teal flex flex-col">
+          <div class="flex items-start justify-between gap-2">
+            <p class="clp-stat-label">{{ 'dashboard.storesTotal' | translate }}</p>
+            <!-- The state's own colour, from the shared tints in styles.css, so the
+                 same state never reads amber here and orange elsewhere. -->
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 clp-tint-teal">
+              <mat-icon>storefront</mat-icon>
+            </span>
           </div>
-          <div>
-            <dt class="clp-stat-label">{{ 'status.active' | translate }}</dt>
-            <dd class="clp-stat-value">{{ stats.merchants.active }}</dd>
+
+          <p class="clp-stat-value !text-3xl !font-bold mt-2">{{ stats.total }}</p>
+
+          <p class="text-xs text-slate-600 mt-auto pt-3">
+            @if (stats.merchants.rejected > 0) {
+              <!-- Rejected applications are part of the total but not of the
+                   business, so they are a footnote and not a card of their own. -->
+              {{ 'dashboard.rejectedNote' | translate: { count: stats.merchants.rejected } }}
+            } @else {
+              {{ 'dashboard.totalNote' | translate }}
+            }
+          </p>
+        </mat-card>
+
+        <mat-card class="p-5 clp-panel-teal flex flex-col">
+          <div class="flex items-start justify-between gap-2">
+            <p class="clp-stat-label">{{ 'status.active' | translate }}</p>
+            <!-- The state's own colour, from the shared tints in styles.css, so the
+                 same state never reads amber here and orange elsewhere. -->
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 clp-tint-green">
+              <mat-icon>verified</mat-icon>
+            </span>
           </div>
-          <div>
-            <dt class="clp-stat-label">{{ 'status.suspended' | translate }}</dt>
-            <dd class="clp-stat-value">{{ stats.merchants.suspended }}</dd>
+
+          <p class="clp-stat-value !text-3xl !font-bold mt-2" style="color: #14524e">
+            {{ stats.merchants.active }}
+          </p>
+
+          <p class="text-xs text-slate-600 mt-auto pt-3">{{ 'dashboard.activeNote' | translate }}</p>
+        </mat-card>
+
+        <mat-card class="p-5 clp-panel-teal flex flex-col">
+          <div class="flex items-start justify-between gap-2">
+            <p class="clp-stat-label">{{ 'status.pending' | translate }}</p>
+            <!-- The state's own colour, from the shared tints in styles.css, so the
+                 same state never reads amber here and orange elsewhere. -->
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 clp-tint-amber">
+              <mat-icon>hourglass_top</mat-icon>
+            </span>
           </div>
-          <div>
-            <dt class="clp-stat-label">{{ 'status.rejected' | translate }}</dt>
-            <dd class="clp-stat-value">{{ stats.merchants.rejected }}</dd>
+
+          <p class="clp-stat-value !text-3xl !font-bold mt-2">{{ stats.merchants.pending }}</p>
+
+          <p class="text-xs text-slate-600 mt-auto pt-3">{{ 'dashboard.pendingNote' | translate }}</p>
+        </mat-card>
+
+        <mat-card class="p-5 clp-panel-teal flex flex-col">
+          <div class="flex items-start justify-between gap-2">
+            <p class="clp-stat-label">{{ 'status.suspended' | translate }}</p>
+            <!-- The state's own colour, from the shared tints in styles.css, so the
+                 same state never reads amber here and orange elsewhere. -->
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 clp-tint-red">
+              <mat-icon>pause_circle</mat-icon>
+            </span>
           </div>
-        </dl>
-      </mat-card>
+
+          <p class="clp-stat-value !text-3xl !font-bold mt-2">{{ stats.merchants.suspended }}</p>
+
+          <p class="text-xs text-slate-600 mt-auto pt-3">{{ 'dashboard.suspendedNote' | translate }}</p>
+        </mat-card>
+      </div>
     } @else if (loading()) {
       <div class="flex justify-center py-10">
         <mat-spinner diameter="36" />

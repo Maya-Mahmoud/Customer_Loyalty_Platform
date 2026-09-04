@@ -19,6 +19,7 @@ import { MerchantStatus } from '../../../core/models/auth.model';
 import { AdminMerchant, SubscriptionPlan } from '../../../core/models/merchant.model';
 import { AdminMerchantService } from '../../../core/services/admin-merchant.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PlatformSettingsService } from '../../../core/services/platform-settings.service';
 import {
   DecisionDialogComponent,
   DecisionDialogData,
@@ -54,6 +55,7 @@ import {
 })
 export class MerchantDetailComponent {
   private readonly merchants = inject(AdminMerchantService);
+  private readonly settings = inject(PlatformSettingsService);
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
@@ -65,6 +67,17 @@ export class MerchantDetailComponent {
 
   readonly merchant = signal<AdminMerchant | null>(null);
   readonly plans = signal<SubscriptionPlan[]>([]);
+
+  /**
+   * The money the platform bills in, which is not the money the shop trades in.
+   *
+   * Read from the platform settings rather than taken from the merchant record: a
+   * subscription price shown against the shop's own currency read as a claim that
+   * the two were the same money, and they are set by different people for different
+   * purposes. Falls back to the configured default if the request fails, so a plan
+   * price is never printed with no currency at all.
+   */
+  readonly billingCurrency = signal('SYP');
   readonly loading = signal(true);
   readonly working = signal(false);
 
@@ -83,6 +96,38 @@ export class MerchantDetailComponent {
     () => this.merchant()?.status === 'pending' && !this.merchant()?.is_verified
   );
 
+  /**
+   * The subscription in the terms the supervisor thinks in: which plan, what it
+   * costs, and how long is left on it.
+   *
+   * The days are computed here rather than shown as a bare date because a date on
+   * its own makes the reader do the arithmetic, and the arithmetic is the whole
+   * question — FR-ADM-05 exists so that a lapse is noticed before it happens.
+   */
+  readonly subscription = computed(() => {
+    const merchant = this.merchant();
+    const endsAt = merchant?.subscription_ends_at ?? null;
+
+    if (endsAt === null) {
+      return null;
+    }
+
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+
+    const days = Math.round(
+      (new Date(endsAt).getTime() - midnight.getTime()) / 86_400_000
+    );
+
+    return {
+      endsAt: endsAt.slice(0, 10),
+      days,
+      expired: days < 0,
+      // The same warning window the platform dashboard counts by.
+      expiringSoon: days >= 0 && days <= 14,
+    };
+  });
+
   readonly planForm = this.fb.nonNullable.group({
     subscription_plan_id: [0, [Validators.required, Validators.min(1)]],
     subscription_ends_at: ['', [Validators.required]],
@@ -91,8 +136,16 @@ export class MerchantDetailComponent {
   constructor() {
     this.load();
 
-    this.merchants.plans().subscribe({
-      next: (plans) => this.plans.set(plans),
+    /*
+     * One request for both: the plans on offer and the currency their prices are
+     * quoted in. Asking for the plans alone would leave the picker showing figures
+     * with no money attached.
+     */
+    this.settings.get().subscribe({
+      next: (settings) => {
+        this.plans.set(settings.plans.filter((plan) => plan.is_active));
+        this.billingCurrency.set(settings.billing_currency);
+      },
       error: () => this.plans.set([]),
     });
   }

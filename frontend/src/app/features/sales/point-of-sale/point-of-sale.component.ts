@@ -86,29 +86,19 @@ export class PointOfSaleComponent {
   readonly branches = signal<Branch[]>([]);
 
   /**
-   * Whether the rep is copying a number off a printed receipt.
+   * The strip beside the till.
    *
-   * Closed by default, because the common case at a small shop is a hand-written
-   * receipt with no number on it — and a field nobody needs is a field everybody
-   * still has to tab past.
+   * Their own entries for everyone — enough to catch a mistyped amount or a sale
+   * entered twice, and nothing that would hand a rep the customer list BR-019 keeps
+   * away from them. The branch totals and the pending queue appear only for the roles
+   * that already hold those permissions, so the same screen says different things to
+   * the person standing at it.
    */
-  readonly numberFromReceipt = signal(false);
-
-  /*
-   * The strip beside the till. What it shows depends on who opened the screen,
-   * because the people who stand here differ in what they are allowed to see —
-   * and the difference is enforced by the same permissions the server checks.
-   */
-
-  /** Everyone's own entries from today. Their work, never a customer list (BR-019). */
   readonly myRecent = signal<MyRecentInvoice[]>([]);
-
-  /** Today's takings, for the roles that hold reports.view_own_branch. */
   readonly todayTotals = signal<ReportSummary | null>(null);
-  readonly canSeeTotals = computed(() => this.auth.has('reports.view_own_branch'));
-
-  /** A correction waiting on a decision is a rep standing still (BR-012). */
   readonly pendingCorrections = signal(0);
+
+  readonly canSeeTotals = computed(() => this.auth.has('reports.view_own_branch'));
   readonly canDecideCorrections = computed(() => this.auth.has('invoices.amend'));
 
   readonly phoneForm = this.fb.nonNullable.group({
@@ -122,8 +112,9 @@ export class PointOfSaleComponent {
   });
 
   readonly saleForm = this.fb.nonNullable.group({
-    // Optional: empty means the system numbers the sale (see InvoiceService).
-    invoice_number: ['', [Validators.maxLength(64)]],
+    // The number from the shop's own receipt: required, and the customer's proof
+    // of the card later (FR-CUS-12).
+    invoice_number: ['', [Validators.required, Validators.maxLength(64)]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
     invoice_date: [this.today(), [Validators.required]],
     branch_id: [null as number | null],

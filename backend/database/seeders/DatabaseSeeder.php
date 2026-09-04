@@ -85,7 +85,15 @@ class DatabaseSeeder extends Seeder
             [
                 'merchant_id' => null,
                 'branch_id' => null,
-                'name' => 'Platform Supervisor',
+                /*
+                 * Arabic, because it is a name and not a label: it is printed
+                 * wherever an account is named — the toolbar, the reviewer line on a
+                 * merchant record, the audit trail — and no translation file can
+                 * reach it there. The platform serves Syrian shops, so the account
+                 * the platform ships with reads in their language. Whoever runs it
+                 * can change it from their own profile screen.
+                 */
+                'name' => 'مشرف المنصة',
                 'phone' => '0900000000',
                 'password' => self::PASSWORD,
                 'role' => UserRole::PlatformAdmin,

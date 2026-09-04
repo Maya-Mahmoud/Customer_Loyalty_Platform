@@ -1,0 +1,205 @@
+<!--
+  Built for a phone held in a shop. One column, large type, big targets, and no
+  navigation to get lost in: the visitor has exactly one question.
+-->
+<div class="min-h-screen py-8 px-4 clp-public-page">
+  <div class="max-w-md mx-auto">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <p class="text-lg font-semibold" style="color: var(--clp-ink)">
+          {{ 'app.shortName' | translate }}
+        </p>
+        <p class="text-xs text-slate-600 mt-0.5">{{ 'balance.tagline' | translate }}</p>
+      </div>
+
+      <button mat-button type="button" (click)="toggleLanguage()">
+        {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
+      </button>
+    </header>
+
+    <!-- The answer, once it is known -->
+    @if (card(); as card) {
+      <mat-card class="p-6 clp-panel-teal">
+        <div class="flex items-center gap-3">
+          @if (card.logo_url) {
+            <img [src]="card.logo_url" alt=""
+                 class="w-14 h-14 rounded-xl object-contain bg-white border border-teal-100 p-1" />
+          } @else {
+            <span class="w-14 h-14 rounded-xl bg-white border border-teal-100 flex items-center justify-center"
+                  style="color: var(--clp-teal)">
+              <mat-icon>storefront</mat-icon>
+            </span>
+          }
+
+          <div class="min-w-0">
+            <p class="text-base font-semibold truncate" style="color: var(--clp-ink)">{{ card.store }}</p>
+            <p class="text-xs text-slate-600">{{ card.city }}</p>
+          </div>
+        </div>
+
+        <!-- The number they came for -->
+        <p class="clp-stat-label mt-6">{{ 'balance.yourBalance' | translate }}</p>
+        <p class="clp-stat-value !text-4xl mt-1" dir="ltr">
+          {{ card.balance }} <span class="text-base font-medium">{{ card.currency }}</span>
+        </p>
+
+        <mat-progress-bar mode="determinate" [value]="progressPercent()"
+                          [color]="card.is_eligible ? 'accent' : 'primary'"
+                          class="!h-2 !rounded mt-4" />
+
+        @if (card.is_eligible) {
+          <!-- Said plainly, because this is the moment the programme pays off. -->
+          <div class="mt-4 rounded-xl bg-white border border-emerald-200 p-4">
+            <div class="flex items-start gap-2">
+              <mat-icon class="text-emerald-600">redeem</mat-icon>
+              <div>
+                <p class="text-sm font-semibold text-emerald-900">
+                  {{ 'balance.eligibleTitle' | translate }}
+                </p>
+                <p class="text-xs text-emerald-800 mt-1">{{ 'balance.eligibleBody' | translate }}</p>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <p class="text-sm mt-4" style="color: var(--clp-ink)">
+            @if (card.amount_remaining !== null) {
+              {{ 'balance.remainingAmount' | translate: { amount: card.amount_remaining, currency: card.currency } }}
+            }
+            @if (card.invoices_remaining !== null) {
+              {{ 'balance.remainingVisits' | translate: { count: card.invoices_remaining } }}
+            }
+          </p>
+        }
+
+        <!-- What the reward is: a balance on its own is a number with no meaning. -->
+        @if (card.reward; as reward) {
+          <p class="text-xs text-slate-600 mt-3">
+            @if (reward.type === 'percentage') {
+              {{ 'balance.rewardPercentage' | translate: { value: reward.value } }}
+              @if (reward.max_discount) {
+                {{ 'balance.rewardCapped' | translate: { amount: reward.max_discount, currency: card.currency } }}
+              }
+            } @else if (reward.type === 'fixed_amount') {
+              {{ 'balance.rewardFixed' | translate: { amount: reward.value, currency: card.currency } }}
+            } @else {
+              {{ 'balance.rewardVoucher' | translate: { amount: reward.value, currency: card.currency } }}
+            }
+          </p>
+        }
+
+        <!-- Vouchers already issued and still spendable -->
+        @if (card.vouchers.length > 0) {
+          <div class="mt-5 pt-4 border-t border-teal-100">
+            <p class="clp-stat-label mb-2">{{ 'balance.vouchers' | translate }}</p>
+
+            <div class="flex flex-col gap-2">
+              @for (voucher of card.vouchers; track voucher.code) {
+                <div class="rounded-xl bg-white border border-teal-100 px-3 py-2 flex items-center justify-between gap-2">
+                  <span class="font-mono font-semibold tracking-widest" dir="ltr"
+                        style="color: var(--clp-ink)">
+                    {{ voucher.code }}
+                  </span>
+                  <span class="text-xs text-slate-600" dir="ltr">
+                    {{ voucher.amount }} {{ card.currency }}
+                    @if (voucher.expires_at) {
+                      &middot; {{ voucher.expires_at }}
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <button mat-stroked-button type="button" class="w-full !h-11 mt-6" (click)="startOver()">
+          {{ 'balance.checkAnother' | translate }}
+        </button>
+      </mat-card>
+
+      <p class="text-xs text-slate-500 text-center mt-4">{{ 'balance.privacyNote' | translate }}</p>
+    } @else {
+      <!-- The three answers that stand in for a password -->
+      <mat-card class="p-6 clp-panel-teal clp-ink-labels">
+        <h1 class="text-xl font-semibold" style="color: var(--clp-ink)">
+          {{ 'balance.title' | translate }}
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 mb-5">{{ 'balance.subtitle' | translate }}</p>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ 'balance.store' | translate }}</mat-label>
+            <mat-select formControlName="merchant_id">
+              @for (store of stores(); track store.id) {
+                <mat-option [value]="store.id">{{ store.name }} — {{ store.city }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.merchant_id.touched && form.controls.merchant_id.invalid) {
+              <mat-error>{{ 'validation.required' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mt-1">
+            <mat-label>{{ 'balance.phone' | translate }}</mat-label>
+            <input matInput formControlName="phone" dir="ltr" inputmode="tel" autocomplete="tel" />
+            <mat-hint>{{ 'balance.phoneHint' | translate }}</mat-hint>
+            @if (form.controls.phone.touched && form.controls.phone.invalid) {
+              <mat-error>{{ 'validation.phone' | translate }}</mat-error>
+            }
+          </mat-form-field>
+
+          @if (!lostReceipt()) {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mt-1">
+              <mat-label>{{ 'balance.invoiceNumber' | translate }}</mat-label>
+              <input matInput formControlName="invoice_number" dir="ltr" autocomplete="off" />
+              <mat-hint>{{ 'balance.invoiceNumberHint' | translate }}</mat-hint>
+              @if (form.controls.invoice_number.touched && form.controls.invoice_number.value === '') {
+                <mat-error>{{ 'validation.required' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <button mat-button type="button" class="!px-2 self-start"
+                    (click)="lostReceipt.set(true)">
+              {{ 'balance.forgotNumber' | translate }}
+            </button>
+          } @else {
+            <!-- The fallback: answered from memory instead of from paper. -->
+            <p class="text-xs text-slate-600 -mb-1">{{ 'balance.fallbackHint' | translate }}</p>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ 'balance.lastPurchaseDate' | translate }}</mat-label>
+              <input matInput type="date" formControlName="invoice_date" dir="ltr" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mt-1">
+              <mat-label>{{ 'balance.lastPurchaseAmount' | translate }}</mat-label>
+              <input matInput type="number" formControlName="amount" dir="ltr" step="0.01" />
+            </mat-form-field>
+
+            <button mat-button type="button" class="!px-2 self-start"
+                    (click)="lostReceipt.set(false)">
+              {{ 'balance.haveNumber' | translate }}
+            </button>
+          }
+
+          @if (notFound()) {
+            <div class="rounded-xl bg-white border border-amber-200 px-3 py-3 text-sm text-amber-900"
+                 role="alert">
+              {{ 'balance.notFound' | translate }}
+            </div>
+          }
+
+          <button mat-flat-button color="primary" type="submit" class="!h-12 mt-1"
+                  [disabled]="loading()">
+            @if (loading()) {
+              <mat-spinner diameter="22" />
+            } @else {
+              {{ 'balance.check' | translate }}
+            }
+          </button>
+        </form>
+      </mat-card>
+
+      <p class="text-xs text-slate-500 text-center mt-4">{{ 'balance.whyProof' | translate }}</p>
+    }
+  </div>
+</div>

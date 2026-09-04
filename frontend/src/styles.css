@@ -337,10 +337,93 @@ body {
   color: #0f172a;
 }
 
+/*
+ * A value on a record card.
+ *
+ * Heavier and darker than body text so a scanned record reads as pairs — the green
+ * label naming the field, the near-black value answering it — but not at the size of
+ * a headline figure, because a record has twenty of them and twenty headlines is a
+ * page with no hierarchy at all.
+ */
+.clp-detail-value {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/*
+ * A field and its answer, made into one object.
+ *
+ * Colour alone was not enough. On a two-column record the pairs sat in a common
+ * gap, so a green caption and the dark line under it read as two separate items and
+ * the eye had to guess which value belonged to which label — worse in Arabic, where
+ * the columns are mirrored and the gap falls where a reader expects the next word.
+ *
+ * So each pair gets its own tile: a pale ground to bound it, and a green edge on the
+ * side the reader starts from, which is the start edge rather than the left one so
+ * it moves with the language.
+ */
+.clp-pair {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #cfe6e1;
+  border-inline-start: 3px solid var(--clp-teal);
+  border-radius: 0.625rem;
+  padding: 0.6rem 0.85rem;
+}
+
+.clp-pair dt,
+.clp-pair-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--clp-teal);
+  line-height: 1.1rem;
+}
+
+.clp-pair dd,
+.clp-pair-value {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.4rem;
+}
+
 /* The small tinted square behind an icon on a tile. */
 .clp-tile-icon {
   background: linear-gradient(135deg, #eef6f5 0%, #d3e8e5 100%);
   color: var(--clp-teal);
+}
+
+/*
+ * State tints for the square behind a status icon.
+ *
+ * Four names rather than four pairs of hex codes written into the templates: the
+ * same states are counted on the supervisor's dashboard, listed on the merchants
+ * screen and stamped on a merchant's record, and a state that is amber in one place
+ * and orange in another stops being a signal and becomes decoration.
+ *
+ * Each pair is a pale ground with its own colour at full strength on top, so the
+ * icon carries the meaning and the ground only separates it from the card. Every
+ * combination clears WCAG AA for an icon at this size, which a mid-tone icon on a
+ * mid-tone ground would not.
+ */
+.clp-tint-teal {
+  background: #e3f0ee;
+  color: #1a5f59;
+}
+
+.clp-tint-green {
+  background: #e4f5ec;
+  color: #136b43;
+}
+
+.clp-tint-amber {
+  background: #fbeed3;
+  color: #8a5e14;
+}
+
+.clp-tint-red {
+  background: #fbe6e4;
+  color: #a52f26;
 }
 
 /* A figure that is the answer to the question the card asks. */
@@ -474,6 +557,71 @@ h1 {
 .mat-mdc-cell,
 .mat-mdc-header-cell {
   padding-inline: 14px !important;
+}
+
+/*
+ * A plain table in the same clothes as a mat-table.
+ *
+ * Written by hand rather than as a mat-table because the audit trail needs a second
+ * row underneath a row — the before/after fields, which are a different shape for
+ * every action. mat-table's expandable-row pattern costs more markup than the whole
+ * table does, and none of what it buys (sorting, virtual scroll) applies to a page
+ * the server has already ordered and paginated.
+ *
+ * The look is deliberately identical to the mat-tables elsewhere: green headings
+ * because a heading names its column and every other label in this app is green, and
+ * hairline rules rather than boxes so a long page of rows stays quiet.
+ */
+.clp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.clp-table thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--clp-teal);
+  background: #f2f8f7;
+  border-bottom: 1px solid #d3e8e5;
+  white-space: nowrap;
+  text-align: start;
+  padding: 0.7rem 0.875rem;
+}
+
+.clp-table tbody td {
+  border-bottom: 1px solid #f1efeb;
+  padding: 0.7rem 0.875rem;
+  vertical-align: top;
+  color: #1f2d2c;
+}
+
+/* Scanning a wide row across a screen is where the eye loses its place. */
+.clp-table tbody tr.clp-row:hover,
+.clp-table tbody tr.clp-row:hover + tr.clp-detail-row {
+  background-color: #fbfaf8;
+}
+
+.clp-table tbody tr.clp-detail-row > td {
+  border-bottom: 1px solid #f1efeb;
+  padding-top: 0;
+}
+
+/*
+ * A short word carrying a state, on the tinted ground of that state.
+ *
+ * The tints come from the same four in this file, so an action that failed is the
+ * same red as a suspended shop, and a shop being read is the same teal as a count of
+ * shops. Consistency here is what lets a reader learn the colours once.
+ */
+.clp-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.15rem;
+  white-space: nowrap;
 }
 
 /* -------------------------------------------------------------------------
@@ -620,4 +768,22 @@ h1 {
  */
 [dir='ltr'] {
   font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------------------
+   Public pages
+   ------------------------------------------------------------------------- */
+
+/*
+ * The customer's balance page sits outside the shell, so the canvas gradient painted
+ * on .mat-drawer-content never reaches it. It carries its own — which is why a
+ * customer opening a link on their phone in a shop lands on something that plainly
+ * belongs to the same product the shop is using.
+ */
+.clp-public-page {
+  background:
+    radial-gradient(700px 400px at 50% -10%, rgb(13 148 136 / 20%), transparent 60%),
+    radial-gradient(600px 400px at 100% 100%, rgb(194 143 44 / 14%), transparent 60%),
+    linear-gradient(180deg, #eaf4f2 0%, #f6f7f3 45%, #faf6ed 100%);
+  background-attachment: fixed;
 }

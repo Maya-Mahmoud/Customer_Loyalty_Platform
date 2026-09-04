@@ -26,6 +26,9 @@
     "The request was declined and the applicant has been notified.": "تم رفض الطلب وإشعار مقدّمه.",
     "The store account has been suspended.": "تم تعليق حساب المحل.",
     "The subscription plan has been updated.": "تم تحديث خطة الاشتراك.",
+    "The platform settings have been saved.": "تم حفظ إعدادات المنصة.",
+    "The plan has been saved.": "تم حفظ الخطة.",
+    "The plan has been added.": "تم إضافة الخطة.",
     "A new invitation has been emailed to the store owner.": "تم إرسال دعوة جديدة إلى بريد صاحب المحل.",
     "Activate the store account before inviting its owner.": "لا يمكن إرسال الدعوة قبل تفعيل حساب المحل.",
     "This store has no owner account.": "لا يوجد حساب مالك لهذا المحل.",
@@ -155,5 +158,6 @@
     "This customer has already been anonymised.": "هوية هذا الزبون مُخفاة مسبقاً.",
     "Withdrawn at the customer's own request.": "تم السحب بناءً على طلب الزبون نفسه.",
     "Balance closed on a data erasure request.": "أُغلق الرصيد بناءً على طلب حذف البيانات.",
-    "Could not assign an invoice number. Please try again.": "تعذر إعطاء رقم للفاتورة، الرجاء إعادة المحاولة."
+    "Could not assign an invoice number. Please try again.": "تعذر إعطاء رقم للفاتورة، الرجاء إعادة المحاولة.",
+    "We could not match those details. Check the shop, the number and the invoice.": "لم نتمكن من مطابقة هذه البيانات. الرجاء التأكد من المحل ورقم الموبايل وبيانات الفاتورة."
 }

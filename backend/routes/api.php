@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\V1\Admin\MerchantController;
 use App\Http\Controllers\Api\V1\Admin\PlatformStatsController;
+use App\Http\Controllers\Api\V1\Admin\PlatformSettingController;
 use App\Http\Controllers\Api\V1\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BalanceLookupController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\Merchant\BranchController;
 use App\Http\Controllers\Api\V1\Merchant\CustomerErasureController;
@@ -45,9 +47,10 @@ Route::prefix('v1')->group(function () {
     |----------------------------------------------------------------------
     */
 
-    // Throttled because this is the one endpoint an attacker can call freely.
+    // Throttled because this is the one endpoint an attacker can call freely. The
+    // ceiling is in config/clp.php, so it is an .env line rather than a code change.
     Route::post('/auth/login', [AuthController::class, 'login'])
-        ->middleware('throttle:6,1');
+        ->middleware('throttle:' . config('clp.login_attempts_per_minute') . ',1');
 
     // Merchant self-registration (BRD 8.1). The per-destination resend and
     // attempt caps live in VerificationCodeService; this only limits volume.
@@ -64,6 +67,22 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot', [PasswordResetController::class, 'store']);
         Route::post('/reset', [PasswordResetController::class, 'update']);
     });
+
+    /*
+     * The customer's own balance (BRD FR-CUS-12).
+     *
+     * Public, because the customer has no account and never will (BR-001). The proof
+     * is a receipt rather than a password, which makes the throttle part of the
+     * control and not just protection: invoice numbers run in sequence, so somebody
+     * holding one receipt from a shop could otherwise sit and guess their neighbours'
+     * numbers against a known phone. Eight tries per ten minutes leaves an honest
+     * customer room to mistype and leaves a guesser nowhere to go.
+     */
+    Route::get('/balance/stores', [BalanceLookupController::class, 'stores'])
+        ->middleware('throttle:30,1');
+
+    Route::post('/balance', [BalanceLookupController::class, 'show'])
+        ->middleware('throttle:8,10');
 
     // Setting a password from an invitation link (BRD FR-BRN-04). The token in
     // the URL is the authorisation, so no session is needed.
@@ -262,6 +281,12 @@ Route::prefix('v1')->group(function () {
             ->group(function () {
                 Route::get('/stats', PlatformStatsController::class);
                 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
+                Route::post('/subscription-plans', [SubscriptionPlanController::class, 'store']);
+                Route::put('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'update']);
+
+                // The platform's own settings, as opposed to a store's (FR-ADM-04).
+                Route::get('/settings', [PlatformSettingController::class, 'show']);
+                Route::put('/settings', [PlatformSettingController::class, 'update']);
 
                 Route::get('/merchants', [MerchantController::class, 'index']);
                 Route::get('/merchants/{merchant}', [MerchantController::class, 'show']);
