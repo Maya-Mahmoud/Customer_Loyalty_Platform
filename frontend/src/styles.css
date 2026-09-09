@@ -25,7 +25,7 @@
   /* Paper, not grey. The canvas is the largest colour on the screen and the one
      nobody notices until it is cold. */
   --clp-canvas: #f7f6f3;
-  --clp-line: #e9e6e0;
+  --clp-line: #dcd6cd;
   --clp-text: #1f2d2c;
   --clp-muted: #6b7a78;
 }
@@ -203,8 +203,18 @@ body {
  */
 .mat-mdc-card {
   border-radius: 16px !important;
-  border: 1px solid var(--clp-line);
-  box-shadow: 0 1px 2px rgb(11 47 45 / 4%) !important;
+  /* Green-tinted rather than warm grey, so a plain white card belongs to the same
+     family as the tinted panels beside it instead of looking like a stray. */
+  border: 1px solid #c3dad5;
+  /*
+   * Two soft layers rather than one: a tight shadow to seat the card on the page
+   * and a wider, fainter one to lift it off the tinted background. Four cards in a
+   * row on a pale ground were reading as one long block, because the only thing
+   * separating them was the gap between them.
+   */
+  box-shadow:
+    0 1px 2px rgb(11 47 45 / 6%),
+    0 6px 16px -8px rgb(11 47 45 / 8%) !important;
   background: #ffffff;
 }
 
@@ -234,12 +244,21 @@ body {
  */
 .clp-panel-teal {
   background: linear-gradient(165deg, #d7ece8 0%, #eaf5f3 45%, #f7fcfb 100%) !important;
-  border-color: #b9dcd6 !important;
+  /*
+   * A definite green edge, not a tint of the fill.
+   *
+   * It was drawn a shade off the gradient, which kept it honest but left four cards
+   * in a row reading as one block: an edge that close to what it borders is only
+   * visible when you look for it, and nobody looks for an edge. This is dark enough
+   * to be seen at a glance and still one pixel, so the card is bounded rather than
+   * boxed in.
+   */
+  border-color: #3e8d84 !important;
 }
 
 .clp-panel-gold {
   background: linear-gradient(165deg, #f9ecd0 0%, #fdf6e8 45%, #fffdf8 100%) !important;
-  border-color: #ecd39c !important;
+  border-color: #d4ad63 !important;
 }
 
 /*
@@ -614,6 +633,27 @@ h1 {
  * same red as a suspended shop, and a shop being read is the same teal as a count of
  * shops. Consistency here is what lets a reader learn the colours once.
  */
+/*
+ * The one control in a table row.
+ *
+ * A text button in a cell is indistinguishable from the data in the cells beside
+ * it, which is how a whole column of "review" links stopped looking clickable. The
+ * teal outline is the lightest thing that still reads as a control, and it fills in
+ * on hover and focus so the affordance is confirmed rather than only promised.
+ */
+.clp-row-action.mat-mdc-outlined-button {
+  --mdc-outlined-button-label-text-color: var(--clp-teal);
+  border-color: #b9dcd6 !important;
+  font-weight: 600;
+  padding-inline: 0.85rem !important;
+}
+
+.clp-row-action.mat-mdc-outlined-button:hover,
+.clp-row-action.mat-mdc-outlined-button:focus-visible {
+  background: #e3f0ee;
+  border-color: var(--clp-teal) !important;
+}
+
 .clp-badge {
   display: inline-block;
   padding: 0.15rem 0.5rem;
@@ -695,9 +735,17 @@ h1 {
   font-weight: 500;
 }
 
+/*
+ * !important on both, for the same reason the rule above needs two class names.
+ *
+ * The base rule sets an !important white background, so this one — written at equal
+ * specificity without it — was losing: the active tab stayed white and its label,
+ * which is white by design, disappeared into it. The tab was still there and still
+ * selected; it simply had nothing visible in it.
+ */
 .mat-mdc-tab.mdc-tab.mdc-tab--active {
-  background: linear-gradient(180deg, var(--clp-teal) 0%, var(--clp-ink) 100%);
-  border-color: var(--clp-ink);
+  background: linear-gradient(180deg, var(--clp-teal) 0%, var(--clp-ink) 100%) !important;
+  border-color: var(--clp-ink) !important;
 }
 
 .mat-mdc-tab.mdc-tab.mdc-tab--active .mdc-tab__text-label {
@@ -786,4 +834,159 @@ h1 {
     radial-gradient(600px 400px at 100% 100%, rgb(194 143 44 / 14%), transparent 60%),
     linear-gradient(180deg, #eaf4f2 0%, #f6f7f3 45%, #faf6ed 100%);
   background-attachment: fixed;
+}
+
+/* -------------------------------------------------------------------------
+   The doors — sign in, register, set a password, look up a balance
+   ------------------------------------------------------------------------- */
+
+/*
+ * These pages live outside the shell, so none of the app's identity reached them:
+ * a white card on flat grey, which is what every unfinished admin panel looks
+ * like. They are also the first thing a shop owner ever sees of this platform.
+ *
+ * Two panels on a wide screen. The dark one carries the brand and says what the
+ * thing is; the light one carries the form. Below `lg` the brand panel is dropped
+ * rather than stacked — on a phone the form is the whole job, and a banner above it
+ * would push the fields under the fold.
+ */
+.clp-auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .clp-auth {
+    grid-template-columns: 26rem minmax(0, 1fr);
+  }
+}
+
+/* The branded half. Same ink-to-black ramp as the navigation rail, so somebody
+   who signs in recognises the surface they arrive on. */
+.clp-auth-brand {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 2.5rem;
+  background: linear-gradient(180deg, var(--clp-ink) 0%, #08201f 100%);
+  color: #d9e5e3;
+}
+
+@media (min-width: 1024px) {
+  .clp-auth-brand {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* A gold wash in the far corner and a teal one behind the wordmark: the same two
+   hues as the app canvas, at the only strength that survives on a dark ground. */
+.clp-auth-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(560px 360px at 8% 0%, rgb(71 151 143 / 30%), transparent 62%),
+    radial-gradient(420px 320px at 100% 100%, rgb(194 143 44 / 22%), transparent 60%);
+  pointer-events: none;
+}
+
+.clp-auth-brand > * {
+  position: relative;
+}
+
+.clp-auth-brand h1 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.clp-auth-brand .clp-auth-tagline {
+  color: #a9c0bd;
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  margin: 0.75rem 0 0;
+}
+
+/* One point per line, each with its own gold tick. Three claims, because a fourth
+   turns a statement into a brochure. */
+.clp-auth-points {
+  list-style: none;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.clp-auth-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #c3d5d2;
+}
+
+.clp-auth-points .mat-icon {
+  color: var(--clp-gold);
+  flex-shrink: 0;
+}
+
+/* The form half, on the app's own canvas rather than on flat grey. */
+.clp-auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 3rem;
+  background:
+    radial-gradient(760px 420px at 100% -10%, rgb(13 148 136 / 14%), transparent 60%),
+    radial-gradient(620px 420px at 0% 110%, rgb(194 143 44 / 12%), transparent 60%),
+    linear-gradient(165deg, #eef5f3 0%, #f6f6f2 45%, #faf7ee 100%);
+}
+
+[dir='rtl'] .clp-auth-form {
+  background:
+    radial-gradient(760px 420px at 0% -10%, rgb(13 148 136 / 14%), transparent 60%),
+    radial-gradient(620px 420px at 100% 110%, rgb(194 143 44 / 12%), transparent 60%),
+    linear-gradient(195deg, #eef5f3 0%, #f6f6f2 45%, #faf7ee 100%);
+}
+
+/* The wordmark shown only where the brand panel is not — a phone still needs to
+   know which application it is looking at. */
+.clp-auth-compact-brand {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .clp-auth-compact-brand {
+    display: none;
+  }
+}
+
+/*
+ * A section inside a long form.
+ *
+ * The registration form asks for nine things about two different subjects — the
+ * shop, and the account that will sign in. Unlabelled, it reads as one wall of
+ * boxes; a caption over each half turns it into two short questions.
+ */
+.clp-form-section {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--clp-teal);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+
+.clp-form-section::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #d3e8e5;
 }

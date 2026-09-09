@@ -38,7 +38,7 @@ import { NotificationService } from '../../../core/services/notification.service
  * the current one (BR-015), so the wording says so and asks for a start date. And
  * the parameters interact — a percentage needs a ceiling, a voucher needs an
  * expiry, an amount threshold needs an amount — so fields appear only when they
- * apply, and a worked example shows what the current settings would actually pay.
+ * apply.
  */
 @Component({
   selector: 'app-loyalty-rule',
@@ -70,9 +70,6 @@ export class LoyaltyRuleComponent {
 
   readonly historyColumns = ['version', 'threshold', 'reward', 'period', 'author'];
 
-  /** A version cannot start in the past (BR-015), so the picker starts today. */
-  readonly today = new Date();
-
   readonly current = signal<LoyaltyRule | null>(null);
   readonly history = signal<LoyaltyRule[]>([]);
   readonly loading = signal(true);
@@ -96,7 +93,6 @@ export class LoyaltyRuleComponent {
     balance_validity_months: [12 as number | null],
     voucher_validity_days: [30 as number | null],
 
-    effective_from: [new Date() as Date | string, [Validators.required]],
   });
 
   private readonly thresholdType = signal<ThresholdType>('amount');
@@ -118,43 +114,6 @@ export class LoyaltyRuleComponent {
 
   /** True once a version exists, which changes the wording from "publish" to "replace". */
   readonly hasCurrent = computed(() => this.current() !== null);
-
-  /**
-   * What the current settings would actually pay on a worked example.
-   *
-   * A narrow reading of the simulator in FR-LOY-09 — one illustrative cycle rather
-   * than a projection over real data — but it is the part that stops an owner
-   * publishing a rule whose arithmetic surprises them.
-   */
-  readonly example = computed(() => {
-    const v = this.values();
-    const threshold = this.tracksAmount() ? Number(v.threshold_amount ?? 0) : 0;
-
-    // A cycle that lands 16% past the threshold, mirroring BRD 11.2.
-    const cycleTotal = this.tracksAmount() ? Math.round(threshold * 1.16) : 1160;
-
-    const computedReward =
-      v.reward_type === 'percentage'
-        ? (cycleTotal * Number(v.reward_value ?? 0)) / 100
-        : Number(v.reward_value ?? 0);
-
-    const cap = this.needsCap() ? Number(v.max_discount_amount ?? 0) : 0;
-    const paid = this.needsCap() && cap > 0 ? Math.min(computedReward, cap) : computedReward;
-
-    const surplus =
-      v.reset_policy === 'carry_over' && this.tracksAmount()
-        ? Math.max(0, cycleTotal - threshold)
-        : 0;
-
-    return {
-      cycleTotal: Math.round(cycleTotal * 100) / 100,
-      computedReward: Math.round(computedReward * 100) / 100,
-      paid: Math.round(paid * 100) / 100,
-      wasCapped: computedReward > paid,
-      surplus: Math.round(surplus * 100) / 100,
-      carriesOver: v.reset_policy === 'carry_over',
-    };
-  });
 
   constructor() {
     this.form.controls.threshold_type.valueChanges.subscribe((type) => this.thresholdType.set(type));
@@ -230,7 +189,7 @@ export class LoyaltyRuleComponent {
         ? Number(v.voucher_validity_days)
         : null,
 
-      effective_from: this.asDate(v.effective_from),
+      effective_from: this.asDate(new Date()),
     };
   }
 
@@ -244,11 +203,9 @@ export class LoyaltyRuleComponent {
 
         // Pre-filled from the version in force, or from the defaults of BRD 11.1
         // when nothing has been published yet.
-        this.form.patchValue({
-          ...(current !== null ? this.toFormValues(current) : this.toFormValues(defaults)),
-          // Always today: a version cannot start in the past (BR-015).
-          effective_from: new Date(),
-        });
+        this.form.patchValue(
+          current !== null ? this.toFormValues(current) : this.toFormValues(defaults)
+        );
 
         this.thresholdType.set(this.form.controls.threshold_type.value);
         this.rewardType.set(this.form.controls.reward_type.value);

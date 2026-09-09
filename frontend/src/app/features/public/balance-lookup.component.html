@@ -201,5 +201,19 @@
 
       <p class="text-xs text-slate-500 text-center mt-4">{{ 'balance.whyProof' | translate }}</p>
     }
+
+    <!--
+      The way back, at the bottom of every state including the answer.
+
+      This page has no navigation on purpose — a customer has one question — but it
+      is reached from the sign-in screen, and somebody who arrives here by mistake,
+      or a shop worker who followed the customer link, had no way out but the browser
+      button.
+    -->
+    <p class="text-sm text-slate-600 text-center mt-6">
+      {{ 'balance.staffQuestion' | translate }}
+      <a routerLink="/login" class="font-medium no-underline hover:underline"
+         style="color: var(--clp-teal)">{{ 'auth.signIn' | translate }}</a>
+    </p>
   </div>
 </div>

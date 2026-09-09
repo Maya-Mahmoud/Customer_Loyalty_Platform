@@ -162,6 +162,18 @@ export class AuditLogComponent {
   }
 
   /**
+   * A changed field in words rather than as its column name.
+   *
+   * The trail is read by a shop owner, and it was showing them
+   * `max_discount_amount` and `accumulation_scope`. Unlisted names fall through to
+   * the raw column, because a field added later must still appear — an audit entry
+   * with a gap in it is worse than one with an untranslated line.
+   */
+  fieldLabel(field: string): string {
+    return this.translated(`auditFields.${field}`, field);
+  }
+
+  /**
    * Which of the four state tints an action wears.
    *
    * Grouped by what the action did, not by the word before its dot: a reader wants
@@ -271,6 +283,24 @@ export class AuditLogComponent {
       return value ? '✓' : '✗';
     }
 
-    return String(value);
+    const text = String(value);
+
+    /*
+     * A stored timestamp, cut to the day.
+     *
+     * These arrive as "2026-09-08T00:00:00.000000Z" and were printed in full, which
+     * is nineteen characters of noise around the four that matter. The time is kept
+     * only when there is one — a date column carries midnight, and midnight here
+     * means "no time", not "00:00".
+     */
+    const timestamp = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(text);
+
+    if (timestamp !== null) {
+      return timestamp[2] === '00:00' ? timestamp[1] : `${timestamp[1]} ${timestamp[2]}`;
+    }
+
+    // A stored enum is an identifier too: "carry_over" is not a phrase in either
+    // language. Anything unlisted is left exactly as it was recorded.
+    return this.translated(`auditValues.${text}`, text);
   }
 }

@@ -72,7 +72,14 @@
                   {{ 'dashboard.expiringNone' | translate }}
                 }
               </p>
-              <p class="text-xs text-slate-600 mt-1">{{ 'dashboard.expiringHint' | translate }}</p>
+              <!-- The hint follows the state, the way the queue card's does. One
+                   sentence for both read as a non-sequitur under 'nothing is close to
+                   expiring'. -->
+              <p class="text-xs text-slate-600 mt-1">
+                {{ (stats.expiring_soon > 0
+                    ? 'dashboard.expiringHint'
+                    : 'dashboard.expiringEmptyHint') | translate }}
+              </p>
 
               @if (stats.expiring_soon > 0) {
                 <a mat-stroked-button class="!h-10 !px-5 mt-4" routerLink="/admin/merchants">
@@ -260,39 +267,170 @@
     }
   }
 
-  <!-- Where the work actually happens. A rep sees only this. -->
-  @if (canSell() || canLookup()) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      @if (canSell()) {
-        <a routerLink="/pos" class="no-underline">
-          <mat-card class="p-5 h-full clp-action">
-            <div class="flex items-start gap-3">
-              <span class="rounded-xl clp-tile-icon p-2.5 flex">
-                <mat-icon>point_of_sale</mat-icon>
-              </span>
-              <div>
-                <p class="text-sm font-medium text-slate-900">{{ 'nav.pos' | translate }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.posHint' | translate }}</p>
-              </div>
-            </div>
-          </mat-card>
-        </a>
-      }
+  <!--
+    Where the work happens, and the context around it.
 
-      @if (canLookup()) {
-        <a routerLink="/customers" class="no-underline">
-          <mat-card class="p-5 h-full clp-action">
-            <div class="flex items-start gap-3">
-              <span class="rounded-xl clp-tile-icon p-2.5 flex">
-                <mat-icon>person_search</mat-icon>
-              </span>
-              <div>
-                <p class="text-sm font-medium text-slate-900">{{ 'nav.customers' | translate }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ 'dashboard.lookupHint' | translate }}</p>
+    A sales rep used to land on two tiles and an empty page. They have no figures to
+    read — BR-019 keeps them from the customer list and the branch takings — so the
+    page is filled with the two things it can honestly show: which shop and branch
+    this account belongs to, and what this person has entered today.
+  -->
+  @if (canSell() || canLookup()) {
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-5 items-start">
+      <div class="flex flex-col gap-5">
+        <!-- The two actions, at the size of things meant to be pressed all day. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @if (canSell()) {
+            <a routerLink="/pos" class="no-underline">
+              <mat-card class="p-6 h-full clp-action clp-panel-teal">
+                <span class="w-12 h-12 rounded-xl flex items-center justify-center clp-tint-teal">
+                  <mat-icon>point_of_sale</mat-icon>
+                </span>
+                <p class="text-base font-semibold mt-4" style="color: var(--clp-ink)">
+                  {{ 'nav.pos' | translate }}
+                </p>
+                <p class="text-xs text-slate-600 mt-1">{{ 'dashboard.posHint' | translate }}</p>
+              </mat-card>
+            </a>
+          }
+
+          @if (canLookup()) {
+            <a routerLink="/customers" class="no-underline">
+              <mat-card class="p-6 h-full clp-action clp-panel-teal">
+                <span class="w-12 h-12 rounded-xl flex items-center justify-center clp-tint-teal">
+                  <mat-icon>person_search</mat-icon>
+                </span>
+                <p class="text-base font-semibold mt-4" style="color: var(--clp-ink)">
+                  {{ 'nav.customers' | translate }}
+                </p>
+                <p class="text-xs text-slate-600 mt-1">{{ 'dashboard.lookupHint' | translate }}</p>
+              </mat-card>
+            </a>
+          }
+        </div>
+
+        <!--
+          Their own entries for today, and nothing else.
+
+          No customer names and no branch total (BR-019) — just enough for the person
+          at the counter to catch a mistyped amount or a sale entered twice, which is
+          the same reason the strip beside the till exists.
+        -->
+        @if (canSell()) {
+          <mat-card class="p-6 clp-panel-teal">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 clp-tint-green">
+                  <mat-icon>receipt_long</mat-icon>
+                </span>
+                <div>
+                  <p class="clp-stat-label">{{ 'pos.myRecentTitle' | translate }}</p>
+                  <p class="clp-stat-value !text-3xl !font-bold">{{ myCountToday() }}</p>
+                </div>
+              </div>
+
+              <a mat-stroked-button class="clp-row-action !h-10" routerLink="/pos">
+                {{ 'dashboard.openTill' | translate }}
+                <mat-icon iconPositionEnd class="!w-4 !h-4 !text-base rtl-flip">
+                  chevron_right
+                </mat-icon>
+              </a>
+            </div>
+
+            @if (myRecent().length > 0) {
+              <mat-divider class="!my-4" />
+
+              <ul class="flex flex-col gap-2 m-0 p-0 list-none">
+                @for (invoice of myRecent(); track invoice.id) {
+                  <li class="flex items-center justify-between gap-3 text-sm">
+                    <span class="flex items-center gap-2 min-w-0">
+                      <span class="text-slate-500 tabular-nums" dir="ltr">{{ invoice.at }}</span>
+                      <span class="font-medium truncate" dir="ltr">{{ invoice.invoice_number }}</span>
+                      <!-- The same three marks the till strip uses: cancelled,
+                           counted, or recorded and deliberately not counted
+                           (BR-003, BR-022). One vocabulary for one set of states. -->
+                      @if (invoice.cancelled) {
+                        <mat-icon class="!text-base !w-4 !h-4 text-red-700">block</mat-icon>
+                      } @else if (invoice.counted) {
+                        <mat-icon class="!text-base !w-4 !h-4" style="color: var(--clp-teal)">check_circle</mat-icon>
+                      } @else {
+                        <mat-icon class="!text-base !w-4 !h-4 text-slate-400">remove_circle_outline</mat-icon>
+                      }
+                    </span>
+                    <span class="font-semibold shrink-0" dir="ltr">
+                      {{ invoice.amount }} {{ currency() }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-xs text-slate-600 mt-3">{{ 'pos.myRecentEmpty' | translate }}</p>
+            }
+          </mat-card>
+        }
+      </div>
+
+      <!-- Which shop, which branch, and who to go to. -->
+      @if (showsPlace()) {
+        <aside>
+          <mat-card class="p-6 clp-panel-teal">
+            <div class="flex items-center gap-3 mb-5">
+              @if (merchant()?.logo_url) {
+                <img [src]="merchant()!.logo_url!" alt=""
+                     class="w-12 h-12 rounded-xl object-contain bg-white border border-teal-100 p-1" />
+              } @else {
+                <span class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 clp-tint-teal">
+                  <mat-icon>storefront</mat-icon>
+                </span>
+              }
+
+              <div class="min-w-0">
+                <p class="text-base font-semibold truncate" style="color: var(--clp-ink)">
+                  {{ merchant()?.trade_name || merchant()?.name }}
+                </p>
+                <p class="text-xs text-slate-600">{{ 'dashboard.whereYouWork' | translate }}</p>
               </div>
             </div>
+
+            <dl class="grid grid-cols-1 gap-3">
+              @if (branch(); as branch) {
+                <div class="clp-pair">
+                  <dt>{{ 'dashboard.branch' | translate }}</dt>
+                  <dd>{{ branch.name }}</dd>
+                </div>
+
+                <div class="clp-pair">
+                  <dt>{{ 'register.city' | translate }}</dt>
+                  <dd>
+                    {{ branch.city }}
+                    @if (branch.address) {
+                      <span class="block text-xs text-slate-500 mt-0.5">{{ branch.address }}</span>
+                    }
+                  </dd>
+                </div>
+
+                @if (branch.phone) {
+                  <div class="clp-pair">
+                    <dt>{{ 'settings.phone' | translate }}</dt>
+                    <dd dir="ltr">{{ branch.phone }}</dd>
+                  </div>
+                }
+              }
+
+              @if (merchant()?.owner_name) {
+                <div class="clp-pair">
+                  <dt>{{ 'register.ownerName' | translate }}</dt>
+                  <dd>{{ merchant()!.owner_name }}</dd>
+                </div>
+              }
+
+              <div class="clp-pair">
+                <dt>{{ 'dashboard.currency' | translate }}</dt>
+                <dd>{{ 'currencies.' + currency() | translate }}</dd>
+              </div>
+            </dl>
           </mat-card>
-        </a>
+        </aside>
       }
     </div>
   }

@@ -1,14 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
+import { MyRecentInvoice } from '../../core/models/sales.model';
 import { ReportSummary } from '../../core/models/report.model';
 import { PlatformStats } from '../../core/models/merchant.model';
 import { AdminMerchantService } from '../../core/services/admin-merchant.service';
+import { SalesService } from '../../core/services/sales.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ReportService } from '../../core/services/report.service';
 
@@ -31,6 +34,7 @@ import { ReportService } from '../../core/services/report.service';
     TranslateModule,
     MatButtonModule,
     MatCardModule,
+    MatDividerModule,
     MatIconModule,
     MatProgressSpinnerModule,
   ],
@@ -40,6 +44,7 @@ export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly reports = inject(ReportService);
   private readonly admin = inject(AdminMerchantService);
+  private readonly sales = inject(SalesService);
 
   readonly user = this.auth.user;
   readonly merchant = this.auth.merchant;
@@ -60,11 +65,43 @@ export class DashboardComponent {
   /** The queue is the supervisor's actual job, so it drives the whole panel. */
   readonly hasQueue = computed(() => (this.stats()?.awaiting_review ?? 0) > 0);
 
+  /**
+   * The rep own entries for today.
+   *
+   * The one figure this screen can honestly show somebody who may not read a
+   * total: their own work. BR-019 keeps a rep away from the customer list and the
+   * branch takings, and none of that is here — no names, no shop total, only what
+   * this person entered since this morning.
+   */
+  readonly myRecent = signal<MyRecentInvoice[]>([]);
+
+  readonly myCountToday = computed(() => this.myRecent().filter((i) => !i.cancelled).length);
+
+  /**
+   * Whether to show which shop and branch this account is working in.
+   *
+   * For whoever has no figures to read. An owner opening this screen gets their
+   * takings; a sales rep used to get two tiles and an empty page, and the question
+   * that page could not answer was the simplest one — which shop is this, and who
+   * do I go to.
+   */
+  readonly showsPlace = computed(() => this.merchant() !== null && !this.canSeeNumbers());
+
   constructor() {
     if (this.isPlatformAdmin()) {
       this.loadPlatform();
     } else if (this.canSeeNumbers()) {
       this.loadStore();
+    }
+
+    // Their own day, for whoever records sales. Silent on failure: this is context
+    // beside the two buttons, and an error banner over it would be louder than the
+    // thing it failed to fetch.
+    if (this.canSell()) {
+      this.sales.myRecentInvoices().subscribe({
+        next: (invoices) => this.myRecent.set(invoices),
+        error: () => this.myRecent.set([]),
+      });
     }
   }
 

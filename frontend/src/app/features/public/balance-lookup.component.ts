@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BalanceCard, BalanceStore, BalanceService } from '../../core/services/balance.service';
@@ -30,6 +31,7 @@ import { LanguageService } from '../../core/services/language.service';
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     TranslateModule,
     MatButtonModule,
     MatCardModule,

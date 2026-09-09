@@ -56,6 +56,16 @@ export class RegisterComponent {
 
   /** 'form' collects the details, 'verify' confirms the code, 'done' waits. */
   readonly step = signal<'form' | 'verify' | 'done'>('form');
+
+  /**
+   * Whether this installation asks for an emailed code at all.
+   *
+   * Starts false, and the server's answer to the first submission turns it on if
+   * needed. False is the safe start because a promised step that disappears reads
+   * as something going wrong, while a step that appears reads as progress — and
+   * the applicant has not been told anything about a code before they submit.
+   */
+  readonly verifying = signal(false);
   readonly loading = signal(false);
   readonly formError = signal<string | null>(null);
 
@@ -131,6 +141,20 @@ export class RegisterComponent {
       .subscribe({
         next: (response) => {
           this.loading.set(false);
+
+          /*
+           * Whether a code step follows is the server's call, not this screen's.
+           * With verification off (config/clp.php) the request is already in the
+           * supervisor's queue, so the applicant goes straight to being told so —
+           * showing a code box would ask them for something nobody sent.
+           */
+          this.verifying.set(response.verification_required);
+
+          if (!response.verification_required) {
+            this.step.set('done');
+            return;
+          }
+
           this.codeTtlMinutes.set(response.expires_in_minutes);
           this.resendCooldown.set(RESEND_COOLDOWN_SECONDS);
           this.step.set('verify');

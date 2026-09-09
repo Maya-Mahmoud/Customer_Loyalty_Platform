@@ -22,6 +22,26 @@ return [
     'currencies' => ['SYP', 'USD'],
 
     /*
+     * Whether a registering merchant has to prove their email with a code
+     * (BRD FR-MER-02).
+     *
+     * Off by default, which is a deliberate departure from the document. The
+     * supervisor's approval is the gate that actually decides whether an account
+     * exists — no registration grants any access until FR-ADM-02 activation — and
+     * a code in the middle stops the platform being demonstrable: every trial
+     * account needs a real mailbox somebody can open. With this off, a submission
+     * goes straight into the review queue and the supervisor decides.
+     *
+     * What is lost while it is off is worth stating plainly: an address with a typo
+     * in it will be approved, and the owner will never receive the decision, the
+     * password-reset code, or the subscription warnings — because every one of
+     * those travels by email. That is a real cost, and it is why this reads from
+     * the environment rather than being deleted: turning it back on for production
+     * is one line in .env, and the whole verification path stays covered by tests.
+     */
+    'require_email_verification' => (bool) env('REQUIRE_EMAIL_VERIFICATION', false),
+
+    /*
      * Sign-in attempts allowed per minute from one address.
      *
      * Login is the one endpoint an attacker can call freely — no token, no account —

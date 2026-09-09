@@ -47,6 +47,10 @@ export class ProfileComponent {
 
   readonly user = this.auth.user;
 
+  /** The account's place in the business, for the summary beside the forms. */
+  readonly merchant = this.auth.merchant;
+  readonly branch = this.auth.branch;
+
   readonly savingProfile = signal(false);
   readonly savingPassword = signal(false);
   readonly uploading = signal(false);

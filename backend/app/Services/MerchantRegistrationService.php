@@ -75,15 +75,25 @@ class MerchantRegistrationService
                 'currency' => $data['currency'] ?? config('clp.default_currency'),
             ]);
 
-            // A re-application starts over: previous verification and the
-            // previous rejection reason both stop counting.
+            /*
+             * A re-application starts over: previous verification and the
+             * previous rejection reason both stop counting.
+             *
+             * When verification is switched off (see config/clp.php) the request
+             * is submitted the moment it is filled in, so submitted_at is set here
+             * rather than by verify(). email_verified_at is left null on purpose
+             * even then: nothing has been proven, and the review screen shows the
+             * supervisor exactly that.
+             */
+            $verifying = $this->verificationRequired();
+
             $merchant->forceFill([
                 'status' => MerchantStatus::Pending,
                 'status_reason' => null,
                 'status_changed_at' => now(),
                 'email_verified_at' => null,
                 'phone_verified_at' => null,
-                'submitted_at' => null,
+                'submitted_at' => $verifying ? null : now(),
                 'reviewed_by' => null,
                 'reviewed_at' => null,
             ])->save();
@@ -96,7 +106,9 @@ class MerchantRegistrationService
              * register, so the applicant cannot even try again. Rolling the whole
              * thing back leaves them free to retry once mail is working.
              */
-            $this->issueCode($merchant, $ipAddress);
+            if ($verifying) {
+                $this->issueCode($merchant, $ipAddress);
+            }
 
             return $merchant;
         });
@@ -107,7 +119,23 @@ class MerchantRegistrationService
             after: $merchant->only(['name', 'commercial_register', 'email', 'city']),
         );
 
+        /*
+         * Outside the transaction, and only once verification is off: with it on,
+         * this is verify()'s job. The supervisors are told after the record is
+         * committed, so a queue notification never points at a row that rolled
+         * back.
+         */
+        if (! $this->verificationRequired()) {
+            $this->notifySupervisors($merchant);
+        }
+
         return $merchant;
+    }
+
+    /** Whether a registering merchant has to prove their email (BRD FR-MER-02). */
+    public function verificationRequired(): bool
+    {
+        return (bool) config('clp.require_email_verification');
     }
 
     /**

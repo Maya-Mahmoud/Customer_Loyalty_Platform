@@ -73,8 +73,6 @@ export class PointOfSaleComponent {
   readonly formError = signal<string | null>(null);
 
   readonly customer = signal<CustomerCard | null>(null);
-  /** True for the BR-022 case: a customer who will not give a number. */
-  readonly anonymous = signal(false);
 
   /** What the last save produced, kept on screen while the rep talks. */
   readonly lastResult = signal<{ counted: boolean; cycle: CycleState | null; message: string } | null>(null);
@@ -174,14 +172,6 @@ export class PointOfSaleComponent {
     });
   }
 
-  /** BRD BR-022: the sale is still recorded, it simply belongs to nobody. */
-  skipCustomer(): void {
-    this.customer.set(null);
-    this.anonymous.set(true);
-    this.stage.set('sale');
-    this.focusInvoice();
-  }
-
   // -----------------------------------------------------------------
   // Registering on the spot
   // -----------------------------------------------------------------
@@ -275,7 +265,6 @@ export class PointOfSaleComponent {
   /** Back to the phone field, keeping the last outcome visible. */
   private resetForNext(): void {
     this.customer.set(null);
-    this.anonymous.set(false);
     this.stage.set('lookup');
 
     this.phoneForm.reset();

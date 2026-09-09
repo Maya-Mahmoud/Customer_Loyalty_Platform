@@ -37,7 +37,14 @@ class MerchantController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $merchants = Merchant::query()
-            ->with('subscriptionPlan')
+            /*
+             * The owner comes along for the list, not just for one record.
+             *
+             * Eager-loaded rather than fetched per row: without it the resource omits
+             * the owner entirely (it is a whenLoaded field), and adding it lazily
+             * would be one query per merchant on a paginated screen.
+             */
+            ->with(['subscriptionPlan', 'owner'])
             ->withCount(['branches', 'users'])
             ->when(
                 $request->filled('status'),

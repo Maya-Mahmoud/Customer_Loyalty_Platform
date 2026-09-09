@@ -39,6 +39,18 @@ class MerchantRegistrationTest extends TestCase
 
         Mail::fake();
 
+        /*
+         * This class is about the verification flow of BRD FR-MER-02, so it is
+         * switched on explicitly rather than inherited from config.
+         *
+         * The shipped default is off — the supervisor's approval is the gate that
+         * decides whether an account exists, and a code in the middle stops the
+         * platform being demonstrable without a real mailbox. Turning it on here
+         * keeps the documented path covered whichever way the default is set, and
+         * MerchantRegistrationWithoutVerificationTest covers the other side.
+         */
+        config(['clp.require_email_verification' => true]);
+
         // Bound so an accidental SMS send would be visible rather than silent.
         $this->sms = new FakeSmsGateway();
         $this->app->instance(SmsGateway::class, $this->sms);

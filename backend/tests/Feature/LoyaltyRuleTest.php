@@ -257,15 +257,47 @@ class LoyaltyRuleTest extends TestCase
             ->assertJsonValidationErrors('effective_from');
     }
 
-    public function test_a_new_version_cannot_start_on_or_before_the_current_one(): void
+    public function test_saving_again_the_same_day_corrects_the_version_rather_than_stacking_one(): void
     {
         $this->asOwner()->postJson('/api/v1/loyalty-rule', $this->form())->assertCreated();
 
-        // Two versions sharing a start date would leave ruleEffectiveOn guessing.
+        /*
+         * An owner adjusting the figures before the shop opens is correcting a rule
+         * that has priced nothing on an earlier day, so it stays version one. Two
+         * versions sharing a start date would leave ruleEffectiveOn guessing which
+         * one governs today, and a version per save would fill the history with
+         * rules that never priced a sale.
+         */
         $this->asOwner()
             ->postJson('/api/v1/loyalty-rule', $this->form(['threshold_amount' => 2000]))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('effective_from');
+            ->assertCreated()
+            ->assertJsonPath('data.version', 1);
+
+        $this->assertSame(1, LoyaltyRule::withoutGlobalScopes()->count());
+
+        // The correction is not lost: the trail is the append-only record of it.
+        $this->assertDatabaseHas('audit_logs', ['action' => 'loyalty_rule.corrected']);
+    }
+
+    public function test_a_version_that_has_governed_a_day_is_superseded_not_rewritten(): void
+    {
+        $this->asOwner()->postJson('/api/v1/loyalty-rule', $this->form())->assertCreated();
+
+        /*
+         * Yesterday's rule priced yesterday's invoices, so it has to survive intact
+         * (BR-015). Saving today inserts version two and leaves version one alone —
+         * this is the half of the behaviour that must not become a convenience.
+         */
+        LoyaltyRule::withoutGlobalScopes()->firstOrFail()
+            ->forceFill(['effective_from' => now()->subDay()->toDateString()])
+            ->save();
+
+        $this->asOwner()
+            ->postJson('/api/v1/loyalty-rule', $this->form(['threshold_amount' => 2000]))
+            ->assertCreated()
+            ->assertJsonPath('data.version', 2);
+
+        $this->assertSame(2, LoyaltyRule::withoutGlobalScopes()->count());
     }
 
     public function test_the_history_keeps_every_version(): void

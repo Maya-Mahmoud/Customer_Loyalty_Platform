@@ -87,6 +87,28 @@ export class MerchantListComponent {
   }
 
   /** Colour-codes the status chip so the queue is scannable at a glance. */
+  /**
+   * A shop's initials, for the rows where no logo was uploaded.
+   *
+   * Two letters, because a shop called "Al Noor Stores" is recognised by "AN" and
+   * not by four stacked letters. Falls back to a dash rather than an empty square,
+   * so a row with no usable name still looks deliberate.
+   */
+  storeInitials(name: string | null | undefined): string {
+    const trimmed = (name ?? '').trim();
+
+    if (trimmed === '') {
+      return '—';
+    }
+
+    return trimmed
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  }
+
   statusClass(status: MerchantStatus): string {
     return {
       pending: 'bg-amber-100 text-amber-900',

@@ -38,6 +38,8 @@ export interface AuthMerchant {
   id: number;
   name: string;
   trade_name: string | null;
+  /** Who to go to. The only thing about the owner the session carries. */
+  owner_name: string;
   city: string;
   currency: string;
   logo_path: string | null;

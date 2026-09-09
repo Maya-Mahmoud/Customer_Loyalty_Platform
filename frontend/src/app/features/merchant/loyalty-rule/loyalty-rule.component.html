@@ -7,6 +7,29 @@
   @if (loading()) {
     <div class="py-16 text-center"><mat-spinner diameter="32" class="mx-auto" /></div>
   } @else {
+    <!--
+      The accumulation scope, stated rather than asked.
+
+      It used to be a choice between one balance across the shop and a separate
+      balance per branch. Per-branch is the answer almost nobody wants — a customer
+      deals with the brand, not with a building, and telling them their balance is
+      in the other shop is how a loyalty programme loses them. So it is fixed, and
+      said here plainly so nobody wonders what it is set to.
+    -->
+    <mat-card class="p-4 mb-4 clp-panel-gold">
+      <div class="flex items-center gap-3">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 clp-tint-amber">
+          <mat-icon class="!w-5 !h-5 !text-xl">hub</mat-icon>
+        </span>
+        <div>
+          <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+            {{ 'loyaltyRule.scopeTitle' | translate }}: {{ 'loyaltyRule.scopeMerchant' | translate }}
+          </p>
+          <p class="text-xs text-slate-600 mt-0.5">{{ 'loyaltyRule.scopeFixedHint' | translate }}</p>
+        </div>
+      </div>
+    </mat-card>
+
     <!-- The version in force. BR-015: it keeps governing invoices already recorded. -->
     @if (current(); as rule) {
       <mat-card class="p-4 mb-4 border-s-4 !border-s-emerald-500">
@@ -149,13 +172,6 @@
 
         <mat-divider class="!my-5" />
 
-        <p class="text-sm text-slate-700 mb-1">{{ 'loyaltyRule.scopeTitle' | translate }}</p>
-        <mat-radio-group formControlName="accumulation_scope" class="flex flex-col gap-1 mb-1">
-          <mat-radio-button value="merchant">{{ 'loyaltyRule.scopeMerchant' | translate }}</mat-radio-button>
-          <mat-radio-button value="branch">{{ 'loyaltyRule.scopeBranch' | translate }}</mat-radio-button>
-        </mat-radio-group>
-        <p class="text-xs text-slate-500 mb-5 ms-8">{{ 'loyaltyRule.scopeHint' | translate }}</p>
-
         <p class="text-sm text-slate-700 mb-1">{{ 'loyaltyRule.resetTitle' | translate }}</p>
         <mat-radio-group formControlName="reset_policy" class="flex flex-col gap-1 mb-1">
           <mat-radio-button value="carry_over">{{ 'loyaltyRule.carryOver' | translate }}</mat-radio-button>
@@ -171,74 +187,30 @@
       </mat-card>
 
       <!-- ============================================================ -->
-      <!-- What this would actually pay                                 -->
-      <!-- ============================================================ -->
-      @if (example(); as ex) {
-        <mat-card class="p-6 clp-panel-gold">
-          <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.exampleTitle' | translate }}</h2>
-          <p class="text-xs text-slate-500 mb-4">{{ 'loyaltyRule.exampleHint' | translate }}</p>
-
-          <dl class="text-sm space-y-2">
-            <div class="flex justify-between gap-4">
-              <dt class="text-slate-600">{{ 'loyaltyRule.exampleCycle' | translate }}</dt>
-              <dd class="font-medium text-slate-900" dir="ltr">{{ ex.cycleTotal }} {{ currency() }}</dd>
-            </div>
-
-            @if (ex.wasCapped) {
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-600">{{ 'loyaltyRule.exampleBeforeCap' | translate }}</dt>
-                <dd class="text-slate-500 line-through" dir="ltr">{{ ex.computedReward }} {{ currency() }}</dd>
-              </div>
-            }
-
-            <div class="flex justify-between gap-4">
-              <dt class="text-slate-700 font-medium">{{ 'loyaltyRule.exampleCustomerGets' | translate }}</dt>
-              <dd class="font-semibold text-emerald-700" dir="ltr">{{ ex.paid }} {{ currency() }}</dd>
-            </div>
-
-            <div class="flex justify-between gap-4">
-              <dt class="text-slate-600">{{ 'loyaltyRule.exampleNextCycle' | translate }}</dt>
-              <dd class="text-slate-900" dir="ltr">
-                @if (ex.carriesOver) {
-                  {{ ex.surplus }} {{ currency() }}
-                } @else {
-                  0 {{ currency() }}
-                }
-              </dd>
-            </div>
-          </dl>
-
-          @if (ex.wasCapped) {
-            <p class="text-xs text-amber-800 mt-3">{{ 'loyaltyRule.exampleCapNote' | translate }}</p>
-          }
-        </mat-card>
-      }
-
-      <!-- ============================================================ -->
       <!-- Publishing — BR-015                                          -->
       <!-- ============================================================ -->
       <mat-card class="p-6 clp-panel-teal clp-ink-labels">
-        <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">{{ 'loyaltyRule.publishTitle' | translate }}</h2>
-        <p class="text-xs text-slate-500 mb-4">
-          {{ (hasCurrent() ? 'loyaltyRule.publishReplaceHint' : 'loyaltyRule.publishFirstHint') | translate }}
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold" style="color: var(--clp-ink)">{{ 'loyaltyRule.publishTitle' | translate }}</h2>
+            <p class="text-xs text-slate-600 mt-1 max-w-xl">{{ 'loyaltyRule.saveHint' | translate }}</p>
+          </div>
 
-        <div class="flex flex-col sm:flex-row sm:items-start gap-3">
-          <mat-form-field appearance="outline" class="sm:w-56">
-            <mat-label>{{ 'loyaltyRule.effectiveFrom' | translate }}</mat-label>
-            <input matInput [matDatepicker]="picker" [min]="today" formControlName="effective_from" />
-            <mat-datepicker-toggle matIconSuffix [for]="picker" />
-            <mat-datepicker #picker />
-            @if (form.controls.effective_from.hasError('server')) {
-              <mat-error>{{ form.controls.effective_from.getError('server') }}</mat-error>
-            }
-          </mat-form-field>
+          <!--
+            One button, no start date.
 
-          <button mat-flat-button color="primary" type="submit" class="!h-11" [disabled]="saving()">
+            The date used to be the owner's to pick, which put a scheduling decision
+            in front of somebody who wanted to change a percentage. It is now always
+            today: saving on the day the current version started corrects it, and
+            saving later inserts the next version — so past sales keep the rule they
+            were priced under (BR-015) without anybody being asked about it.
+          -->
+          <button mat-flat-button color="primary" type="submit" class="!h-11 !px-8"
+                  [disabled]="saving()">
             @if (saving()) {
               <mat-spinner diameter="20" />
             } @else {
-              {{ (hasCurrent() ? 'loyaltyRule.publishNew' : 'loyaltyRule.publish') | translate }}
+              {{ 'common.save' | translate }}
             }
           </button>
         </div>

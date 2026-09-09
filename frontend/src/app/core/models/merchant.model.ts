@@ -21,6 +21,12 @@ export interface RegistrationStarted {
   message: string;
   /** Where the code went, echoed back so the screen can confirm it. */
   email: string;
+  /**
+   * Whether a second step follows. Decided by the server (config/clp.php), never
+   * by this client — a screen that guessed would eventually ask for a code nobody
+   * sent, or skip one that was.
+   */
+  verification_required: boolean;
   expires_in_minutes: number;
 }
 
@@ -56,6 +62,15 @@ export interface AdminMerchant {
   phone_verified_at: string | null;
   is_verified: boolean;
 
+  /**
+   * Whether the missing verification actually stands in the way of approval.
+   *
+   * The server's verdict, not a rule this client re-derives. Verification is a
+   * server-side setting, so a screen that worked the answer out from is_verified
+   * fell out of step with it the moment the setting changed.
+   */
+  blocked_by_verification: boolean;
+
   submitted_at: string | null;
   reviewed_at: string | null;
   reviewed_by?: string | null;
@@ -75,10 +90,15 @@ export interface AdminMerchant {
   owner?: {
     name: string;
     email: string;
+    /** The picture the owner set for themselves; null when they set none. */
+    avatar_url: string | null;
     status: UserStatus;
     has_password: boolean;
     invitation_expires_at: string | null;
   };
+
+  /** The shop logo the owner uploaded (FR-MER-06); null when none. */
+  logo_url: string | null;
 
   /** Earliest date suspended data may be archived (BRD BR-020). */
   retention_floor: string | null;

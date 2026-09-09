@@ -66,18 +66,13 @@
           }
         </mat-form-field>
 
-        <div class="flex items-center gap-2 mt-4">
-          <button mat-flat-button color="primary" type="submit" class="h-12 flex-1" [disabled]="searching()">
+        <div class="mt-4">
+          <button mat-flat-button color="primary" type="submit" class="h-12 w-full" [disabled]="searching()">
             @if (searching()) {
               <mat-spinner diameter="20" />
             } @else {
               {{ 'pos.search' | translate }}
             }
-          </button>
-
-          <!-- BRD BR-022: respects a refusal without losing the sale. -->
-          <button mat-stroked-button type="button" class="h-12" (click)="skipCustomer()">
-            {{ 'pos.noNumber' | translate }}
           </button>
         </div>
       </form>
@@ -190,16 +185,7 @@
               <dd class="clp-stat-value">{{ card.redemptions_count }}</dd>
             </div>
           </dl>
-        } @else {
-          <!-- The till still works; there is simply nothing to accumulate towards. -->
-          <p class="text-xs text-amber-800 mt-1">{{ 'pos.noRule' | translate }}</p>
         }
-      </mat-card>
-    }
-
-    @if (anonymous()) {
-      <mat-card class="p-4 mb-4 border-s-4 !border-s-slate-300">
-        <p class="text-sm text-slate-700">{{ 'pos.anonymousNotice' | translate }}</p>
       </mat-card>
     }
 

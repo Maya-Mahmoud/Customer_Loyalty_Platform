@@ -20,6 +20,13 @@ class MerchantResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'trade_name' => $this->trade_name,
+            /*
+             * The owner's name, for the "which shop am I working in" card a sales rep
+             * lands on. It is not a secret from the staff of the shop it names — it is
+             * on the door — and it answers the one question the rest of that card
+             * cannot: who to go to. Nothing else about the owner is sent.
+             */
+            'owner_name' => $this->owner_name,
             'city' => $this->city,
             'currency' => $this->currency,
             'logo_path' => $this->logo_path,

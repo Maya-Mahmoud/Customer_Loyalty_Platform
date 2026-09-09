@@ -66,13 +66,43 @@
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'staff.name' | translate }}</th>
             <td mat-cell *matCellDef="let member">
-              <span class="font-medium text-slate-900">
-                {{ member.name }}
-                @if (member.id === currentUserId()) {
-                  <span class="text-xs text-slate-500">({{ 'staff.you' | translate }})</span>
+              <!-- The picture the user set for themselves. A face is recognised
+                   before a name is read, which is what a list of colleagues is
+                   scanned for. -->
+              <div class="flex items-center gap-3">
+                @if (member.avatar_url) {
+                  <img [src]="member.avatar_url" alt=""
+                       class="w-9 h-9 rounded-full object-cover border border-teal-100 shrink-0" />
+                } @else {
+                  <span class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 clp-tint-teal">
+                    {{ initials(member.name) }}
+                  </span>
                 }
-              </span>
-              <span class="block text-xs text-slate-500" dir="ltr">{{ member.email }}</span>
+
+                <span class="min-w-0">
+                  <span class="block font-medium text-slate-900 truncate">
+                    {{ member.name }}
+                    @if (member.id === currentUserId()) {
+                      <span class="text-xs text-slate-500">({{ 'staff.you' | translate }})</span>
+                    }
+                  </span>
+                  <span class="block text-xs text-slate-500 truncate" dir="ltr">{{ member.email }}</span>
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef>{{ 'profile.myPhone' | translate }}</th>
+            <td mat-cell *matCellDef="let member">
+              @if (member.phone) {
+                <!-- A link, not text: on the tablet at the counter this is how the
+                     owner actually reaches the person. -->
+                <a [href]="'tel:' + member.phone" class="text-slate-700 no-underline hover:underline"
+                   dir="ltr">{{ member.phone }}</a>
+              } @else {
+                <span class="text-slate-400">—</span>
+              }
             </td>
           </ng-container>
 

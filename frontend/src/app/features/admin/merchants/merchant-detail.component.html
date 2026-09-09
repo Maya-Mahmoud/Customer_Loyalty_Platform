@@ -21,9 +21,14 @@
       <mat-card class="p-6 mb-5 clp-panel-teal">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="flex items-start gap-4 min-w-0">
-            <span class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 clp-tint-teal">
-              <mat-icon class="!w-8 !h-8 !text-3xl">storefront</mat-icon>
-            </span>
+            @if (store.logo_url) {
+              <img [src]="store.logo_url" alt=""
+                   class="w-14 h-14 rounded-2xl object-contain bg-white border border-teal-100 p-1 shrink-0" />
+            } @else {
+              <span class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 clp-tint-teal">
+                <mat-icon class="!w-8 !h-8 !text-3xl">storefront</mat-icon>
+              </span>
+            }
 
             <div class="min-w-0">
               <h1 class="text-2xl font-semibold" style="color: var(--clp-ink)">{{ store.name }}</h1>
@@ -35,10 +40,44 @@
             </div>
           </div>
 
-          <span class="inline-block rounded-full px-3 py-1 text-sm font-medium shrink-0"
-                [class]="statusClass(store.status)">
-            {{ 'status.' + store.status | translate }}
-          </span>
+          <div class="flex items-center gap-5 shrink-0">
+            <!--
+              Who owns the shop, in the header rather than further down.
+
+              The header answers "which record is this", and the owner is half of
+              that answer — they are the person the decision below is about. A face
+              is also how a supervisor recognises them on the next visit, which an
+              email address never manages.
+            -->
+            @if (store.owner; as owner) {
+              <div class="flex items-center gap-2.5 min-w-0">
+                @if (owner.avatar_url) {
+                  <img [src]="owner.avatar_url" alt=""
+                       class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm shrink-0" />
+                } @else {
+                  <!-- Initials beat a grey silhouette, and they are what the owner
+                       looks like everywhere else in the app too. -->
+                  <span class="w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 clp-tint-teal">
+                    {{ ownerInitials() }}
+                  </span>
+                }
+
+                <div class="min-w-0">
+                  <p class="text-xs" style="color: var(--clp-teal)">
+                    {{ 'register.ownerName' | translate }}
+                  </p>
+                  <p class="text-sm font-semibold truncate" style="color: var(--clp-ink)">
+                    {{ owner.name }}
+                  </p>
+                </div>
+              </div>
+            }
+
+            <span class="inline-block rounded-full px-3 py-1 text-sm font-medium shrink-0"
+                  [class]="statusClass(store.status)">
+              {{ 'status.' + store.status | translate }}
+            </span>
+          </div>
         </div>
       </mat-card>
 
@@ -192,6 +231,10 @@
                invitation is open but unusable, so it is called out explicitly. -->
           @if (store.owner; as owner) {
             <mat-card class="p-6 clp-panel-teal">
+              <!-- The face and the name are in the header now; this card is only
+                   about whether that person can actually get in. Printing them
+                   twice on one screen invites the reader to compare two copies of
+                   the same fact. -->
               <h2 class="text-base font-semibold mb-1" style="color: var(--clp-ink)">
                 {{ 'admin.ownerAccess' | translate }}
               </h2>

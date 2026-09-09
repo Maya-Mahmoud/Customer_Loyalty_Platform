@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -45,6 +46,7 @@ import { StaffService } from '../../core/services/staff.service';
     TranslateModule,
     MatButtonModule,
     MatCardModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -87,9 +89,28 @@ export class ReportsComponent {
 
   readonly form = this.fb.nonNullable.group({
     from: [this.startOfMonth()],
-    to: [this.today()],
+    to: [new Date()],
     branch_id: [null as number | null],
   });
+
+  /**
+   * The period as the API takes it.
+   *
+   * The controls hold Dates because that is what the picker reads and writes; the
+   * server wants a plain calendar day. Converted from local parts rather than
+   * toISOString(), which goes through UTC first — east of Greenwich a day picked at
+   * midnight becomes the day before, and the report would quietly drop the very day
+   * that was asked for.
+   */
+  private query(): ReportQuery {
+    const raw = this.form.getRawValue();
+
+    return {
+      from: this.format(raw.from),
+      to: this.format(raw.to),
+      branch_id: raw.branch_id,
+    };
+  }
 
   constructor() {
     if (this.canPickBranch()) {
@@ -103,7 +124,7 @@ export class ReportsComponent {
   }
 
   load(): void {
-    const query: ReportQuery = this.form.getRawValue();
+    const query: ReportQuery = this.query();
 
     this.loading.set(true);
 
@@ -165,18 +186,14 @@ export class ReportsComponent {
         from = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
-    this.form.patchValue({ from: this.format(from), to: this.format(to) });
+    this.form.patchValue({ from, to });
     this.load();
   }
 
-  private startOfMonth(): string {
+  private startOfMonth(): Date {
     const now = new Date();
 
-    return this.format(new Date(now.getFullYear(), now.getMonth(), 1));
-  }
-
-  private today(): string {
-    return this.format(new Date());
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   }
 
   /** Local date parts, not toISOString, which shifts the day across time zones. */
@@ -201,11 +218,11 @@ export class ReportsComponent {
 
     this.exporting.set(true);
 
-    const query = { ...this.form.getRawValue(), only_consented: onlyConsented };
+    const query = { ...this.query(), only_consented: onlyConsented };
 
     this.reports.exportCustomers(query).subscribe({
       next: (blob) => {
-        this.save(blob, `customers-${this.form.controls.to.value}.csv`);
+        this.save(blob, `customers-${this.format(this.form.controls.to.value)}.csv`);
         this.notifications.success('reports.exportDone');
         this.exporting.set(false);
       },

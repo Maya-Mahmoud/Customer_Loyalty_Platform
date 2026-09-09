@@ -127,7 +127,6 @@
               <th>{{ 'audit.colActor' | translate }}</th>
               <th>{{ 'audit.colAction' | translate }}</th>
               <th>{{ 'audit.colTarget' | translate }}</th>
-              <th>{{ 'audit.colIp' | translate }}</th>
               <th>{{ 'audit.colDetails' | translate }}</th>
             </tr>
           </thead>
@@ -171,10 +170,6 @@
                   }
                 </td>
 
-                <td class="text-slate-500 whitespace-nowrap" dir="ltr">
-                  {{ entry.ip_address ?? '—' }}
-                </td>
-
                 <td>
                   @if (changes(entry).length > 0) {
                     <button mat-button type="button" class="!min-w-0 !px-2"
@@ -197,16 +192,23 @@
 
               @if (expanded() === entry.id) {
                 <tr class="clp-detail-row">
-                  <td colspan="6">
+                  <td colspan="5">
                     <!-- Rendered generically: a trail that only showed the fields
                          somebody templated would hide the rest, and the unusual
                          entries are the ones worth finding. -->
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-xs
-                               rounded-lg px-3 py-2" style="background: #f7faf9">
+                    <!--
+                      Each field its own tile, and named in words.
+
+                      It was a two-column grid of column names against values, with
+                      the pair separated by whatever space was left in the row — so
+                      `accumulation_scope` sat at one edge and `branch` at the other,
+                      and the reader had to guess which value belonged to which name.
+                    -->
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 pb-3">
                       @for (line of changes(entry); track line.key) {
-                        <div class="flex justify-between gap-3">
-                          <dt class="text-slate-500 shrink-0" dir="ltr">{{ line.key }}</dt>
-                          <dd class="text-slate-800 text-end break-all" dir="ltr">
+                        <div class="clp-pair">
+                          <dt>{{ fieldLabel(line.key) }}</dt>
+                          <dd class="break-words">
                             @if (line.before !== null && line.after !== null
                                  && line.before !== line.after) {
                               <span class="text-slate-400 line-through">{{ line.before }}</span>
@@ -218,6 +220,20 @@
                           </dd>
                         </div>
                       }
+
+                      <!--
+                        The entry's own reference, where the IP address used to be.
+
+                        The address is still recorded — FR-SEC-02 wants it, and a
+                        forensic question needs it — it is simply not what a shop
+                        owner reading their trail is looking for; every line said
+                        127.0.0.1. The reference is: it is how one entry gets quoted
+                        to somebody else, which is the thing this screen is for.
+                      -->
+                      <div class="clp-pair">
+                        <dt>{{ 'audit.entryRef' | translate }}</dt>
+                        <dd dir="ltr">#{{ entry.id }}</dd>
+                      </div>
                     </dl>
                   </td>
                 </tr>

@@ -56,8 +56,39 @@
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'admin.store' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <span class="font-medium text-slate-900">{{ row.name }}</span>
-              <span class="block text-xs text-slate-500" dir="ltr">{{ row.commercial_register }}</span>
+              <!--
+                The shop's own logo beside its name.
+
+                A column of names in two scripts is slow to scan; a logo is
+                recognised before it is read, which is the whole point of a list
+                somebody comes back to every day. The shop's picture rather than the
+                owner's, because this column is the shop — the owner has their face
+                on the record itself.
+              -->
+              <div class="flex items-center gap-3">
+                @if (row.logo_url) {
+                  <!-- The shop's own logo first: it is the shop's face, and this
+                       column is the shop. -->
+                  <img [src]="row.logo_url" alt=""
+                       class="w-9 h-9 rounded-lg object-contain bg-white border border-teal-100 p-0.5 shrink-0" />
+                } @else if (row.owner?.avatar_url) {
+                  <!-- Then the owner's picture. A shop that never uploaded a logo
+                       usually has an owner who set a picture, and either one names
+                       the row faster than two letters do. Round, so it still reads
+                       as a person rather than as a badly cropped logo. -->
+                  <img [src]="row.owner!.avatar_url!" alt=""
+                       class="w-9 h-9 rounded-full object-cover border border-teal-100 shrink-0" />
+                } @else {
+                  <span class="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0 clp-tint-teal">
+                    {{ storeInitials(row.name) }}
+                  </span>
+                }
+
+                <span class="min-w-0">
+                  <span class="block font-medium text-slate-900 truncate">{{ row.name }}</span>
+                  <span class="block text-xs text-slate-500" dir="ltr">{{ row.commercial_register }}</span>
+                </span>
+              </div>
             </td>
           </ng-container>
 
@@ -77,9 +108,10 @@
                 {{ 'status.' + row.status | translate }}
               </span>
 
-              <!-- A request cannot be approved before both codes are confirmed
-                   (BRD FR-MER-02), so the gap is flagged here. -->
-              @if (row.status === 'pending' && !row.is_verified) {
+              <!-- Flagged only when the missing verification is actually what
+                   holds the request up — the server decides that, because the step
+                   itself is a server-side setting. -->
+              @if (row.blocked_by_verification) {
                 <mat-icon class="!text-base !w-4 !h-4 align-middle ms-1 text-slate-400"
                           [matTooltip]="'admin.notVerified' | translate">error_outline</mat-icon>
               }
@@ -109,8 +141,22 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let row">
-              <a mat-button [routerLink]="['/admin/merchants', row.id]">
+              <!--
+                An outlined button, not a text one.
+
+                As plain text it read as another cell of data — the one cell in the
+                row that did something, and nothing on it said so. Outlined rather
+                than filled because there is one per row: twenty solid green buttons
+                down a page would shout louder than the records they belong to.
+              -->
+              <a mat-stroked-button class="clp-row-action !h-9"
+                 [routerLink]="['/admin/merchants', row.id]">
                 {{ 'admin.review' | translate }}
+                <!-- Mirrored in Arabic: "onward" is the direction the reader is
+                     already travelling. -->
+                <mat-icon iconPositionEnd class="!w-4 !h-4 !text-base rtl-flip">
+                  chevron_right
+                </mat-icon>
               </a>
             </td>
           </ng-container>

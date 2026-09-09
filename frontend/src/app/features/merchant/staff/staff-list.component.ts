@@ -46,7 +46,34 @@ export class StaffListComponent {
   private readonly notifications = inject(NotificationService);
   private readonly auth = inject(AuthService);
 
-  readonly columns = ['name', 'role', 'branch', 'access', 'actions'];
+  /*
+   * The phone has a column of its own rather than a second line under the email.
+   * The owner's reason for opening this screen is often to reach somebody, and a
+   * column can be read straight down where a buried line has to be hunted for.
+   */
+  readonly columns = ['name', 'phone', 'role', 'branch', 'access', 'actions'];
+
+  /**
+   * A user's initials, for the rows where no picture was uploaded.
+   *
+   * Two letters — a colleague is recognised by "SR", not by four stacked letters —
+   * and a dash rather than an empty circle when there is no usable name, so the row
+   * still looks deliberate.
+   */
+  initials(name: string | null | undefined): string {
+    const trimmed = (name ?? '').trim();
+
+    if (trimmed === '') {
+      return '—';
+    }
+
+    return trimmed
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  }
 
   readonly members = signal<StaffMember[]>([]);
   readonly branches = signal<Branch[]>([]);

@@ -231,8 +231,21 @@ class MerchantStatusService
      * Only the email address is proven during registration; the owner's phone is
      * captured but not verified. See MerchantRegistrationService for why.
      */
+    /**
+     * Whether this request is allowed past review.
+     *
+     * True whenever verification is switched off (config/clp.php), and not merely
+     * because the timestamp happens to be set. With the step off no code is ever
+     * issued, so a guard that only read the timestamp would refuse every single
+     * request and leave the queue permanently unapprovable — the setting would
+     * silently disable the platform rather than one step of it.
+     */
     private function isVerified(Merchant $merchant): bool
     {
+        if (! config('clp.require_email_verification')) {
+            return true;
+        }
+
         return $merchant->email_verified_at !== null;
     }
 

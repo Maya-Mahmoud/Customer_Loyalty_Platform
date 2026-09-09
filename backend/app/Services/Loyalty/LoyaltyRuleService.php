@@ -23,6 +23,14 @@ use Illuminate\Validation\ValidationException;
  */
 class LoyaltyRuleService
 {
+    /** The columns an audit entry records, named once so the two save paths agree. */
+    private const AUDITED = [
+        'version', 'threshold_type', 'threshold_amount', 'threshold_invoice_count',
+        'reward_type', 'reward_value', 'max_discount_amount', 'min_invoice_amount',
+        'accumulation_scope', 'reset_policy', 'balance_validity_months',
+        'effective_from',
+    ];
+
     public function __construct(private readonly AuditLogger $audit)
     {
     }
@@ -46,7 +54,20 @@ class LoyaltyRuleService
     }
 
     /**
-     * Publishes a new version.
+     * Saves the rule: a correction to the version that owns the day, or the next
+     * version if the one in force belongs to an earlier day.
+     *
+     * The distinction is what BR-015 rests on. A version whose start date has
+     * already passed has governed invoices, and those invoices must keep being
+     * explainable — so changing the rule inserts a new version and leaves the old
+     * one intact. A version that starts today or later has governed nothing on any
+     * earlier date, so an owner adjusting the figures is correcting a draft, and
+     * stacking a version per keystroke would fill the history with rules that never
+     * priced a single sale.
+     *
+     * The invariant either way: one version owns a date. ruleEffectiveOn() would
+     * have to guess between two versions sharing a start, and the correction that
+     * happened is not lost — it is in the audit trail, which is append-only.
      *
      * @param  array<string, mixed>  $data
      */
@@ -56,6 +77,12 @@ class LoyaltyRuleService
 
         $this->guardConsistency($data);
         $this->guardEffectiveDate($merchant, $effectiveFrom);
+
+        $replaceable = $this->versionOwning($effectiveFrom);
+
+        if ($replaceable !== null) {
+            return $this->correct($replaceable, $data, $effectiveFrom, $actor);
+        }
 
         return DB::transaction(function () use ($merchant, $data, $actor, $effectiveFrom): LoyaltyRule {
             $previous = LoyaltyRule::orderByDesc('version')->first();
@@ -84,17 +111,8 @@ class LoyaltyRuleService
             $this->audit->record(
                 action: $previous === null ? 'loyalty_rule.created' : 'loyalty_rule.superseded',
                 entity: $rule,
-                before: $previous?->only([
-                    'version', 'threshold_type', 'threshold_amount', 'threshold_invoice_count',
-                    'reward_type', 'reward_value', 'max_discount_amount', 'min_invoice_amount',
-                    'accumulation_scope', 'reset_policy', 'balance_validity_months',
-                ]),
-                after: $rule->only([
-                    'version', 'threshold_type', 'threshold_amount', 'threshold_invoice_count',
-                    'reward_type', 'reward_value', 'max_discount_amount', 'min_invoice_amount',
-                    'accumulation_scope', 'reset_policy', 'balance_validity_months',
-                    'effective_from',
-                ]),
+                before: $previous?->only(self::AUDITED),
+                after: $rule->only(self::AUDITED),
                 actor: $actor,
             );
 
@@ -171,12 +189,80 @@ class LoyaltyRuleService
 
         $latest = LoyaltyRule::orderByDesc('version')->first();
 
-        if ($latest !== null && now()->parse($effectiveFrom)->lte(now()->parse($latest->effective_from))) {
+        /*
+         * Strictly before, where it used to be before-or-equal.
+         *
+         * The equal case is now a correction to the version that owns that day
+         * (see versionOwning), which is what lets an owner press save twice in one
+         * morning. Earlier than the current version stays refused: it would insert a
+         * version starting before one that is already scheduled, and closing the
+         * outgoing version "the day before the new one" would then run backwards.
+         */
+        if ($latest !== null && now()->parse($effectiveFrom)->startOfDay()->lt(now()->parse($latest->effective_from)->startOfDay())) {
             throw ValidationException::withMessages([
                 'effective_from' => __('The start date must be later than the current version, which starts on :date.', [
                     'date' => now()->parse($latest->effective_from)->toDateString(),
                 ]),
             ]);
         }
+    }
+
+    /**
+     * The newest version, when the incoming save is a correction to it.
+     *
+     * Two conditions, and both are needed. The dates must be the *same* day, because
+     * a save aimed at a later day is a deliberate second rule — the current version
+     * will have governed the days in between, and those days have to keep their
+     * rule. And that day must not be in the past, because a version whose start has
+     * passed has already priced invoices.
+     */
+    private function versionOwning(string $effectiveFrom): ?LoyaltyRule
+    {
+        $latest = LoyaltyRule::orderByDesc('version')->first();
+
+        if ($latest === null) {
+            return null;
+        }
+
+        $starts = now()->parse($latest->effective_from)->startOfDay();
+        $incoming = now()->parse($effectiveFrom)->startOfDay();
+
+        return $starts->equalTo($incoming) && $starts->gte(now()->startOfDay())
+            ? $latest
+            : null;
+    }
+
+    /**
+     * Rewrites a version that has not governed an earlier day, keeping its number.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function correct(
+        LoyaltyRule $rule,
+        array $data,
+        string $effectiveFrom,
+        User $actor,
+    ): LoyaltyRule {
+        $before = $rule->only(self::AUDITED);
+
+        $rule->forceFill([
+            ...$data,
+            'effective_from' => $effectiveFrom,
+            'effective_to' => null,
+            'is_active' => true,
+            'created_by' => $actor->getKey(),
+        ])->save();
+
+        if ($rule->wasChanged()) {
+            $this->audit->record(
+                action: 'loyalty_rule.corrected',
+                entity: $rule,
+                before: $before,
+                after: $rule->only(self::AUDITED),
+                actor: $actor,
+            );
+        }
+
+        return $rule->refresh();
     }
 }

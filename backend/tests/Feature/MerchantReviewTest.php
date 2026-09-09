@@ -188,7 +188,17 @@ class MerchantReviewTest extends TestCase
 
     public function test_an_unverified_request_cannot_be_approved(): void
     {
-        // BRD FR-MER-02: the email and phone must be proven first.
+        /*
+         * BRD FR-MER-02: the email must be proven first.
+         *
+         * Switched on explicitly, because the shipped default is off — and when it
+         * is off no code is ever issued, so this guard has to stand down or the
+         * queue would be permanently unapprovable. That is the whole point of the
+         * setting, and MerchantRegistrationWithoutVerificationTest holds the other
+         * side of it.
+         */
+        config(['clp.require_email_verification' => true]);
+
         $merchant = Merchant::factory()->pending()->create();
 
         $this->asSupervisor()

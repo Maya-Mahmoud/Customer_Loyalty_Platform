@@ -91,9 +91,17 @@ export class MerchantDetailComponent {
   readonly canReject = computed(() => this.merchant()?.status === 'pending');
   readonly canSuspend = computed(() => this.merchant()?.status === 'active');
 
-  /** BRD FR-MER-02 blocks approval until both codes are confirmed. */
+  /**
+   * BRD FR-MER-02 blocks approval until the email is proven — where that step is
+   * switched on.
+   *
+   * Read from the server rather than worked out here. This used to be derived from
+   * is_verified, and when verification became a setting the two disagreed: the
+   * server would have approved the request while this screen kept the button
+   * greyed out under a sentence explaining a rule that no longer applied.
+   */
   readonly blockedByVerification = computed(
-    () => this.merchant()?.status === 'pending' && !this.merchant()?.is_verified
+    () => this.merchant()?.blocked_by_verification === true
   );
 
   /**
@@ -219,6 +227,28 @@ export class MerchantDetailComponent {
    * True when the account is open but its owner has never set a password — the
    * one state where the store exists yet nobody can get into it.
    */
+  /**
+   * The owner's initials, for when they have set no picture.
+   *
+   * Initials beat a grey silhouette, and they are what this person looks like
+   * everywhere else in the app — the same fallback the profile screen and the
+   * toolbar use, so one account has one appearance.
+   */
+  readonly ownerInitials = computed(() => {
+    const name = this.merchant()?.owner?.name?.trim() ?? '';
+
+    if (name === '') {
+      return '—';
+    }
+
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  });
+
   readonly ownerCannotSignIn = computed(() => {
     const merchant = this.merchant();
 

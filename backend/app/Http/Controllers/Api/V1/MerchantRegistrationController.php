@@ -26,9 +26,20 @@ class MerchantRegistrationController extends Controller
     {
         $merchant = $this->registrations->submit($request->merchantData(), $request->ip());
 
+        /*
+         * The screen is told whether a second step follows rather than deciding for
+         * itself. Verification is a server-side setting (config/clp.php), and a
+         * client that guessed would eventually show a code box for a code nobody
+         * sent — or skip one that was.
+         */
+        $verifying = $this->registrations->verificationRequired();
+
         return response()->json([
-            'message' => __('We sent a verification code to your email address.'),
+            'message' => $verifying
+                ? __('We sent a verification code to your email address.')
+                : __('Your request has been submitted and is awaiting review. We will email you the decision.'),
             'email' => $merchant->email,
+            'verification_required' => $verifying,
             'expires_in_minutes' => (int) config('verification.ttl_minutes'),
         ], 201);
     }

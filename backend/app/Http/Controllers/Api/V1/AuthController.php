@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\MerchantStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
@@ -20,6 +21,34 @@ class AuthController extends Controller
 {
     public function __construct(private readonly AuditLogger $audit)
     {
+    }
+
+    /**
+     * Why this account cannot sign in, told to the person it belongs to.
+     *
+     * Said in three ways rather than one, and that is not a leak: the password has
+     * already been verified above, so whoever is reading this is the account
+     * holder being told about their own account. Before, every case got
+     * "contact your store owner" — which for a shop owner still waiting on the
+     * platform's review is advice to go and ask themselves, and left them
+     * believing something had broken.
+     *
+     * The wrong-credentials path above stays deliberately single-messaged. That
+     * one is answered before anything is proven, and telling a stranger which
+     * addresses exist is a different matter entirely.
+     */
+    private function refusalReason(User $user): string
+    {
+        if (! $user->status->allowsAccess()) {
+            return __('This account is not active. Please contact your store owner.');
+        }
+
+        return match ($user->merchant?->status) {
+            MerchantStatus::Pending => __('Your store is still waiting for the platform supervisor to review it. You will be emailed the decision.'),
+            MerchantStatus::Rejected => __('This store registration was declined. Check the email we sent for the reason.'),
+            MerchantStatus::Suspended => __('This store account is suspended. Please contact the platform supervisor.'),
+            default => __('This account is not active. Please contact your store owner.'),
+        };
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -45,7 +74,7 @@ class AuthController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('This account is not active. Please contact your store owner.'),
+                'email' => $this->refusalReason($user),
             ]);
         }
 

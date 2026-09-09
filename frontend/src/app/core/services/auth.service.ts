@@ -114,14 +114,14 @@ export class AuthService {
    * A sales rep goes straight to the till — it is the only screen they need, and
    * a dashboard they cannot act on would be a wasted tap at the start of every
    * shift.
+   *
+   * Everyone else lands on the dashboard, the platform supervisor included. They
+   * used to be sent to the merchants list, which was true when that list was the
+   * only thing on the console; now the dashboard tells them how many requests are
+   * waiting and which subscriptions are about to lapse, and carries a button into
+   * the list. Landing one screen past the summary meant the summary was never read.
    */
   homeRoute(): string {
-    const role = this.currentUser()?.role;
-
-    if (role === 'platform_admin') {
-      return '/admin/merchants';
-    }
-
-    return role === 'sales_rep' ? '/pos' : '/dashboard';
+    return this.currentUser()?.role === 'sales_rep' ? '/pos' : '/dashboard';
   }
 }

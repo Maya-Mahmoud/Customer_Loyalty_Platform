@@ -6,15 +6,24 @@
 
   <!-- One period for all five reports, so the figures can be read against each other -->
   <mat-card class="p-5 mb-4 clp-panel-teal clp-ink-labels">
-    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-center gap-3">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+    <form [formGroup]="form" (ngSubmit)="load()" class="flex flex-wrap items-end gap-3">
+      <!--
+        Material pickers, not native date inputs. The native control renders in the
+        browser own locale, so an Arabic screen was showing mm/dd/yyyy in Latin
+        script with the month before the day.
+      -->
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
         <mat-label>{{ 'reports.from' | translate }}</mat-label>
-        <input matInput type="date" formControlName="from" dir="ltr" />
+        <input matInput [matDatepicker]="fromPicker" formControlName="from" />
+        <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+        <mat-datepicker #fromPicker />
       </mat-form-field>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-40">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
         <mat-label>{{ 'reports.to' | translate }}</mat-label>
-        <input matInput type="date" formControlName="to" dir="ltr" />
+        <input matInput [matDatepicker]="toPicker" formControlName="to" />
+        <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+        <mat-datepicker #toPicker />
       </mat-form-field>
 
       @if (canPickBranch()) {
@@ -29,7 +38,7 @@
         </mat-form-field>
       }
 
-      <button mat-flat-button color="primary" type="submit" class="!h-10 !px-7" [disabled]="loading()">
+      <button mat-flat-button color="primary" type="submit" class="!h-11 !px-7" [disabled]="loading()">
         @if (loading()) {
           <mat-spinner diameter="20" />
         } @else {
@@ -38,7 +47,7 @@
       </button>
     </form>
 
-    <div class="flex flex-wrap gap-2 mt-3">
+    <div class="flex flex-wrap items-center gap-2 mt-3">
       <button mat-stroked-button type="button" (click)="applyPreset('week')">
         {{ 'reports.presets.week' | translate }}
       </button>
@@ -51,17 +60,23 @@
       <button mat-stroked-button type="button" (click)="applyPreset('year')">
         {{ 'reports.presets.year' | translate }}
       </button>
+
+      <!-- The period the shortcuts produced, at the end of the same line. It used to
+           sit on a row of its own, where it read as a stray sentence rather than as
+           the answer to the buttons beside it. -->
+      @if (period(); as period) {
+        <p class="text-xs text-slate-500 ms-auto mb-0">
+          <span dir="ltr">{{ period.from }} → {{ period.to }}</span>
+          <span class="text-slate-400">·</span>
+          {{ period.days }} {{ 'reports.days' | translate }}
+        </p>
+      }
     </div>
 
     @if (period(); as period) {
-      <p class="text-xs text-slate-500 mt-3" dir="ltr">
-        {{ period.from }} → {{ period.to }} · {{ period.days }}
-        <span dir="auto">{{ 'reports.days' | translate }}</span>
-      </p>
-
       @if (period.branch_locked) {
         <!-- FR-BRN-03: the server answered with their branch, so the screen says so. -->
-        <p class="text-xs text-amber-800 mt-1">{{ 'reports.branchLocked' | translate }}</p>
+        <p class="text-xs text-amber-800 mt-3">{{ 'reports.branchLocked' | translate }}</p>
       }
     }
   </mat-card>
@@ -69,48 +84,76 @@
   <!-- RPT-01 -->
   @if (summary(); as summary) {
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-      <mat-card class="p-5 clp-panel-teal">
-        <p class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</p>
-        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
+      <mat-card class="p-5 clp-panel-teal flex flex-col">
+        <div class="flex items-start justify-between gap-2">
+          <p class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</p>
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 clp-tint-teal">
+            <mat-icon class="!w-5 !h-5 !text-xl">payments</mat-icon>
+          </span>
+        </div>
+
+        <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
           {{ summary.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
-        <p class="text-xs text-slate-500 mt-1">
+
+        <p class="text-xs text-slate-600 mt-auto pt-3">
           {{ 'reports.invoiceCount' | translate: { count: summary.invoice_count } }}
         </p>
       </mat-card>
 
-      <mat-card class="p-5 clp-panel-teal">
-        <p class="clp-stat-label">{{ 'reports.discountTotal' | translate }}</p>
-        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
+      <mat-card class="p-5 clp-panel-teal flex flex-col">
+        <div class="flex items-start justify-between gap-2">
+          <p class="clp-stat-label">{{ 'reports.discountTotal' | translate }}</p>
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 clp-tint-amber">
+            <mat-icon class="!w-5 !h-5 !text-xl">redeem</mat-icon>
+          </span>
+        </div>
+
+        <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
           {{ summary.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
+
         <!-- The one figure that answers whether the programme is worth running. -->
-        <p class="text-xs text-slate-500 mt-1" dir="ltr">
+        <p class="text-xs text-slate-600 mt-auto pt-3" dir="ltr">
           {{ summary.discount_ratio }}% <span dir="auto">{{ 'reports.ofSales' | translate }}</span>
         </p>
       </mat-card>
 
-      <mat-card class="p-5 clp-panel-teal">
-        <p class="clp-stat-label">{{ 'reports.averageInvoice' | translate }}</p>
-        <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
+      <mat-card class="p-5 clp-panel-teal flex flex-col">
+        <div class="flex items-start justify-between gap-2">
+          <p class="clp-stat-label">{{ 'reports.averageInvoice' | translate }}</p>
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 clp-tint-teal">
+            <mat-icon class="!w-5 !h-5 !text-xl">receipt_long</mat-icon>
+          </span>
+        </div>
+
+        <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
           {{ summary.average_invoice }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
-        <p class="text-xs text-slate-500 mt-1">
+
+        <p class="text-xs text-slate-600 mt-auto pt-3">
           {{ 'reports.customersServed' | translate: { count: summary.customers_served } }}
         </p>
       </mat-card>
 
-      <mat-card class="p-5 clp-panel-teal">
-        <p class="clp-stat-label">{{ 'reports.newCustomers' | translate }}</p>
-        <p class="clp-stat-value !text-3xl mt-1">{{ summary.new_customers }}</p>
-        <p class="text-xs text-slate-500 mt-1">
+      <mat-card class="p-5 clp-panel-teal flex flex-col">
+        <div class="flex items-start justify-between gap-2">
+          <p class="clp-stat-label">{{ 'reports.newCustomers' | translate }}</p>
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 clp-tint-green">
+            <mat-icon class="!w-5 !h-5 !text-xl">person_add</mat-icon>
+          </span>
+        </div>
+
+        <p class="clp-stat-value !text-3xl !font-bold mt-2">{{ summary.new_customers }}</p>
+
+        <p class="text-xs text-slate-600 mt-auto pt-3">
           {{ 'reports.rewardsPaid' | translate: { count: summary.redemption_count } }}
         </p>
       </mat-card>
     </div>
   }
 
-  <mat-card>
+  <mat-card class="p-0 overflow-hidden">
     <mat-tab-group>
       <!-- RPT-03 -->
       <mat-tab [label]="'reports.tabs.branches' | translate">
@@ -164,32 +207,32 @@
       <mat-tab [label]="'reports.tabs.rewards' | translate">
         <div class="p-5">
           @if (rewards(); as rewards) {
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div class="rounded-lg border border-slate-200 p-4">
-                <p class="text-xs text-slate-500">{{ 'reports.vouchersIssued' | translate }}</p>
-                <p class="text-lg font-semibold text-slate-900 mt-1" dir="ltr">
-                  {{ rewards.vouchers.issued_total }} ({{ rewards.vouchers.issued_count }})
-                </p>
+            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="clp-pair">
+                <dt>{{ 'reports.vouchersIssued' | translate }}</dt>
+                <dd dir="ltr">{{ rewards.vouchers.issued_total }} ({{ rewards.vouchers.issued_count }})</dd>
               </div>
-              <div class="rounded-lg border border-slate-200 p-4">
-                <p class="text-xs text-slate-500">{{ 'reports.vouchersUsed' | translate }}</p>
-                <p class="text-lg font-semibold text-slate-900 mt-1" dir="ltr">
-                  {{ rewards.vouchers.used_total }} ({{ rewards.vouchers.used_count }})
-                </p>
+              <div class="clp-pair">
+                <dt>{{ 'reports.vouchersUsed' | translate }}</dt>
+                <dd dir="ltr">{{ rewards.vouchers.used_total }} ({{ rewards.vouchers.used_count }})</dd>
               </div>
-              <!-- Credit already promised and not yet spent: a liability. -->
-              <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <p class="text-xs text-amber-900">{{ 'reports.vouchersOutstanding' | translate }}</p>
-                <p class="text-lg font-semibold text-amber-900 mt-1" dir="ltr">
+              <!--
+                Credit already promised and not yet spent: a liability, and the only
+                figure here the owner may owe on. It keeps the gold ground while the
+                two beside it are plain, because it is the one that needs reading.
+              -->
+              <div class="clp-pair" style="background: #fdf6e8; border-color: #e0bd7a; border-inline-start-color: var(--clp-gold)">
+                <dt style="color: #855d1b">{{ 'reports.vouchersOutstanding' | translate }}</dt>
+                <dd dir="ltr" style="color: #6b4a12">
                   {{ rewards.vouchers.outstanding_total }} ({{ rewards.vouchers.outstanding_count }})
-                </p>
-                <p class="text-xs text-amber-800 mt-1">
+                </dd>
+                <p class="text-xs mt-1" style="color: #855d1b">
                   {{ 'reports.vouchersOutstandingHint' | translate }}
                 </p>
               </div>
-            </div>
+            </dl>
 
-            <h3 class="text-sm font-medium text-slate-700 mt-5 mb-2">
+            <h3 class="text-sm font-semibold mt-6 mb-3" style="color: var(--clp-ink)">
               {{ 'reports.byRewardType' | translate }}
             </h3>
 
@@ -234,25 +277,25 @@
       <mat-tab [label]="'reports.tabs.customers' | translate">
         <div class="p-5">
           @if (customers(); as customers) {
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-              <div class="rounded-lg border border-slate-200 p-4">
-                <p class="text-xs text-slate-500">{{ 'reports.totalCustomers' | translate }}</p>
-                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.total_customers }}</p>
+            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              <div class="clp-pair">
+                <dt>{{ 'reports.totalCustomers' | translate }}</dt>
+                <dd>{{ customers.total_customers }}</dd>
               </div>
-              <div class="rounded-lg border border-slate-200 p-4">
-                <p class="text-xs text-slate-500">{{ 'reports.inactive' | translate }}</p>
-                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.inactive }}</p>
-                <p class="text-xs text-slate-500 mt-1" dir="ltr">
-                  {{ 'reports.since' | translate }} {{ customers.inactive_since }}
+              <div class="clp-pair">
+                <dt>{{ 'reports.inactive' | translate }}</dt>
+                <dd>{{ customers.inactive }}</dd>
+                <p class="text-xs text-slate-500 mt-1">
+                  {{ 'reports.since' | translate }} <span dir="ltr">{{ customers.inactive_since }}</span>
                 </p>
               </div>
-              <div class="rounded-lg border border-slate-200 p-4">
-                <p class="text-xs text-slate-500">{{ 'reports.neverBought' | translate }}</p>
-                <p class="text-lg font-semibold text-slate-900 mt-1">{{ customers.never_bought }}</p>
+              <div class="clp-pair">
+                <dt>{{ 'reports.neverBought' | translate }}</dt>
+                <dd>{{ customers.never_bought }}</dd>
               </div>
-            </div>
+            </dl>
 
-            <h3 class="text-sm font-medium text-slate-700 mb-2">
+            <h3 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
               {{ 'reports.topCustomers' | translate }}
             </h3>
 

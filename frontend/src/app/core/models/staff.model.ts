@@ -23,6 +23,8 @@ export interface StaffMember {
   name: string;
   email: string;
   phone: string | null;
+  /** The picture the user set for themselves; null when they have not. */
+  avatar_url: string | null;
   role: UserRole;
   status: UserStatus;
   branch_id: number | null;
