@@ -1,25 +1,48 @@
 <mat-sidenav-container class="h-screen">
-  <mat-sidenav mode="side" opened class="w-64">
-    <div class="px-4 py-4 flex items-center gap-3">
-      <!-- The store's own logo where there is one (BRD FR-MER-06): the owner
-           uploaded it to be seen, and this is where they look for it. -->
+  <!--
+    A column of its own on a wide screen, an overlay on a narrow one.
+
+    Fixed open at 256px, the rail took two thirds of a phone and covered the work
+    instead of pointing at it. Over a certain width it earns its column; below it,
+    it opens from the button in the bar and closes the moment it is used.
+  -->
+  <mat-sidenav #drawer
+               [mode]="isHandset() ? 'over' : 'side'"
+               [opened]="!isHandset()"
+               class="w-64">
+    <!--
+      The shop's own identity, at the top of every screen it owns.
+
+      The logo used to sit at 40px beside the name, which on a rail that is present
+      all day read as a favicon rather than as the shop's mark. It is the one thing
+      here that belongs to the customer rather than to us, so it is given the room to
+      be recognised: shown large, centred, and on white — a logo drawn for a shop
+      sign is almost never legible against a dark ground.
+    -->
+    <div class="px-4 pt-6 pb-5 flex flex-col items-center text-center">
       @if (merchant()?.logo_url) {
         <img [src]="merchant()!.logo_url!" alt=""
-             class="w-10 h-10 rounded-lg object-contain bg-white p-0.5" />
-      } @else {
-        <span class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #d9a747, #c28f2c); color: #0b2f2d">
-          <mat-icon>loyalty</mat-icon>
+             class="w-20 h-20 rounded-2xl object-contain bg-white p-1.5 shadow-sm" />
+      } @else if (merchant()) {
+        <!-- A shop with no logo yet gets its own initials rather than our tag icon:
+             the letters are at least theirs. -->
+        <span class="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold"
+              style="background: linear-gradient(135deg, #d9a747, #c28f2c); color: #0b2f2d">
+          {{ merchantInitials() }}
         </span>
+      } @else {
+        <!-- The platform supervisor has no shop, so this is the platform's own mark:
+             the logo uploaded in platform settings, or the drawn badge until there
+             is one. -->
+        <clp-platform-logo [size]="80" />
       }
 
-      <div class="min-w-0">
-        <p class="text-sm font-semibold text-white truncate">
-          {{ merchant()?.trade_name || merchant()?.name || ('app.shortName' | translate) }}
-        </p>
-        <p class="text-xs truncate" style="color: #8fa8a5">
-          {{ merchant() ? ('app.shortName' | translate) : ('roles.platform_admin' | translate) }}
-        </p>
-      </div>
+      <p class="text-base font-semibold text-white mt-3 leading-snug w-full break-words">
+        {{ merchant()?.trade_name || merchant()?.name || ('app.shortName' | translate) }}
+      </p>
+      <p class="text-xs mt-0.5 truncate w-full" style="color: #8fa8a5">
+        {{ merchant() ? ('app.shortName' | translate) : ('roles.platform_admin' | translate) }}
+      </p>
     </div>
 
     <mat-divider />
@@ -29,9 +52,12 @@
         <!-- Bound to the directive, not hardcoded: with [activated]="true" every
              entry rendered as selected, so the first one always looked current
              regardless of where the user actually was. -->
+        <!-- Closed on the way out, but only when it is an overlay: on a wide screen
+             the rail is part of the furniture and must not vanish under the user. -->
         <a mat-list-item [routerLink]="item.route"
            routerLinkActive #linkActive="routerLinkActive"
-           [activated]="linkActive.isActive" ariaCurrentWhenActive="page">
+           [activated]="linkActive.isActive" ariaCurrentWhenActive="page"
+           (click)="isHandset() && drawer.close()">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.labelKey | translate }}</span>
         </a>
@@ -40,19 +66,34 @@
   </mat-sidenav>
 
   <mat-sidenav-content>
-    <mat-toolbar class="flex items-center justify-between">
-      <div class="flex flex-col leading-tight">
-        <span class="text-sm font-medium" style="color: var(--clp-ink)">{{ user()?.name }}</span>
-        <span class="text-xs text-slate-500">
-          {{ roleLabelKey() | translate }}
-          @if (branch()) {
-            &middot; {{ branch()!.name }}
-          }
-        </span>
+    <mat-toolbar class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <!-- The way back to the rail on a narrow screen. Hidden where the rail is
+             already on the page, because a button that opens what is open is noise. -->
+        @if (isHandset()) {
+          <button mat-icon-button type="button" (click)="drawer.toggle()"
+                  [attr.aria-label]="'nav.menu' | translate">
+            <mat-icon>menu</mat-icon>
+          </button>
+        }
+
+        <div class="flex flex-col leading-tight min-w-0">
+          <span class="text-sm font-medium truncate" style="color: var(--clp-ink)">
+            {{ user()?.name }}
+          </span>
+          <!-- Dropped on a phone: the bar has four controls to fit and the role is
+               the least urgent of the things competing for that width. -->
+          <span class="text-xs text-slate-500 truncate hidden sm:block">
+            {{ roleLabelKey() | translate }}
+            @if (branch()) {
+              &middot; {{ branch()!.name }}
+            }
+          </span>
+        </div>
       </div>
 
-      <div class="flex items-center gap-1">
-        <button mat-button type="button" (click)="toggleLanguage()">
+      <div class="flex items-center gap-1 shrink-0">
+        <button mat-button type="button" class="!min-w-0 !px-2" (click)="toggleLanguage()">
           {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
         </button>
 
@@ -94,7 +135,7 @@
       </div>
     </mat-toolbar>
 
-    <main class="p-6 lg:p-8">
+    <main class="p-4 sm:p-6 lg:p-8">
       <router-outlet />
     </main>
   </mat-sidenav-content>

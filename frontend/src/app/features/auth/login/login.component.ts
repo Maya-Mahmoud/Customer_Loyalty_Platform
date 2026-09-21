@@ -13,6 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ApiError } from '../../../core/models/api.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { PlatformLogoComponent } from '../../../shared/platform-logo.component';
 
 @Component({
   selector: 'app-login',
@@ -27,6 +28,7 @@ import { LanguageService } from '../../../core/services/language.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './login.component.html',
 })

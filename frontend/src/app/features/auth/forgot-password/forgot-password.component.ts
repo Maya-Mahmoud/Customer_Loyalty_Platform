@@ -17,6 +17,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PasswordResetService } from '../../../core/services/password-reset.service';
+import { PlatformLogoComponent } from '../../../shared/platform-logo.component';
 
 /** Seconds before another code may be requested; matches the server cooldown. */
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -41,6 +42,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './forgot-password.component.html',
 })

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdatePlatformSettingsRequest;
+use App\Http\Requests\Profile\UploadImageRequest;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\PlatformSetting;
 use App\Models\SubscriptionPlan;
 use App\Services\AuditLogger;
+use App\Services\ImageStorage;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -25,13 +27,46 @@ use Illuminate\Http\JsonResponse;
  */
 class PlatformSettingController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit)
-    {
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly ImageStorage $images,
+    ) {
     }
 
     public function show(): JsonResponse
     {
         return $this->settings();
+    }
+
+    /**
+     * The platform's own mark (the counterpart of FR-MER-06 for the platform).
+     *
+     * Reuses the same storage the shops' logos go through, which re-encodes every
+     * upload rather than storing the bytes it was handed — the security control is
+     * the same whoever is uploading.
+     */
+    public function uploadLogo(UploadImageRequest $request): JsonResponse
+    {
+        $previous = PlatformSetting::get(PlatformSetting::LOGO_PATH);
+
+        $path = $this->images->store($request->file('image'), 'platform', $previous);
+
+        PlatformSetting::set(PlatformSetting::LOGO_PATH, $path);
+
+        $this->audit->record(action: 'platform.logo_updated');
+
+        return $this->settings(__('The platform logo has been updated.'));
+    }
+
+    public function deleteLogo(): JsonResponse
+    {
+        $this->images->delete(PlatformSetting::get(PlatformSetting::LOGO_PATH));
+
+        PlatformSetting::set(PlatformSetting::LOGO_PATH, '');
+
+        $this->audit->record(action: 'platform.logo_removed');
+
+        return $this->settings(__('The platform logo has been removed.'));
     }
 
     public function update(UpdatePlatformSettingsRequest $request): JsonResponse
@@ -62,6 +97,7 @@ class PlatformSettingController extends Controller
             'message' => $message,
             'data' => [
                 'billing_currency' => PlatformSetting::billingCurrency(),
+                'logo_url' => PlatformSetting::logoUrl(),
                 'currencies' => config('clp.currencies'),
                 'plans' => SubscriptionPlanResource::collection(
                     SubscriptionPlan::orderBy('monthly_price')->get()

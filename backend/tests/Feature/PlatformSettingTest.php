@@ -9,6 +9,8 @@ use App\Models\PlatformSetting;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -361,6 +363,83 @@ class PlatformSettingTest extends TestCase
         )->pluck('code');
 
         $this->assertFalse($offered->contains('silver'));
+    }
+
+    // -----------------------------------------------------------------
+    // The platform's own logo
+    // -----------------------------------------------------------------
+
+    public function test_the_supervisor_uploads_and_removes_the_platform_logo(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->post('/api/v1/admin/settings/logo', [
+                'image' => UploadedFile::fake()->image('mark.png', 400, 400),
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.logo_url', fn ($url) => is_string($url) && $url !== '');
+
+        $this->assertNotNull(PlatformSetting::logoUrl());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'platform.logo_updated']);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->deleteJson('/api/v1/admin/settings/logo')
+            ->assertOk()
+            ->assertJsonPath('data.logo_url', null);
+
+        $this->assertNull(PlatformSetting::logoUrl());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'platform.logo_removed']);
+    }
+
+    public function test_only_the_supervisor_may_set_the_platform_logo(): void
+    {
+        Storage::fake('public');
+
+        $merchant = Merchant::factory()->create();
+        $owner = User::factory()->owner($merchant->id)->create();
+
+        // A shop owner sets their own shop's logo, never the platform's.
+        $this->actingAs($owner, 'sanctum')
+            ->post('/api/v1/admin/settings/logo', [
+                'image' => UploadedFile::fake()->image('mark.png'),
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_the_public_brand_endpoint_serves_the_name_and_logo_to_anyone(): void
+    {
+        Storage::fake('public');
+
+        /*
+         * Read with no token on purpose: the landing page, the sign-in screen and
+         * the customer's balance lookup all carry this mark, and every one of them
+         * is opened by somebody who has no account.
+         */
+        $this->getJson('/api/v1/platform')
+            ->assertOk()
+            ->assertJsonPath('data.name', config('app.name'))
+            ->assertJsonPath('data.logo_url', null);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->post('/api/v1/admin/settings/logo', [
+                'image' => UploadedFile::fake()->image('mark.png'),
+            ])->assertOk();
+
+        $this->getJson('/api/v1/platform')
+            ->assertOk()
+            ->assertJsonPath('data.logo_url', fn ($url) => is_string($url) && $url !== '');
+    }
+
+    public function test_the_public_brand_endpoint_leaks_nothing_else(): void
+    {
+        // The supervisor's settings screen returns the price list beside the logo.
+        // This endpoint is read by strangers, so it carries two fields and no more.
+        $keys = array_keys($this->getJson('/api/v1/platform')->assertOk()->json('data'));
+
+        sort($keys);
+
+        $this->assertSame(['logo_url', 'name'], $keys);
     }
 
     public function test_an_unchanged_save_writes_no_audit_entry(): void

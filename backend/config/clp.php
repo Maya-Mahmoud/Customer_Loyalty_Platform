@@ -55,6 +55,23 @@ return [
      */
     'login_attempts_per_minute' => (int) env('LOGIN_ATTEMPTS_PER_MINUTE', 60),
 
+    /*
+     * The public balance lookup (BRD AF-12).
+     *
+     * This is the one screen where somebody with no account guesses at other people's
+     * data, so the ceiling is deliberately low: a customer checks their balance once
+     * or twice, while anybody walking a list of invoice numbers against a phone
+     * number needs hundreds of tries. Eight in ten minutes stops the second without
+     * ever reaching the first.
+     *
+     * Configurable because the limit that protects the live site is also the limit
+     * that blocks a developer demonstrating the screen, and those two needs do not
+     * share a number. Raise it in a local .env; leave it alone in production.
+     */
+    'balance_lookup_attempts' => (int) env('BALANCE_LOOKUP_ATTEMPTS', 8),
+
+    'balance_lookup_window_minutes' => (int) env('BALANCE_LOOKUP_WINDOW_MINUTES', 10),
+
     /** How long a password-setting invitation stays valid (BRD FR-BRN-04). */
     'invitation_ttl_hours' => (int) env('INVITATION_TTL_HOURS', 72),
 

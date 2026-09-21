@@ -1,4 +1,7 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Permission } from '../../core/models/auth.model';
 import { AuthService } from '../../core/services/auth.service';
 import { LanguageService } from '../../core/services/language.service';
+import { PlatformLogoComponent } from '../../shared/platform-logo.component';
 
 interface NavItem {
   route: string;
@@ -40,12 +44,29 @@ interface NavItem {
     MatSidenavModule,
     MatToolbarModule,
     MatTooltipModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './shell.component.html',
 })
 export class ShellComponent {
   private readonly auth = inject(AuthService);
   private readonly language = inject(LanguageService);
+  private readonly breakpoints = inject(BreakpointObserver);
+
+  /**
+   * Whether the screen is too narrow to give the rail a column of its own.
+   *
+   * Below this the rail is 256px of a 390px phone — it was covering the work
+   * instead of pointing at it. On a narrow screen it becomes an overlay that opens
+   * from a button and closes as soon as it is used.
+   *
+   * The breakpoint matches Tailwind's lg, so the rail appears at exactly the width
+   * the page layouts start assuming a second column.
+   */
+  readonly isHandset = toSignal(
+    this.breakpoints.observe('(max-width: 1023.98px)').pipe(map((state) => state.matches)),
+    { initialValue: false }
+  );
 
   readonly user = this.auth.user;
   readonly merchant = this.auth.merchant;
@@ -162,6 +183,27 @@ export class ShellComponent {
   );
 
   readonly roleLabelKey = computed(() => `roles.${this.user()?.role ?? 'sales_rep'}`);
+
+  /**
+   * The shop's initials, for a shop that has not uploaded a logo yet.
+   *
+   * Shown in place of our own tag icon: an owner who has not got round to uploading
+   * a mark should still see something of theirs at the top of their screen, and the
+   * first letters of their trade name are at least that.
+   */
+  readonly merchantInitials = computed(() => {
+    const name = (this.merchant()?.trade_name || this.merchant()?.name || '').trim();
+
+    if (name === '') {
+      return '—';
+    }
+
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('');
+  });
 
   toggleLanguage(): void {
     this.language.toggle();

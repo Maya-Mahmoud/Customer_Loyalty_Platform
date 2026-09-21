@@ -13,6 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 import { BalanceCard, BalanceStore, BalanceService } from '../../core/services/balance.service';
 import { LanguageService } from '../../core/services/language.service';
+import { PlatformLogoComponent } from '../../shared/platform-logo.component';
 
 /**
  * The customer's own balance (BRD FR-CUS-12).
@@ -41,6 +42,7 @@ import { LanguageService } from '../../core/services/language.service';
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './balance-lookup.component.html',
 })

@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api/v1',
+  apiUrl: 'https://loyalty.shamheartcenter.com/api/v1',
   defaultLanguage: 'ar',
-  supportedLanguages: ['ar', 'en'],
+  supportedLanguages: ['ar', 'en']
 };

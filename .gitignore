@@ -1,0 +1,14 @@
+# Deployment archives.
+#
+# These are built to be uploaded to the host, not to be tracked. backend.zip in
+# particular packs backend/.env, so committing one would publish the database and
+# mail credentials in a repository that is public.
+*.zip
+*.tar
+*.tar.gz
+
+# Anything that looks like an environment file, wherever it appears. The backend
+# has its own rule for this; this one catches copies made outside it.
+.env
+.env.*
+!.env.example

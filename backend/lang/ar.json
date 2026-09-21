@@ -162,5 +162,7 @@
     "We could not match those details. Check the shop, the number and the invoice.": "لم نتمكن من مطابقة هذه البيانات. الرجاء التأكد من المحل ورقم الموبايل وبيانات الفاتورة.",
     "Your store is still waiting for the platform supervisor to review it. You will be emailed the decision.": "محلك لا يزال بانتظار مراجعة مشرف المنصة. سيصلك القرار على بريدك الإلكتروني.",
     "This store registration was declined. Check the email we sent for the reason.": "تم رفض طلب تسجيل هذا المحل. راجع البريد الذي أرسلناه لمعرفة السبب.",
-    "This store account is suspended. Please contact the platform supervisor.": "حساب هذا المحل معلَّق. الرجاء مراجعة مشرف المنصة."
+    "This store account is suspended. Please contact the platform supervisor.": "حساب هذا المحل معلَّق. الرجاء مراجعة مشرف المنصة.",
+    "The platform logo has been updated.": "تم تحديث شعار المنصة.",
+    "The platform logo has been removed.": "تم حذف شعار المنصة."
 }

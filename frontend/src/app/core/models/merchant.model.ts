@@ -129,6 +129,8 @@ export interface InvitationDetails {
  */
 export interface PlatformSettings {
   billing_currency: string;
+  /** Null until a supervisor uploads one; every screen falls back to the drawn mark. */
+  logo_url: string | null;
   currencies: string[];
   plans: SubscriptionPlan[];
 }

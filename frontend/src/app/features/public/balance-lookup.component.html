@@ -5,11 +5,15 @@
 <div class="min-h-screen py-8 px-4 clp-public-page">
   <div class="max-w-md mx-auto">
     <header class="flex items-center justify-between mb-6">
-      <div>
-        <p class="text-lg font-semibold" style="color: var(--clp-ink)">
-          {{ 'app.shortName' | translate }}
-        </p>
-        <p class="text-xs text-slate-600 mt-0.5">{{ 'balance.tagline' | translate }}</p>
+      <div class="flex items-center gap-3 min-w-0">
+        <clp-platform-logo [size]="40" />
+
+        <div class="min-w-0">
+          <p class="text-lg font-semibold truncate" style="color: var(--clp-ink)">
+            {{ 'app.shortName' | translate }}
+          </p>
+          <p class="text-xs text-slate-600 mt-0.5">{{ 'balance.tagline' | translate }}</p>
+        </div>
       </div>
 
       <button mat-button type="button" (click)="toggleLanguage()">

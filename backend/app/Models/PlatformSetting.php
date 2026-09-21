@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Settings the platform supervisor edits from a screen.
@@ -28,6 +29,24 @@ class PlatformSetting extends Model
     protected $fillable = ['key', 'value'];
 
     public const BILLING_CURRENCY = 'billing_currency';
+
+    public const LOGO_PATH = 'logo_path';
+
+    /**
+     * The platform's own mark, as a URL the client can put straight in an img tag.
+     *
+     * Null until the supervisor uploads one, and the screens fall back to the icon
+     * they have always drawn — so the platform is never nameless, it is simply not
+     * yet branded.
+     */
+    public static function logoUrl(): ?string
+    {
+        $path = static::get(self::LOGO_PATH);
+
+        return $path === null || $path === ''
+            ? null
+            : Storage::disk('public')->url($path);
+    }
 
     /**
      * The money the platform charges its shops in (BRD 5, subscription plans).

@@ -17,6 +17,7 @@ import { applyServerErrors, clearServerErrors } from '../../../core/forms/server
 import { LanguageService } from '../../../core/services/language.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { RegistrationService } from '../../../core/services/registration.service';
+import { PlatformLogoComponent } from '../../../shared/platform-logo.component';
 
 /** Seconds before another code may be requested; matches the server cooldown. */
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -42,6 +43,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './register.component.html',
 })

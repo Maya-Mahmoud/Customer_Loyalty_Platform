@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Merchant\StaffController;
 use App\Http\Controllers\Api\V1\Merchant\StoreProfileController;
 use App\Http\Controllers\Api\V1\MerchantRegistrationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\PlatformBrandController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\Sales\CorrectionController;
@@ -78,11 +79,21 @@ Route::prefix('v1')->group(function () {
      * numbers against a known phone. Eight tries per ten minutes leaves an honest
      * customer room to mistype and leaves a guesser nowhere to go.
      */
+    /*
+     * The platform's own name and logo, for the screens a visitor sees before they
+     * have an account: the landing page, sign-in, registration and the balance
+     * lookup. Cheap, cacheable and free of anything private.
+     */
+    Route::get('/platform', PlatformBrandController::class)->middleware('throttle:60,1');
+
     Route::get('/balance/stores', [BalanceLookupController::class, 'stores'])
         ->middleware('throttle:30,1');
 
     Route::post('/balance', [BalanceLookupController::class, 'show'])
-        ->middleware('throttle:8,10');
+        ->middleware(
+            'throttle:'.config('clp.balance_lookup_attempts')
+            .','.config('clp.balance_lookup_window_minutes')
+        );
 
     // Setting a password from an invitation link (BRD FR-BRN-04). The token in
     // the URL is the authorisation, so no session is needed.
@@ -287,6 +298,8 @@ Route::prefix('v1')->group(function () {
                 // The platform's own settings, as opposed to a store's (FR-ADM-04).
                 Route::get('/settings', [PlatformSettingController::class, 'show']);
                 Route::put('/settings', [PlatformSettingController::class, 'update']);
+                Route::post('/settings/logo', [PlatformSettingController::class, 'uploadLogo']);
+                Route::delete('/settings/logo', [PlatformSettingController::class, 'deleteLogo']);
 
                 Route::get('/merchants', [MerchantController::class, 'index']);
                 Route::get('/merchants/{merchant}', [MerchantController::class, 'show']);

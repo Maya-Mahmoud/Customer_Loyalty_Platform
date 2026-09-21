@@ -1,0 +1,267 @@
+<div class="clp-landing min-h-screen">
+  <!-- ============================================================ -->
+  <!-- Bar                                                          -->
+  <!-- ============================================================ -->
+  <header class="clp-landing-bar">
+    <div class="clp-landing-wrap flex items-center justify-between gap-3 py-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <clp-platform-logo [size]="36" />
+        <span class="font-semibold truncate" style="color: var(--clp-ink)">
+          {{ 'app.name' | translate }}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <button mat-button type="button" class="!min-w-0 !px-2" (click)="toggleLanguage()">
+          {{ (currentLanguage() === 'ar' ? 'common.english' : 'common.arabic') | translate }}
+        </button>
+
+        <!-- Somebody already signed in is sent to their own screen: offering them a
+             sign-in reads as though the session had been lost. -->
+        @if (isSignedIn()) {
+          <a mat-flat-button color="primary" class="!h-10 !px-5" [routerLink]="homeRoute()">
+            {{ 'landing.openApp' | translate }}
+          </a>
+        } @else {
+          <a mat-flat-button color="primary" class="!h-10 !px-5" routerLink="/login">
+            {{ 'auth.signIn' | translate }}
+          </a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- Hero                                                         -->
+  <!-- ============================================================ -->
+  <section class="clp-hero">
+    <div class="clp-landing-wrap py-14 sm:py-20 lg:py-24">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_26rem] gap-10 lg:gap-14 items-center">
+        <div>
+          <p class="clp-eyebrow">{{ 'landing.eyebrow' | translate }}</p>
+
+          <h1 class="clp-hero-title mt-3">{{ 'landing.headline' | translate }}</h1>
+
+          <p class="clp-hero-sub mt-4 max-w-xl">{{ 'landing.sub' | translate }}</p>
+
+          <div class="flex flex-wrap gap-3 mt-8">
+            <a mat-flat-button color="primary" class="!h-12 !px-7 !text-base" routerLink="/register">
+              {{ 'landing.ctaRegister' | translate }}
+            </a>
+
+            <a mat-stroked-button class="clp-hero-ghost !h-12 !px-7 !text-base" routerLink="/my-balance">
+              <mat-icon>loyalty</mat-icon>
+              {{ 'landing.ctaBalance' | translate }}
+            </a>
+          </div>
+
+          <p class="text-xs mt-4" style="color: #7c8f8b">{{ 'landing.ctaNote' | translate }}</p>
+        </div>
+
+        <!--
+          A card of the three facts a shop owner weighs, rather than a stock
+          illustration: the page has to earn trust, and a picture of a shop does not.
+        -->
+        <div class="clp-hero-card">
+          <p class="text-sm font-semibold mb-4" style="color: var(--clp-ink)">
+            {{ 'landing.pillarsTitle' | translate }}
+          </p>
+
+          <div class="flex flex-col gap-4">
+            <div class="flex items-start gap-3">
+              <span class="clp-pillar-icon"><mat-icon>lock</mat-icon></span>
+              <div>
+                <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+                  {{ 'landing.pillarIsolation' | translate }}
+                </p>
+                <p class="text-xs mt-0.5" style="color: #55665f">
+                  {{ 'landing.pillarIsolationBody' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span class="clp-pillar-icon"><mat-icon>account_balance</mat-icon></span>
+              <div>
+                <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+                  {{ 'landing.pillarLedger' | translate }}
+                </p>
+                <p class="text-xs mt-0.5" style="color: #55665f">
+                  {{ 'landing.pillarLedgerBody' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <!--
+              The third thing an owner weighs, after "is my data safe" and "can the
+              figures be trusted": what the programme is costing them.
+
+              This slot used to claim the interface was bilingual. That is not a
+              distinction in a product built for Arabic-speaking shops — it is the
+              minimum — and the language button at the top of this very page proves
+              it better than a sentence about it could.
+            -->
+            <div class="flex items-start gap-3">
+              <span class="clp-pillar-icon"><mat-icon>percent</mat-icon></span>
+              <div>
+                <p class="text-sm font-semibold" style="color: var(--clp-ink)">
+                  {{ 'landing.pillarCost' | translate }}
+                </p>
+                <p class="text-xs mt-0.5" style="color: #55665f">
+                  {{ 'landing.pillarCostBody' | translate }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- The problem                                                  -->
+  <!-- ============================================================ -->
+  <section class="clp-landing-wrap py-14 sm:py-16">
+    <div class="clp-problem">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div>
+          <h2 class="clp-h2">{{ 'landing.problemTitle' | translate }}</h2>
+          <p class="clp-body mt-3">{{ 'landing.problemBody' | translate }}</p>
+        </div>
+
+        <ul class="flex flex-col gap-3 m-0 p-0 list-none">
+          <li class="clp-check">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ 'landing.problemPoint1' | translate }}</span>
+          </li>
+          <li class="clp-check">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ 'landing.problemPoint2' | translate }}</span>
+          </li>
+          <li class="clp-check">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ 'landing.problemPoint3' | translate }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- Features                                                     -->
+  <!-- ============================================================ -->
+  <section class="clp-landing-wrap pb-14 sm:pb-16">
+    <h2 class="clp-h2 text-center">{{ 'landing.featuresTitle' | translate }}</h2>
+    <p class="clp-body text-center mt-2 mx-auto max-w-2xl">
+      {{ 'landing.featuresSub' | translate }}
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-9">
+      @for (feature of features; track feature.titleKey) {
+        <article class="clp-feature">
+          <span class="clp-feature-icon"><mat-icon>{{ feature.icon }}</mat-icon></span>
+          <h3 class="text-base font-semibold mt-4" style="color: var(--clp-ink)">
+            {{ feature.titleKey | translate }}
+          </h3>
+          <p class="text-sm mt-2" style="color: #55665f">{{ feature.bodyKey | translate }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- How it works                                                 -->
+  <!-- ============================================================ -->
+  <section class="clp-steps-band">
+    <div class="clp-landing-wrap py-14 sm:py-16">
+      <h2 class="clp-h2 text-center" style="color: #ffffff">
+        {{ 'landing.stepsTitle' | translate }}
+      </h2>
+      <p class="text-center mt-2 mx-auto max-w-2xl text-sm" style="color: #b9cbc8">
+        {{ 'landing.stepsSub' | translate }}
+      </p>
+
+      <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-9 m-0 p-0 list-none">
+        @for (step of steps; track step.titleKey; let i = $index) {
+          <li class="clp-step">
+            <div class="flex items-center gap-3">
+              <span class="clp-step-number">{{ i + 1 }}</span>
+              <mat-icon style="color: var(--clp-gold)">{{ step.icon }}</mat-icon>
+            </div>
+
+            <h3 class="text-sm font-semibold mt-3" style="color: #ffffff">
+              {{ step.titleKey | translate }}
+            </h3>
+            <p class="text-xs mt-1.5" style="color: #b9cbc8">{{ step.bodyKey | translate }}</p>
+          </li>
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- Who it is for                                                -->
+  <!-- ============================================================ -->
+  <section class="clp-landing-wrap py-14 sm:py-16">
+    <h2 class="clp-h2 text-center">{{ 'landing.rolesTitle' | translate }}</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-9">
+      <article class="clp-role">
+        <mat-icon class="clp-role-icon">admin_panel_settings</mat-icon>
+        <h3>{{ 'roles.platform_admin' | translate }}</h3>
+        <p>{{ 'landing.roleAdmin' | translate }}</p>
+      </article>
+
+      <article class="clp-role">
+        <mat-icon class="clp-role-icon">storefront</mat-icon>
+        <h3>{{ 'roles.merchant_owner' | translate }}</h3>
+        <p>{{ 'landing.roleOwner' | translate }}</p>
+      </article>
+
+      <article class="clp-role">
+        <mat-icon class="clp-role-icon">manage_accounts</mat-icon>
+        <h3>{{ 'roles.branch_manager' | translate }}</h3>
+        <p>{{ 'landing.roleManager' | translate }}</p>
+      </article>
+
+      <article class="clp-role">
+        <mat-icon class="clp-role-icon">point_of_sale</mat-icon>
+        <h3>{{ 'roles.sales_rep' | translate }}</h3>
+        <p>{{ 'landing.roleRep' | translate }}</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- Closing call                                                 -->
+  <!-- ============================================================ -->
+  <section class="clp-landing-wrap pb-16">
+    <div class="clp-cta">
+      <h2 class="text-xl sm:text-2xl font-semibold" style="color: var(--clp-ink)">
+        {{ 'landing.ctaTitle' | translate }}
+      </h2>
+      <p class="clp-body mt-2 mx-auto max-w-xl">{{ 'landing.ctaBody' | translate }}</p>
+
+      <div class="flex flex-wrap justify-center gap-3 mt-7">
+        <a mat-flat-button color="primary" class="!h-12 !px-8 !text-base" routerLink="/register">
+          {{ 'landing.ctaRegister' | translate }}
+        </a>
+
+        <a mat-stroked-button class="clp-hero-ghost !h-12 !px-8 !text-base" routerLink="/login">
+          {{ 'auth.signIn' | translate }}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="clp-landing-foot">
+    <div class="clp-landing-wrap py-6 flex flex-wrap items-center justify-between gap-3">
+      <span class="text-xs" style="color: #7c8f8b">{{ 'landing.footer' | translate }}</span>
+
+      <a class="text-xs no-underline hover:underline" style="color: var(--clp-teal)"
+         routerLink="/my-balance">
+        {{ 'landing.ctaBalance' | translate }}
+      </a>
+    </div>
+  </footer>
+</div>

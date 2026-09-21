@@ -15,6 +15,7 @@ import { InvitationDetails } from '../../../core/models/merchant.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { InvitationService } from '../../../core/services/invitation.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { PlatformLogoComponent } from '../../../shared/platform-logo.component';
 
 /**
  * Where an invitation link lands (BRD FR-BRN-04).
@@ -35,6 +36,7 @@ import { LanguageService } from '../../../core/services/language.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './set-password.component.html',
 })

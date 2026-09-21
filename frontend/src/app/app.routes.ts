@@ -8,6 +8,20 @@ import { ShellComponent } from './layout/shell/shell.component';
 export const routes: Routes = [
   {
     /*
+     * The public front door, and the only screen written for somebody who has never
+     * seen the system before.
+     *
+     * Declared before the shell and matched in full, so it answers the bare root and
+     * nothing else: every other path still falls through to the shell below. Behind
+     * no guard — a visitor who cannot sign in must still be able to read it.
+     */
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/public/landing.component').then((m) => m.LandingComponent),
+  },
+  {
+    /*
      * The customer's own balance (BRD FR-CUS-12). Outside the shell and behind no
      * guard: the person asking has no account and never will (BR-001).
      */
@@ -53,6 +67,11 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
+      /*
+       * Unreachable now that the landing page answers the bare root, and kept on
+       * purpose: it is what the shell falls back to if that route is ever removed,
+       * and without it an empty path inside the shell would render nothing at all.
+       */
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'dashboard',

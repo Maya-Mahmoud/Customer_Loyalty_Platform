@@ -12,6 +12,61 @@
     </div>
   } @else {
     <!--
+      The mark first: it is the one setting on this screen a visitor with no account
+      ever sees, and it is the one the supervisor is most likely to have come here to
+      change on the day the platform is handed over.
+    -->
+    <mat-card class="p-6 mb-5 clp-panel-teal">
+      <div class="flex flex-wrap items-center gap-6">
+        <div class="shrink-0">
+          @if (logoUrl()) {
+            <img [src]="logoUrl()!" alt=""
+                 class="w-28 h-28 rounded-2xl object-contain bg-white border border-teal-100 p-3 shadow-sm" />
+          } @else {
+            <!-- The drawn mark, shown exactly as the public pages will render it, so
+                 the supervisor is looking at what is live and not at an empty box. -->
+            <div class="w-28 h-28 rounded-2xl bg-white border border-dashed border-teal-200 flex items-center justify-center">
+              <clp-platform-logo [size]="72" />
+            </div>
+          }
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <h2 class="text-base font-semibold" style="color: var(--clp-ink)">
+            {{ 'platformSettings.logoTitle' | translate }}
+          </h2>
+          <p class="text-xs text-slate-600 mt-1 max-w-xl">
+            {{ 'platformSettings.logoHint' | translate }}
+          </p>
+
+          <div class="flex flex-wrap gap-2 mt-4">
+            <!-- A hidden input behind a real button: the native file control cannot
+                 be styled, and this keeps it reachable by keyboard. -->
+            <button mat-flat-button color="primary" type="button" class="!h-11 !px-6"
+                    [disabled]="uploadingLogo()" (click)="logoInput.click()">
+              @if (uploadingLogo()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                <mat-icon>image</mat-icon>
+                {{ 'platformSettings.chooseLogo' | translate }}
+              }
+            </button>
+
+            @if (logoUrl()) {
+              <button mat-stroked-button type="button" class="!h-11"
+                      [disabled]="uploadingLogo()" (click)="removeLogo()">
+                {{ 'platformSettings.removeLogo' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <input #logoInput type="file" class="hidden" accept="image/jpeg,image/png,image/webp"
+             (change)="pickLogo($event)" />
+    </mat-card>
+
+    <!--
       The currency first, and alone in its own panel. Every figure below is read in
       this money, so it is stated once at the top rather than repeated in each row.
     -->

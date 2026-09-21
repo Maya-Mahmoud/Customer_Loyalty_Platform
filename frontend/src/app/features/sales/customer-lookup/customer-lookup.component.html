@@ -81,8 +81,13 @@
         this, by BR-013, and it opens a confirmation rather than paying at once.
       -->
       @if (canRedeem() && card.cycle) {
-        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
-          <button mat-flat-button color="primary" type="button"
+        <!--
+          Wrapping, and no button allowed to shrink. Three actions on one line fit a
+          desktop and not a phone, and a squeezed Material button does not ellipsize
+          its label — it wraps it straight out through the bottom of the button.
+        -->
+        <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
+          <button mat-flat-button color="primary" type="button" class="shrink-0 !whitespace-nowrap"
                   [disabled]="redeeming()" (click)="redeem()">
             @if (redeeming()) {
               <mat-spinner diameter="20" />
@@ -98,7 +103,8 @@
 
           <!-- The owner's escape hatch (BRD 7.2, ledger.adjust). -->
           @if (canAdjust()) {
-            <button mat-stroked-button type="button" class="ms-auto" (click)="adjust()">
+            <button mat-stroked-button type="button" class="ms-auto shrink-0 !whitespace-nowrap"
+                    (click)="adjust()">
               <mat-icon class="!text-base !w-4 !h-4">tune</mat-icon>
               {{ 'adjust.action' | translate }}
             </button>
@@ -107,7 +113,8 @@
           <!-- The erasure path of FR-CUS-10. Last, and quiet: it is not part of
                anybody's daily work. -->
           @if (canErase()) {
-            <button mat-button type="button" class="!text-red-800" (click)="erase()">
+            <button mat-button type="button" class="!text-red-800 shrink-0 !whitespace-nowrap"
+                    (click)="erase()">
               {{ 'erase.action' | translate }}
             </button>
           }

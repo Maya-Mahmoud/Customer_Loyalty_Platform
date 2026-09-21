@@ -2,10 +2,7 @@
   <!-- The branded half, on a wide screen only. -->
   <aside class="clp-auth-brand">
     <div class="flex items-center gap-3">
-      <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style="background: linear-gradient(135deg, #d9a747, #c28f2c); color: #0b2f2d">
-        <mat-icon>loyalty</mat-icon>
-      </span>
+      <clp-platform-logo [size]="44" />
       <h1>{{ 'app.name' | translate }}</h1>
     </div>
 
@@ -38,7 +35,7 @@
     <div class="w-full max-w-3xl">
       <div class="flex items-center justify-between mb-5">
         <div class="clp-auth-compact-brand items-center gap-2">
-          <mat-icon style="color: var(--clp-gold)">loyalty</mat-icon>
+          <clp-platform-logo [size]="32" />
           <span class="text-base font-semibold" style="color: var(--clp-ink)">
             {{ 'app.name' | translate }}
           </span>

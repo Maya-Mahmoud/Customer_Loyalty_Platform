@@ -20,6 +20,7 @@ import { PlatformSettings, SubscriptionPlan } from '../../../core/models/merchan
 import { applyServerErrors, clearServerErrors } from '../../../core/forms/server-errors';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PlatformSettingsService } from '../../../core/services/platform-settings.service';
+import { PlatformLogoComponent } from '../../../shared/platform-logo.component';
 
 /** One plan and the form that prices it, kept together so the screen can render a
     row without looking anything up. */
@@ -59,6 +60,7 @@ interface PlanRow {
     MatProgressSpinnerModule,
     MatSelectModule,
     MatTooltipModule,
+    PlatformLogoComponent,
   ],
   templateUrl: './platform-settings.component.html',
 })
@@ -75,6 +77,9 @@ export class PlatformSettingsComponent {
 
   readonly currencies = signal<string[]>([]);
   readonly rows = signal<PlanRow[]>([]);
+
+  readonly logoUrl = signal<string | null>(null);
+  readonly uploadingLogo = signal(false);
 
   readonly currencyForm = this.fb.nonNullable.group({
     billing_currency: ['', [Validators.required]],
@@ -100,6 +105,48 @@ export class PlatformSettingsComponent {
     this.settings.get().subscribe({
       next: (settings) => this.fill(settings),
       error: () => this.loading.set(false),
+    });
+  }
+
+  /**
+   * The platform's mark.
+   *
+   * The whole settings payload comes back rather than just the new URL, so the screen
+   * is refilled from what the server holds and never from what it assumed it sent.
+   */
+  pickLogo(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    // Cleared so that picking the same file twice in a row still fires a change.
+    input.value = '';
+
+    if (file === null) {
+      return;
+    }
+
+    this.uploadingLogo.set(true);
+
+    this.settings.uploadLogo(file).subscribe({
+      next: (settings) => {
+        this.fill(settings);
+        this.notifications.success('platformSettings.logoSaved');
+        this.uploadingLogo.set(false);
+      },
+      error: () => this.uploadingLogo.set(false),
+    });
+  }
+
+  removeLogo(): void {
+    this.uploadingLogo.set(true);
+
+    this.settings.removeLogo().subscribe({
+      next: (settings) => {
+        this.fill(settings);
+        this.notifications.success('platformSettings.logoRemoved');
+        this.uploadingLogo.set(false);
+      },
+      error: () => this.uploadingLogo.set(false),
     });
   }
 
@@ -254,6 +301,7 @@ export class PlatformSettingsComponent {
   }
 
   private fill(settings: PlatformSettings): void {
+    this.logoUrl.set(settings.logo_url);
     this.currencies.set(settings.currencies);
     this.currencyForm.patchValue({ billing_currency: settings.billing_currency });
 

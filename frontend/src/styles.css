@@ -690,6 +690,24 @@ h1 {
 }
 
 /*
+ * A button label stays on one line.
+ *
+ * A Material button is a fixed-height box, so a label that wraps does not make the
+ * button taller — it runs straight out through the bottom edge, over whatever is
+ * below. It showed up first on the customer screen, where three actions share a row
+ * and "Pay the reward" broke in two on a narrow phone.
+ *
+ * This is a whole-application rule rather than a patch on that one row because the
+ * interface is bilingual: every label has two lengths, and the longer one is not
+ * always the one that was checked. A button that runs out of room should be given
+ * room — by letting its row wrap — never by letting the label escape the button.
+ */
+.mdc-button__label,
+.mat-mdc-button-base {
+  white-space: nowrap;
+}
+
+/*
  * The tab strip carries the same tint as the panels above it, so a card holding four
  * tabbed tables reads as the bottom of one page rather than as a separate white slab
  * that happens to sit underneath.
@@ -989,4 +1007,335 @@ h1 {
   flex: 1;
   height: 1px;
   background: #d3e8e5;
+}
+
+/* -------------------------------------------------------------------------
+   The landing page
+   ------------------------------------------------------------------------- */
+
+/*
+ * The public front door, and the only screen in the app written for somebody who
+ * has never seen it before.
+ *
+ * It borrows the two hues and the paper ground of the application so that signing
+ * in is a continuation rather than an arrival somewhere else, but it is laid out as
+ * a page to be read rather than a tool to be used: wider measure, larger type, and
+ * one idea per band.
+ *
+ * Every size below is written mobile-first. The manager's complaint that started
+ * this was a phone, and a landing page that reads badly on one is a landing page
+ * nobody reads.
+ */
+/*
+ * A border-box reset, scoped to this page.
+ *
+ * Tailwind's preflight is off (see tailwind.config.js), so nothing in this app sets
+ * box-sizing at all. Every width here is written as "full width, then padding", and
+ * without border-box that overflows its parent by exactly the padding — which on a
+ * phone pushed the page 32px past the viewport and, because the page is
+ * right-to-left, cut the start of every line off the screen.
+ *
+ * Scoped rather than global on purpose: the application screens were laid out under
+ * the rule as it stands, and changing it for all of them to fix one page would move
+ * things nobody asked to move.
+ */
+.clp-landing,
+.clp-landing *,
+.clp-landing *::before,
+.clp-landing *::after {
+  box-sizing: border-box;
+}
+
+/*
+ * The same reset, and for the same reason, inside every dialog.
+ *
+ * A dialog is the one place in this application where the container is narrower than
+ * the screen, so it is the one place where the missing border-box actually shows: a
+ * full-width form field plus the dialog's own padding is wider than the dialog, and
+ * because the interface is right-to-left the overflow is clipped off the start of
+ * every label — "الاسم" arriving on a phone as "سم".
+ *
+ * Every dialog is also opened at a fixed pixel width, which Material then clamps to
+ * 80vw on a narrow screen. The clamp is what saves it from running off the phone;
+ * the rule below is what stops the contents running off the dialog.
+ */
+.mat-mdc-dialog-container,
+.mat-mdc-dialog-container *,
+.mat-mdc-dialog-container *::before,
+.mat-mdc-dialog-container *::after {
+  box-sizing: border-box;
+}
+
+/*
+ * And a little more of the phone's width to sit in. Material's own 80vw leaves a
+ * tenth of the screen empty down each side at exactly the width where the form
+ * inside has none to spare.
+ */
+@media (max-width: 599.98px) {
+  /* The cap lives on the overlay pane, which is what the dialog's own width option
+     is clamped against — not on the surface inside it. */
+  .cdk-overlay-pane.mat-mdc-dialog-panel {
+    max-width: 94vw !important;
+  }
+
+  .mat-mdc-dialog-container .mat-mdc-dialog-content {
+    padding-inline: 16px !important;
+  }
+}
+
+.clp-landing {
+  /*
+   * Nothing on this page may push the document sideways.
+   *
+   * The border-box reset above removed most of it, but a stray pixel of overflow is
+   * far more damaging here than on a left-to-right page: the browser puts the scroll
+   * origin at the left, while an Arabic page begins at the right, so a few pixels of
+   * width push the start of every single line off the screen. Clipping keeps the
+   * page anchored to its own starting edge; anything genuinely too wide is trimmed
+   * instead of dragging the whole layout with it.
+   */
+  overflow-x: clip;
+  background:
+    radial-gradient(1100px 560px at 100% -10%, rgb(13 148 136 / 16%), transparent 60%),
+    radial-gradient(820px 520px at 0% 8%, rgb(194 143 44 / 10%), transparent 58%),
+    linear-gradient(180deg, #f3f8f7 0%, #faf8f3 46%, #f7f6f3 100%);
+}
+
+.clp-landing-wrap {
+  width: 100%;
+  max-width: 1140px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .clp-landing-wrap { padding-inline: 1.5rem; }
+}
+
+.clp-landing-bar {
+  background: rgb(255 255 255 / 82%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e4ece9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ---------- hero ---------- */
+
+.clp-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--clp-gold);
+  margin: 0;
+}
+
+.clp-hero-title {
+  font-size: 1.9rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--clp-ink);
+  margin: 0;
+}
+
+@media (min-width: 640px) { .clp-hero-title { font-size: 2.4rem; } }
+@media (min-width: 1024px) { .clp-hero-title { font-size: 2.9rem; line-height: 1.25; } }
+
+.clp-hero-sub {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: #46574f;
+  margin: 0;
+}
+
+@media (min-width: 640px) { .clp-hero-sub { font-size: 1.0625rem; } }
+
+/* An outlined button on a tinted ground needs its own border: Material's default
+   grey disappears into the wash behind it. */
+.clp-hero-ghost.mat-mdc-outlined-button {
+  --mdc-outlined-button-label-text-color: var(--clp-teal);
+  border-color: #9ecfc6 !important;
+  background: rgb(255 255 255 / 70%);
+  font-weight: 600;
+}
+
+.clp-hero-ghost.mat-mdc-outlined-button:hover {
+  background: #ffffff;
+  border-color: var(--clp-teal) !important;
+}
+
+.clp-hero-card {
+  background: rgb(255 255 255 / 78%);
+  backdrop-filter: blur(6px);
+  border: 1px solid #cfe3df;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px -24px rgb(11 47 45 / 28%);
+}
+
+.clp-pillar-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #e3f0ee;
+  color: var(--clp-teal);
+}
+
+/* ---------- shared section type ---------- */
+
+.clp-h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--clp-ink);
+  margin: 0;
+  line-height: 1.45;
+}
+
+@media (min-width: 640px) { .clp-h2 { font-size: 1.7rem; } }
+
+.clp-body {
+  font-size: 0.95rem;
+  line-height: 1.9;
+  color: #55665f;
+  margin: 0;
+}
+
+/* ---------- the problem ---------- */
+
+.clp-problem {
+  background: #ffffff;
+  border: 1px solid #dceae7;
+  border-radius: 20px;
+  padding: 1.75rem;
+}
+
+@media (min-width: 640px) { .clp-problem { padding: 2.25rem; } }
+
+.clp-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #1f2d2c;
+}
+
+.clp-check .mat-icon {
+  color: #136b43;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  line-height: 1.25rem;
+  margin-top: 0.3rem;
+}
+
+/* ---------- features ---------- */
+
+.clp-feature {
+  background: #ffffff;
+  border: 1px solid #dceae7;
+  border-radius: 18px;
+  padding: 1.5rem;
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.clp-feature:hover {
+  border-color: #9ecfc6;
+  box-shadow: 0 16px 34px -22px rgb(11 47 45 / 30%);
+  transform: translateY(-2px);
+}
+
+.clp-feature-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e3f0ee 0%, #cfe6e1 100%);
+  color: var(--clp-teal);
+}
+
+/* ---------- how it works ---------- */
+
+/* The one dark band on the page: it separates "what it does" from "how to start",
+   and gives the eye somewhere to rest between two fields of white cards. */
+.clp-steps-band {
+  background: linear-gradient(165deg, var(--clp-ink) 0%, #08201f 100%);
+}
+
+.clp-step {
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.clp-step-number {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clp-gold);
+  color: var(--clp-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ---------- roles ---------- */
+
+.clp-role {
+  background: linear-gradient(165deg, #e8f4f1 0%, #f8fbfa 100%);
+  border: 1px solid #cfe3df;
+  border-radius: 18px;
+  padding: 1.35rem;
+  text-align: center;
+}
+
+.clp-role h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--clp-ink);
+  margin: 0.75rem 0 0;
+}
+
+.clp-role p {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: #55665f;
+  margin: 0.4rem 0 0;
+}
+
+.clp-role-icon {
+  color: var(--clp-teal);
+  width: 2rem !important;
+  height: 2rem !important;
+  font-size: 2rem !important;
+  line-height: 2rem !important;
+}
+
+/* ---------- closing call ---------- */
+
+.clp-cta {
+  background: linear-gradient(165deg, #fdf6e8 0%, #ffffff 60%);
+  border: 1px solid #ecd39c;
+  border-radius: 22px;
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) { .clp-cta { padding: 3rem 2rem; } }
+
+.clp-landing-foot {
+  border-top: 1px solid #e4ece9;
+  background: rgb(255 255 255 / 60%);
 }
