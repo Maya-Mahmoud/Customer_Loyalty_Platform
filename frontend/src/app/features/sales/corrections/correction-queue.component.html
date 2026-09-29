@@ -30,9 +30,9 @@
             <div class="text-end">
               <p class="text-sm font-medium text-slate-900" dir="ltr">
                 @if (request.amount) {
-                  {{ request.amount }} {{ currency() }}
+                  {{ request.amount | money }} {{ currency() }}
                 } @else {
-                  {{ request.invoice?.amount }} {{ currency() }}
+                  {{ request.invoice?.amount | money }} {{ currency() }}
                 }
               </p>
               <p class="text-xs text-slate-500" dir="ltr">{{ request.invoice?.invoice_number }}</p>

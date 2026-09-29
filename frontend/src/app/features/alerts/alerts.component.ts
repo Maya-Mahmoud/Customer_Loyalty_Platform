@@ -11,6 +11,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FraudSignal, ReportPeriod } from '../../core/models/report.model';
 import { AuthService } from '../../core/services/auth.service';
 import { ReportService } from '../../core/services/report.service';
+import { MoneyPipe } from '../../shared/money.pipe';
 
 /**
  * The anti-fraud signals of BRD 12.
@@ -35,6 +36,7 @@ import { ReportService } from '../../core/services/report.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MoneyPipe,
   ],
   templateUrl: './alerts.component.html',
 })

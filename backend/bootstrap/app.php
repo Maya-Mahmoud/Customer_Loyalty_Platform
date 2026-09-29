@@ -47,6 +47,26 @@ return Application::configure(basePath: dirname(__DIR__))
             // Locks out disabled users and suspended merchants (BRD FR-ADM-03).
             'account.active' => EnsureAccountIsActive::class,
         ]);
+
+        /*
+         * There is nowhere to send a guest.
+         *
+         * Laravel's default answer to an unauthenticated request is a redirect to a
+         * route named "login", and it takes that path for any request that does not
+         * announce itself as wanting JSON. This application has no such route — it
+         * serves an API and nothing else — so the redirect threw
+         * RouteNotFoundException and the caller was handed a 500 where a 401 was the
+         * whole meaning of the moment.
+         *
+         * It surfaced through an expired token: the client asks who it is on every
+         * start-up, the answer came back as a server fault rather than as "your
+         * session ended", so the client never cleared the dead token and never sent
+         * the user to sign in again. It simply failed, quietly, on every visit.
+         *
+         * Returning null here keeps the AuthenticationException intact, which the
+         * handler below turns into the 401 the client already knows how to act on.
+         */
+        $middleware->redirectGuestsTo(fn (): ?string => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Every API failure answers with the same envelope so the Angular

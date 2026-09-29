@@ -12,6 +12,7 @@ use App\Models\InvoiceCorrection;
 use App\Models\Redemption;
 use App\Models\User;
 use App\Models\Voucher;
+use App\Support\SqlDialect;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -320,6 +321,74 @@ class ReportService
             'customers_served' => (int) $row->customers,
             'correction_count' => (int) ($corrections->get($row->user_id)->count ?? 0),
         ])->values()->all();
+    }
+
+    /**
+     * RPT-07 — the shape of the period, month by month.
+     *
+     * The other reports answer "how much"; this one answers "which way". A shop
+     * owner reads a rising line in a second and a table of the same figures in a
+     * minute, and the question the line answers — is the programme moving anything?
+     * — is the only reason to run a loyalty scheme at all.
+     *
+     * Months with no trade are filled in rather than skipped. A gap silently closed
+     * turns a quiet August into a line that never dipped, which is the one thing a
+     * chart must not do.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function monthly(ReportPeriod $period): array
+    {
+        $sales = $this->invoiceQuery($period)
+            ->groupBy(DB::raw(SqlDialect::month('invoices.invoice_date')))
+            ->select([
+                DB::raw(SqlDialect::month('invoices.invoice_date').' AS ym'),
+                DB::raw('COALESCE(SUM(invoices.amount), 0) AS total'),
+                DB::raw('COUNT(*) AS count'),
+                DB::raw('COUNT(DISTINCT invoices.customer_id) AS customers'),
+            ])
+            ->get()
+            ->keyBy('ym');
+
+        $rewards = $this->redemptionQuery($period)
+            ->groupBy(DB::raw(SqlDialect::month('redemptions.redeemed_at')))
+            ->select([
+                DB::raw(SqlDialect::month('redemptions.redeemed_at').' AS ym'),
+                DB::raw('COALESCE(SUM(redemptions.discount_amount), 0) AS total'),
+                DB::raw('COUNT(*) AS count'),
+            ])
+            ->get()
+            ->keyBy('ym');
+
+        $months = [];
+
+        /*
+         * Reassigned, not mutated. ReportPeriod carries CarbonImmutable, so
+         * $cursor->addMonth() hands back a new instance and leaves $cursor where it
+         * was — a loop that never advances and an array that grows until the process
+         * runs out of memory.
+         */
+        $cursor = $period->from->startOfMonth();
+        $last = $period->to->startOfMonth();
+
+        while ($cursor->lessThanOrEqualTo($last)) {
+            $key = $cursor->format('Y-m');
+            $row = $sales->get($key);
+            $reward = $rewards->get($key);
+
+            $months[] = [
+                'month' => $key,
+                'sales_total' => $this->money((float) ($row->total ?? 0)),
+                'invoice_count' => (int) ($row->count ?? 0),
+                'customers_served' => (int) ($row->customers ?? 0),
+                'discount_total' => $this->money((float) ($reward->total ?? 0)),
+                'redemption_count' => (int) ($reward->count ?? 0),
+            ];
+
+            $cursor = $cursor->addMonth();
+        }
+
+        return $months;
     }
 
     // -----------------------------------------------------------------

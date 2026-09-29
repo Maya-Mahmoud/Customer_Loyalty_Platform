@@ -494,7 +494,13 @@
     "exportAll": "Export (CSV)",
     "exportConsented": "Only those who agreed to be contacted",
     "exportAuditNote": "Exports are recorded in the audit log with your name, the time and the number of records.",
-    "exportDone": "The file has been downloaded."
+    "exportDone": "The file has been downloaded.",
+    "charts": {
+      "months": "Sales by month",
+      "branches": "Sales by branch",
+      "staff": "Sales by staff member",
+      "empty": "No data in this period."
+    }
   },
   "adjust": {
     "title": "Correct the balance",

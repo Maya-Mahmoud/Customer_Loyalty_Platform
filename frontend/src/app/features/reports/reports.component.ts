@@ -18,6 +18,7 @@ import {
   ReportPeriod,
   ReportQuery,
   ReportRewards,
+  ReportMonthRow,
   ReportStaffRow,
   ReportSummary,
 } from '../../core/models/report.model';
@@ -26,6 +27,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ReportService } from '../../core/services/report.service';
 import { StaffService } from '../../core/services/staff.service';
+import { MoneyPipe } from '../../shared/money.pipe';
+import { BarChartComponent, BarDatum } from '../../shared/charts/bar-chart.component';
+import { LanguageService } from '../../core/services/language.service';
 
 /**
  * The reports of BRD 9 (RPT-01 to RPT-05) on one screen.
@@ -54,12 +58,15 @@ import { StaffService } from '../../core/services/staff.service';
     MatSelectModule,
     MatTableModule,
     MatTabsModule,
+    MoneyPipe,
+    BarChartComponent,
   ],
   templateUrl: './reports.component.html',
 })
 export class ReportsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly reports = inject(ReportService);
+  private readonly language = inject(LanguageService);
   private readonly staff = inject(StaffService);
   private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationService);
@@ -76,6 +83,7 @@ export class ReportsComponent {
   readonly rewards = signal<ReportRewards | null>(null);
   readonly customers = signal<ReportCustomers | null>(null);
   readonly staffRows = signal<ReportStaffRow[]>([]);
+  readonly monthRows = signal<ReportMonthRow[]>([]);
 
   readonly branches = signal<Branch[]>([]);
   readonly exporting = signal(false);
@@ -163,7 +171,68 @@ export class ReportsComponent {
       next: (report) => this.staffRows.set(report.data),
       error: () => this.staffRows.set([]),
     });
+
+    this.reports.monthly(query).subscribe({
+      next: (report) => this.monthRows.set(report.data),
+      error: () => this.monthRows.set([]),
+    });
   }
+  /*
+   * The three series the charts read, shaped here rather than in the template.
+   *
+   * Each one is already sorted by the server except the months, which are in
+   * calendar order on purpose: a trend read out of order is not a trend. The
+   * display string is formatted here too, so the chart itself stays a chart and
+   * never has to know what a currency is.
+   */
+  readonly monthlySales = computed<BarDatum[]>(() =>
+    this.monthRows().map((row) => ({
+      label: this.monthName(row.month),
+      value: Number(row.sales_total),
+      display: this.short(Number(row.sales_total)),
+    }))
+  );
+
+  readonly branchSales = computed<BarDatum[]>(() =>
+    this.branchRows().map((row) => ({
+      label: row.branch,
+      value: Number(row.sales_total),
+      display: this.short(Number(row.sales_total)),
+    }))
+  );
+
+  /** The ten busiest, because a staff list can be long and a chart cannot. */
+  readonly staffSales = computed<BarDatum[]>(() =>
+    this.staffRows()
+      .slice(0, 10)
+      .map((row) => ({
+        label: row.name,
+        value: Number(row.sales_total),
+        display: this.short(Number(row.sales_total)),
+      }))
+  );
+
+  /** "2026-03" as the month's own name, in the language being read. */
+  private monthName(key: string): string {
+    const [year, month] = key.split('-').map(Number);
+    const locale = this.language.current() === 'ar' ? 'ar' : 'en-GB';
+
+    return new Date(year, month - 1, 1).toLocaleDateString(locale, {
+      month: 'short',
+      year: '2-digit',
+    });
+  }
+
+  /** Compact enough to sit at the end of a bar without wrapping it. */
+  private short(value: number): string {
+    const locale = this.language.current() === 'ar' ? 'ar-SY-u-nu-latn' : 'en-GB';
+
+    return new Intl.NumberFormat(locale, {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(value);
+  }
+
 
   /** Quick ranges, because most questions are about this month or last. */
   applyPreset(preset: 'month' | 'lastMonth' | 'week' | 'year'): void {

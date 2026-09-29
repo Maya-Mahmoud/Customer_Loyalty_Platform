@@ -12,6 +12,7 @@ import { InvoiceCorrection } from '../../../core/models/sales.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SalesService } from '../../../core/services/sales.service';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 /**
  * Deciding on correction requests (BRD 8.7, FR-INV-08).
@@ -35,6 +36,7 @@ import { SalesService } from '../../../core/services/sales.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MoneyPipe,
   ],
   templateUrl: './correction-queue.component.html',
 })

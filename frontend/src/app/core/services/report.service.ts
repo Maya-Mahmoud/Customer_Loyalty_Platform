@@ -11,6 +11,7 @@ import {
   ReportCustomers,
   ReportQuery,
   ReportRewards,
+  ReportMonthRow,
   ReportStaffRow,
   ReportSummary,
 } from '../models/report.model';
@@ -46,6 +47,11 @@ export class ReportService {
 
   staff(query: ReportQuery): Observable<Report<ReportStaffRow[]>> {
     return this.api.get<Report<ReportStaffRow[]>>('reports/staff', this.params(query));
+  }
+
+  /** The window split into its months, for the trend chart (RPT-07). */
+  monthly(query: ReportQuery): Observable<Report<ReportMonthRow[]>> {
+    return this.api.get<Report<ReportMonthRow[]>>('reports/monthly', this.params(query));
   }
 
   /** The anti-fraud signals of BRD 12 — the owner alone reaches this. */

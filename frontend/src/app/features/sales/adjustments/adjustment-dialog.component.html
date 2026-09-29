@@ -5,7 +5,7 @@
     {{ 'redeem.forCustomer' | translate: { name: data.customer.name ?? data.customer.phone } }}
   </p>
   <p class="text-sm text-slate-800 mb-4" dir="ltr">
-    {{ 'adjust.currentBalance' | translate }}: {{ balance() }} {{ currency() }}
+    {{ 'adjust.currentBalance' | translate }}: {{ balance() | money }} {{ currency() }}
   </p>
 
   <form [formGroup]="form" class="flex flex-col gap-4">

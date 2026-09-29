@@ -156,7 +156,7 @@
           <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm text-center">
             <div>
               <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
-              <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
+              <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount | money }} {{ currency() }}</dd>
             </div>
             <div>
               <dt class="clp-stat-label">{{ 'pos.invoices' | translate }}</dt>
@@ -166,7 +166,7 @@
               <div>
                 <dt class="clp-stat-label">{{ 'pos.toReward' | translate }}</dt>
                 <dd class="font-medium" [class]="cycle.is_eligible ? 'text-emerald-700' : 'text-slate-900'" dir="ltr">
-                  {{ cycle.amount_remaining }} {{ currency() }}
+                  {{ cycle.amount_remaining | money }} {{ currency() }}
                 </dd>
               </div>
             }
@@ -280,7 +280,7 @@
           </p>
 
           <p class="text-3xl font-semibold clp-figure mt-2" dir="ltr">
-            {{ totals.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+            {{ totals.sales_total | money }} <span class="text-sm font-normal">{{ currency() }}</span>
           </p>
 
           <dl class="grid grid-cols-2 gap-2 mt-4 text-sm">
@@ -344,7 +344,7 @@
                 </span>
 
                 <span class="font-medium" style="color: var(--clp-ink)" dir="ltr">
-                  {{ entry.amount }} {{ currency() }}
+                  {{ entry.amount | money }} {{ currency() }}
                 </span>
               </li>
             }

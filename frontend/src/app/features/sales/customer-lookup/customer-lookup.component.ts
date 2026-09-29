@@ -26,6 +26,7 @@ import { AdjustmentDialogComponent } from '../adjustments/adjustment-dialog.comp
 import { CorrectionDialogComponent } from '../corrections/correction-dialog.component';
 import { EraseCustomerDialogComponent } from '../erasure/erase-customer-dialog.component';
 import { RedeemDialogComponent } from '../redemption/redeem-dialog.component';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 /**
  * Customer lookup (BRD 8.5) — reading a customer's position without recording a
@@ -53,6 +54,7 @@ import { RedeemDialogComponent } from '../redemption/redeem-dialog.component';
     MatProgressSpinnerModule,
     MatTableModule,
     MatTooltipModule,
+    MoneyPipe,
   ],
   templateUrl: './customer-lookup.component.html',
 })

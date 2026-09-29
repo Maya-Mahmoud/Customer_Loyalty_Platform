@@ -128,3 +128,19 @@ export interface FraudSignal {
   /** Shape differs per detector; the screen reads the keys it needs. */
   detail: Record<string, string | number>;
 }
+
+/**
+ * RPT-07 — one row per month in the chosen window, gaps included.
+ *
+ * A month with no trade is returned as zeroes rather than left out, so a quiet
+ * month reads as a dip in the chart instead of silently disappearing from it.
+ */
+export interface ReportMonthRow {
+  /** 'YYYY-MM'. */
+  month: string;
+  sales_total: string;
+  invoice_count: number;
+  customers_served: number;
+  discount_total: string;
+  redemption_count: number;
+}

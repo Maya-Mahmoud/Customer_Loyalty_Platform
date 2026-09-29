@@ -15,7 +15,7 @@
       <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 mb-4">
         <p class="text-xs text-emerald-900">{{ 'redeem.amountDue' | translate }}</p>
         <p class="text-3xl font-semibold text-emerald-900 mt-1" dir="ltr">
-          {{ reward.discount_amount }} {{ currency() }}
+          {{ reward.discount_amount | money }} {{ currency() }}
         </p>
 
         @if (reward.was_capped) {
@@ -30,7 +30,7 @@
         <div>
           <dt class="text-xs text-slate-500">{{ 'redeem.cycleTotal' | translate }}</dt>
           <dd class="font-medium text-slate-900" dir="ltr">
-            {{ cycle()?.total_amount }} {{ currency() }}
+            {{ cycle()?.total_amount | money }} {{ currency() }}
           </dd>
         </div>
         <div>
@@ -45,7 +45,7 @@
           <!-- BR-006: what the customer keeps for the next cycle. -->
           <dt class="text-xs text-slate-500">{{ 'redeem.carriedOver' | translate }}</dt>
           <dd class="text-slate-700" dir="ltr">
-            {{ reward.carried_over_amount }} {{ currency() }}
+            {{ reward.carried_over_amount | money }} {{ currency() }}
           </dd>
         </div>
       </dl>

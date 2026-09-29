@@ -93,7 +93,7 @@
         </div>
 
         <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
-          {{ summary.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          {{ summary.sales_total | money }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
 
         <p class="text-xs text-slate-600 mt-auto pt-3">
@@ -110,7 +110,7 @@
         </div>
 
         <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
-          {{ summary.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          {{ summary.discount_total | money }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
 
         <!-- The one figure that answers whether the programme is worth running. -->
@@ -128,7 +128,7 @@
         </div>
 
         <p class="clp-stat-value !text-3xl !font-bold mt-2" dir="ltr">
-          {{ summary.average_invoice }} <span class="text-sm font-normal">{{ currency() }}</span>
+          {{ summary.average_invoice | money }} <span class="text-sm font-normal">{{ currency() }}</span>
         </p>
 
         <p class="text-xs text-slate-600 mt-auto pt-3">
@@ -152,6 +152,45 @@
       </mat-card>
     </div>
   }
+
+  <!--
+    The shape of the period, above the tables rather than inside them.
+
+    Three questions a shop owner asks before any of the detail: is it going up, which
+    branch carries it, and who is selling. Each is a short list of named things, so
+    each is a row of labelled bars — read in a second, where the same figures in a
+    table take a minute.
+  -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <mat-card class="p-5 clp-panel-teal">
+      <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+        {{ 'reports.charts.months' | translate }}
+      </h2>
+      <app-bar-chart [data]="monthlySales()" [emptyText]="'reports.charts.empty' | translate" />
+    </mat-card>
+
+    <mat-card class="p-5 clp-panel-teal">
+      <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+        {{ 'reports.charts.branches' | translate }}
+      </h2>
+      <app-bar-chart
+        [data]="branchSales()"
+        colour="#2a7d74"
+        [emptyText]="'reports.charts.empty' | translate"
+      />
+    </mat-card>
+
+    <mat-card class="p-5 clp-panel-teal">
+      <h2 class="text-sm font-semibold mb-3" style="color: var(--clp-ink)">
+        {{ 'reports.charts.staff' | translate }}
+      </h2>
+      <app-bar-chart
+        [data]="staffSales()"
+        colour="#b58a2e"
+        [emptyText]="'reports.charts.empty' | translate"
+      />
+    </mat-card>
+  </div>
 
   <mat-card class="p-0 overflow-hidden">
     <mat-tab-group>
@@ -247,7 +286,7 @@
                       <span class="text-xs text-slate-500">({{ row.count }})</span>
                     </span>
                     <span class="text-sm font-medium text-slate-900" dir="ltr">
-                      {{ row.paid }} {{ currency() }}
+                      {{ row.paid | money }} {{ currency() }}
                       @if (row.computed !== row.paid) {
                         <!-- BR-021: the cap bit, and the difference is what it saved. -->
                         <span class="text-xs text-slate-500">

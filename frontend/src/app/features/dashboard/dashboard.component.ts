@@ -14,6 +14,7 @@ import { AdminMerchantService } from '../../core/services/admin-merchant.service
 import { SalesService } from '../../core/services/sales.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ReportService } from '../../core/services/report.service';
+import { MoneyPipe, MoneyWordsPipe } from '../../shared/money.pipe';
 
 /**
  * The home screen (BRD FR-RPT-01, FR-ADM-01).
@@ -37,6 +38,8 @@ import { ReportService } from '../../core/services/report.service';
     MatDividerModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MoneyPipe,
+    MoneyWordsPipe,
   ],
   templateUrl: './dashboard.component.html',
 })

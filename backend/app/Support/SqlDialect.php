@@ -30,6 +30,14 @@ final class SqlDialect
             : "DATEDIFF({$later}, {$earlier})";
     }
 
+    /** A "YYYY-MM" key, for grouping a period into the months it spans. */
+    public static function month(string $column): string
+    {
+        return self::isSqlite()
+            ? "strftime('%Y-%m', {$column})"
+            : "DATE_FORMAT({$column}, '%Y-%m')";
+    }
+
     private static function isSqlite(): bool
     {
         return DB::connection()->getDriverName() === 'sqlite';

@@ -19,6 +19,7 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { SalesService } from '../../../core/services/sales.service';
 import { StaffService } from '../../../core/services/staff.service';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 export interface RedeemDialogData {
   customer: CustomerCard;
@@ -49,6 +50,7 @@ export interface RedeemDialogData {
     MatInputModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MoneyPipe,
   ],
   templateUrl: './redeem-dialog.component.html',
 })

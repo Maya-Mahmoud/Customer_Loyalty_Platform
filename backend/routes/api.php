@@ -243,6 +243,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/branches', [ReportController::class, 'branches']);
                 Route::get('/rewards', [ReportController::class, 'rewards']);
                 Route::get('/staff', [ReportController::class, 'staff']);
+                Route::get('/monthly', [ReportController::class, 'monthly']);
             });
 
         /*

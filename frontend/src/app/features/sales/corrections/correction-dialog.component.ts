@@ -9,6 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 import { CorrectionForm, CorrectionType, CustomerInvoice } from '../../../core/models/sales.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 export interface CorrectionDialogData {
   invoice: CustomerInvoice;
@@ -32,6 +33,7 @@ export interface CorrectionDialogData {
     MatFormFieldModule,
     MatInputModule,
     MatRadioModule,
+    MoneyPipe,
   ],
   templateUrl: './correction-dialog.component.html',
 })

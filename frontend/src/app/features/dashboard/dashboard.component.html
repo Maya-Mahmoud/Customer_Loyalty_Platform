@@ -190,9 +190,12 @@
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <mat-card class="p-5 clp-panel-teal">
           <p class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</p>
-          <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
-            {{ today.sales_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          <p class="clp-stat-value !text-3xl mt-1">
+            <span dir="ltr">{{ today.sales_total | money }} <span class="text-sm font-normal">{{ currency() }}</span></span>
           </p>
+          @if (today.sales_total | moneyWords; as spoken) {
+            <p class="text-xs text-slate-500 mt-0.5">{{ spoken }} {{ currency() }}</p>
+          }
         </mat-card>
 
         <mat-card class="p-5 clp-panel-teal">
@@ -207,9 +210,12 @@
 
         <mat-card class="p-5 clp-panel-teal">
           <p class="clp-stat-label">{{ 'dashboard.rewardsToday' | translate }}</p>
-          <p class="clp-stat-value !text-3xl mt-1" dir="ltr">
-            {{ today.discount_total }} <span class="text-sm font-normal">{{ currency() }}</span>
+          <p class="clp-stat-value !text-3xl mt-1">
+            <span dir="ltr">{{ today.discount_total | money }} <span class="text-sm font-normal">{{ currency() }}</span></span>
           </p>
+          @if (today.discount_total | moneyWords; as spoken) {
+            <p class="text-xs text-slate-500 mt-0.5">{{ spoken }} {{ currency() }}</p>
+          }
           <p class="text-xs text-slate-500 mt-1">
             {{ 'reports.rewardsPaid' | translate: { count: today.redemption_count } }}
           </p>
@@ -236,25 +242,31 @@
           <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm">
             <div>
               <dt class="clp-stat-label">{{ 'reports.salesTotal' | translate }}</dt>
-              <dd class="clp-stat-value" dir="ltr">
-                {{ month.sales_total }} {{ currency() }}
+              <dd class="clp-stat-value">
+                <span dir="ltr">{{ month.sales_total | money }} {{ currency() }}</span>
+                @if (month.sales_total | moneyWords; as spoken) {
+                  <span class="block text-xs font-normal text-slate-500">{{ spoken }}</span>
+                }
               </dd>
             </div>
             <div>
               <dt class="clp-stat-label">{{ 'reports.discountTotal' | translate }}</dt>
-              <dd class="clp-stat-value" dir="ltr">
-                {{ month.discount_total }} {{ currency() }}
+              <dd class="clp-stat-value">
+                <span dir="ltr">{{ month.discount_total | money }} {{ currency() }}</span>
+                @if (month.discount_total | moneyWords; as spoken) {
+                  <span class="block text-xs font-normal text-slate-500">{{ spoken }}</span>
+                }
               </dd>
             </div>
             <div>
               <!-- The figure that says whether the programme is paying for itself. -->
               <dt class="clp-stat-label">{{ 'dashboard.costOfProgramme' | translate }}</dt>
-              <dd class="clp-stat-value" dir="ltr">{{ month.discount_ratio }}%</dd>
+              <dd class="clp-stat-value"><span dir="ltr">{{ month.discount_ratio }}%</span></dd>
             </div>
             <div>
               <dt class="clp-stat-label">{{ 'reports.averageInvoice' | translate }}</dt>
-              <dd class="clp-stat-value" dir="ltr">
-                {{ month.average_invoice }} {{ currency() }}
+              <dd class="clp-stat-value">
+                <span dir="ltr">{{ month.average_invoice | money }} {{ currency() }}</span>
               </dd>
             </div>
           </dl>
@@ -358,7 +370,7 @@
                       }
                     </span>
                     <span class="font-semibold shrink-0" dir="ltr">
-                      {{ invoice.amount }} {{ currency() }}
+                      {{ invoice.amount | money }} {{ currency() }}
                     </span>
                   </li>
                 }

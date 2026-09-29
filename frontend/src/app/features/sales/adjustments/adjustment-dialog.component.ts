@@ -12,6 +12,7 @@ import { AdjustmentForm, CustomerCard } from '../../../core/models/sales.model';
 import { Branch } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { StaffService } from '../../../core/services/staff.service';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 export interface AdjustmentDialogData {
   customer: CustomerCard;
@@ -36,6 +37,7 @@ export interface AdjustmentDialogData {
     MatInputModule,
     MatRadioModule,
     MatSelectModule,
+    MoneyPipe,
   ],
   templateUrl: './adjustment-dialog.component.html',
 })

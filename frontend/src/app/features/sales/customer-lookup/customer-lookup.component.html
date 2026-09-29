@@ -59,7 +59,7 @@
         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mt-4 text-sm text-center">
           <div>
             <dt class="clp-stat-label">{{ 'pos.accumulated' | translate }}</dt>
-            <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount }} {{ currency() }}</dd>
+            <dd class="clp-stat-value" dir="ltr">{{ cycle.total_amount | money }} {{ currency() }}</dd>
           </div>
           <div>
             <dt class="clp-stat-label">{{ 'pos.invoices' | translate }}</dt>
@@ -130,7 +130,7 @@
           <div class="flex-1">
             <p class="text-sm font-medium text-emerald-900">{{ 'redeem.paidTitle' | translate }}</p>
             <p class="text-2xl font-semibold text-emerald-900 mt-1" dir="ltr">
-              {{ reward.discount_amount }} {{ currency() }}
+              {{ reward.discount_amount | money }} {{ currency() }}
             </p>
 
             @if (reward.was_capped) {
@@ -262,7 +262,7 @@
               <li class="border-b border-teal-100/70 pb-3 last:border-0 last:pb-0">
                 <div class="flex items-baseline justify-between gap-2">
                   <span class="text-sm font-semibold" style="color: var(--clp-ink)" dir="ltr">
-                    {{ reward.discount_amount }} {{ currency() }}
+                    {{ reward.discount_amount | money }} {{ currency() }}
                   </span>
                   <span class="text-xs text-slate-500" dir="ltr">
                     {{ reward.redeemed_at?.slice(0, 10) }}
@@ -301,7 +301,7 @@
               </div>
               <span class="text-sm font-medium" dir="ltr"
                     [class]="adjustment.amount.startsWith('-') ? 'text-red-800' : 'text-emerald-800'">
-                {{ adjustment.amount }} {{ currency() }}
+                {{ adjustment.amount | money }} {{ currency() }}
               </span>
             </div>
           }

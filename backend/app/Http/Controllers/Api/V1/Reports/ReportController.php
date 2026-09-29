@@ -80,6 +80,22 @@ class ReportController extends Controller
     }
 
     /**
+     * The period broken into months (RPT-07), for the charts.
+     *
+     * Same window and the same branch filter as every other report here, so the line
+     * a reader sees agrees with the totals printed beside it.
+     */
+    public function monthly(Request $request): JsonResponse
+    {
+        $period = $this->period($request);
+
+        return response()->json([
+            'period' => $period->toArray(),
+            'data' => $this->reports->monthly($period),
+        ]);
+    }
+
+    /**
      * The anti-fraud signals of BRD 12.
      *
      * Signals, never verdicts: each one has an innocent explanation, so nothing is

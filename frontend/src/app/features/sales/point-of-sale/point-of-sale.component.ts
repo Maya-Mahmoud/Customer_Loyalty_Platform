@@ -22,6 +22,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ReportService } from '../../../core/services/report.service';
 import { SalesService } from '../../../core/services/sales.service';
 import { StaffService } from '../../../core/services/staff.service';
+import { MoneyPipe } from '../../../shared/money.pipe';
 
 /**
  * The till (BRD 8.4) — the screen used more than every other one combined.
@@ -52,6 +53,7 @@ import { StaffService } from '../../../core/services/staff.service';
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MoneyPipe,
   ],
   templateUrl: './point-of-sale.component.html',
 })
