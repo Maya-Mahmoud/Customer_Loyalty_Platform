@@ -1,428 +1,55 @@
-# Customer Loyalty Platform · منصة ولاء الزبائن
+# 🛒 Customer Loyalty Platform (Multi-Tenant SaaS)
 
-A loyalty system for retail shops — Angular front end, Laravel API, MySQL.
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Angular-17-DD0031?style=for-the-badge&logo=angular&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img src="https://img.shields.io/badge/PHPUnit-Testing-777BB4?style=for-the-badge&logo=php&logoColor=white" />
+  <img src="https://img.shields.io/badge/Status-Live%20Production-green?style=for-the-badge" />
+</p>
 
-**[English](#english) · [العربية](#العربية)**
-
----
-
-<a name="english"></a>
-
-# English
-
-This file covers two things only: **how to install it** and **which account to sign in with**.
-
-## 1. Requirements
-
-| Needed | Minimum | Note |
-|---|---|---|
-| PHP | 8.2 | ships with XAMPP |
-| Composer | 2.x | [getcomposer.org](https://getcomposer.org) |
-| MySQL / MariaDB | 8.x or equivalent | ships with XAMPP |
-| Node.js | 20 | [nodejs.org](https://nodejs.org) |
-| npm | 10 | comes with Node |
+> A robust, multi-tenant SaaS customer loyalty and rewards ecosystem designed for commercial retail, ensuring strict data isolation, immutable transaction ledgers, and comprehensive anti-fraud controls.
 
 ---
 
-## 2. Installing the API
-
-All commands run from the `backend` folder.
-
-**1. Install the packages**
-
-```bash
-cd backend
-composer install
-```
-
-**2. Prepare the environment file**
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-**3. Create an empty database**
-
-From phpMyAdmin, create a database named:
-
-```
-Customer_Loyalty_Platform
-```
-
-Then make sure these values in `.env` match your setup:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=Customer_Loyalty_Platform
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-**4. Create the tables and the seed data**
-
-> **Before running this**: if you want new registration requests to reach your own
-> inbox, add a line to `.env` with your real address. The default is a fake one —
-> details in [section 5](#5-email).
->
-> ```env
-> SEED_PLATFORM_ADMIN_EMAIL=your-real-address@gmail.com
-> ```
-
-```bash
-php artisan migrate --seed
-```
-
-Expected last line of output:
-
-```
-Seeded. Every account uses the password: password
-```
-
-**5. Link the uploads folder**
-
-Without this step, uploaded logos and pictures will not appear:
-
-```bash
-php artisan storage:link
-```
-
-**6. Start the server and leave it running**
-
-```bash
-php artisan serve
-```
-
-The API is now on `http://localhost:8000`.
+## 🔗 Quick Links
+- **Live Demo Video:** [Watch Platform Demo](#) *(Add your video link here)*
+- **Live Production URL:** *(Add your live domain here)*
 
 ---
 
-## 3. Installing the front end
+## 🏗️ Architecture & System Design
+This platform was architected and delivered end-to-end—starting from comprehensive business requirements analysis, role permission matrices, and MOSCOW prioritisation, down to backend API development, Angular SPA frontend, and cPanel production deployment.
 
-In a second terminal:
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Then open:
-
-```
-http://localhost:4200
-```
-
-> If you started the API on a port other than 8000, change `apiUrl` in
-> `frontend/src/environments/environment.ts`.
+### Core Engineering Highlights:
+- **Strict Multi-Tenancy & Data Isolation:** Built with robust tenant boundaries ensuring zero data leakage across shops regarding customers, invoices, or analytics.
+- **Immutable Ledger Architecture:** Customer point balances are dynamically derived from an append-only ledger of immutable entries rather than a static stored total, making balances fully auditable and dispute-proof.
+- **Configurable Loyalty Rules Engine:** Supports flexible threshold types, reward calculations, discount caps, minimum invoice requirements, cross-branch accrual, and historical versioning so rule updates never apply retroactively.
+- **Advanced Anti-Fraud Controls:** Implements 12 rigorous validation checks, including duplicate-invoice constraints, staff phone number blocking, cancellation-pattern detection, and separation of recording from approval.
+- **Frictionless No-Account Customer Lookup:** Enables customers to check balances securely via phone number verification and recent receipt details, removing adoption barriers.
+- **Automated Testing & Bilingual Support:** Covered with PHPUnit automated feature tests and fully localized in Arabic and English with complete RTL layout support.
 
 ---
 
-## 4. Sign-in accounts
-
-> **The password for every account is `password`.**
-
-| Email | Password | Role |
-|---|---|---|
-| `admin@platform.test` | `password` | Platform supervisor |
-| `owner@alnoor.test` | `password` | Shop owner — Al Noor Stores |
-| `manager@alnoor.test` | `password` | Branch manager — Damascus branch |
-| `rep@alnoor.test` | `password` | Sales rep — Damascus branch |
-| `owner@zahra.test` | `password` | Shop owner — Zahra Boutique |
-| `manager@zahra.test` | `password` | Branch manager — main branch |
-| `rep@zahra.test` | `password` | Sales rep — main branch |
+## 🛠️ Tech Stack
+- **Backend:** Laravel 12, PHP 8.2, Eloquent ORM, RESTful APIs, PHPUnit
+- **Frontend:** Angular 17 (Standalone Components, Signals, RxJS), Tailwind CSS
+- **Database:** MySQL
+- **Deployment & Infrastructure:** cPanel Shared Hosting, Apache Rewrite Rules, HTTPS Configuration
 
 ---
 
-## 5. Email
-
-**To try the system without setting up SMTP** — put this in `.env`:
-
-```env
-MAIL_MAILER=log
-```
-
-Every message is then written to a text file instead of being sent, and the links and
-codes can be read out of it:
-
-```
-backend/storage/logs/laravel.log
-```
-
-**For real email**:
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_SCHEME=smtp
-MAIL_USERNAME=your-address@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_FROM_ADDRESS="your-address@gmail.com"
-```
-
-> Gmail needs an **App Password**, not the account's ordinary password.
-
-### Who sends and who receives
-
-These are two different things, and mixing them up causes confusion:
-
-- **`MAIL_USERNAME` and `MAIL_FROM_ADDRESS`** are the **sending account**. Every message
-  the system sends leaves from it and appears to the recipient as coming from it, and
-  a copy stays in that account's **Sent** folder — not in its inbox.
-- **The recipient** depends on the operation: an invitation goes to the staff member's
-  address, an approval or rejection decision to the shop's registered address, and a
-  password reset to the account holder's own address.
-
-### The supervisor's address
-
-Notifications about **new registration requests** go to the platform supervisor's
-account, which by default is:
-
-```
-admin@platform.test
-```
-
-That domain **does not exist**, so those notifications reach nobody until it is
-changed. To receive them, add this line to `.env` **before** running
-`php artisan migrate --seed`:
-
-```env
-SEED_PLATFORM_ADMIN_EMAIL=your-real-address@gmail.com
-```
-
-> **If you have already run `migrate --seed`**: an account's email is its identifier and
-> cannot be changed from the "My account" screen. Add the line above to `.env`, then
-> rebuild the data:
->
-> ```bash
-> php artisan migrate:fresh --seed
-> ```
-
----
-
-## 6. Optional — filling a shop with trade
-
-`migrate --seed` creates the structure: plans, two shops, branches, staff and a
-loyalty rule. It creates no customers and no invoices, so the reports and the charts
-open empty.
-
-To fill the first shop (Al Noor Stores) with customers, invoices spread over recent
-months, and one paid reward:
-
-```bash
-php artisan db:seed --class=DemoDataSeeder
-```
-
-Safe to run more than once — it clears that shop's own trade first, and touches
-nothing belonging to the second shop. The second shop is left empty on purpose: an
-empty tenant beside a full one is what makes the data isolation visible.
-
----
----
-
-<a name="العربية"></a>
-
-# العربية
-
-هذا الملف فيه شيئان فقط: **كيف تُثبَّت** و**بأي حساب تدخل**.
-
-## ١. المتطلبات
-
-| المطلوب | الإصدار الأدنى | ملاحظة |
-|---|---|---|
-| PHP | 8.2 | موجود مع XAMPP |
-| Composer | 2.x | [getcomposer.org](https://getcomposer.org) |
-| MySQL / MariaDB | 8.x أو ما يوازيها | موجود مع XAMPP |
-| Node.js | 20 | [nodejs.org](https://nodejs.org) |
-| npm | 10 | يأتي مع Node |
-
----
-
-## ٢. تثبيت الخادم
-
-كل الأوامر من مجلد `backend`.
-
-**١. نصّب الحزم**
-
-```bash
-cd backend
-composer install
-```
-
-**٢. جهّز ملف الإعدادات**
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-**٣. أنشئ قاعدة بيانات فاضية**
-
-من phpMyAdmin أنشئ قاعدة اسمها:
-
-```
-Customer_Loyalty_Platform
-```
-
-وتأكد أن هذه القيم في `.env` تطابق إعداداتك:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=Customer_Loyalty_Platform
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-**٤. أنشئ الجداول واملأها بالبيانات التجريبية**
-
-> **قبل تنفيذ هذا الأمر**: إن أردت أن تصلك إشعارات طلبات التسجيل الجديدة على بريدك، أضف
-> سطراً إلى `.env` بعنوانك الحقيقي. الافتراضي عنوان وهمي، والتفاصيل في
-> [القسم ٥](#٥-البريد-الإلكتروني).
->
-> ```env
-> SEED_PLATFORM_ADMIN_EMAIL=your-real-address@gmail.com
-> ```
-
-```bash
-php artisan migrate --seed
-```
-
-المخرج المتوقّع في الآخر:
-
-```
-Seeded. Every account uses the password: password
-```
-
-**٥. اربط مجلد الملفات المرفوعة**
-
-بلا هذه الخطوة الشعارات والصور المرفوعة لن تظهر:
-
-```bash
-php artisan storage:link
-```
-
-**٦. شغّل الخادم واتركه شغالاً**
-
-```bash
-php artisan serve
-```
-
-صار الخادم على `http://localhost:8000`.
-
----
-
-## ٣. تثبيت الواجهة
-
-بنافذة طرفية ثانية:
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-وافتح المتصفح على:
-
-```
-http://localhost:4200
-```
-
-> إذا شغّلت الخادم على منفذ غير 8000، عدّل `apiUrl` في `frontend/src/environments/environment.ts`.
-
----
-
-## ٤. حسابات الدخول
-
-> **كلمة السر لكل الحسابات: `password`**
-
-| البريد الإلكتروني | كلمة السر | الدور |
-|---|---|---|
-| `admin@platform.test` | `password` | مشرف المنصة |
-| `owner@alnoor.test` | `password` | صاحب محل — Al Noor Stores |
-| `manager@alnoor.test` | `password` | مدير فرع — فرع دمشق |
-| `rep@alnoor.test` | `password` | مندوب بيع — فرع دمشق |
-| `owner@zahra.test` | `password` | صاحب محل — Zahra Boutique |
-| `manager@zahra.test` | `password` | مدير فرع — الفرع الرئيسي |
-| `rep@zahra.test` | `password` | مندوب بيع — الفرع الرئيسي |
-
----
-
-## ٥. البريد الإلكتروني
-
-**للتجربة بلا إعداد SMTP** — ضع في `.env`:
-
-```env
-MAIL_MAILER=log
-```
-
-فيُكتب كل بريد في ملف نصي بدل أن يُبعت، والروابط والرموز تجدها فيه:
-
-```
-backend/storage/logs/laravel.log
-```
-
-**لبريد حقيقي**:
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_SCHEME=smtp
-MAIL_USERNAME=your-address@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_FROM_ADDRESS="your-address@gmail.com"
-```
-
-> مع Gmail يلزم **App Password** لا كلمة سر الحساب العادية.
-
-### من يُرسل ومن يستلم
-
-هذان أمران مختلفان، وخلطهما يربك:
-
-- **`MAIL_USERNAME` و `MAIL_FROM_ADDRESS`** هما **حساب الإرسال**. كل بريد يبعثه النظام يخرج من هذا الحساب ويظهر للمستلم كأنه منه، وتبقى نسخة منه في مجلد **Sent** لصاحبه لا في صندوق الوارد.
-- **المستلم** يتحدد بحسب العملية نفسها: الدعوة تذهب إلى بريد الموظف، وقرار الموافقة أو الرفض إلى بريد المحل المسجّل، واستعادة كلمة السر إلى بريد صاحب الحساب.
-
-### بريد مشرف المنصة
-
-إشعارات **طلبات التسجيل الجديدة** تذهب إلى بريد حساب مشرف المنصة، وهو افتراضياً:
-
-```
-admin@platform.test
-```
-
-وهذا **نطاق وهمي غير موجود**، فلن تصل تلك الإشعارات إلى أحد ما لم تغيّره. لتصلك، أضف
-هذا السطر إلى `.env` **قبل** تنفيذ `php artisan migrate --seed`:
-
-```env
-SEED_PLATFORM_ADMIN_EMAIL=your-real-address@gmail.com
-```
-
-> **إن كنت قد نفّذت `migrate --seed` مسبقاً**: بريد الحساب هو معرّفه، ولا يمكن تعديله من
-> شاشة «حسابي». فأضف السطر أعلاه إلى `.env` ثم أعد بناء البيانات:
->
-> ```bash
-> php artisan migrate:fresh --seed
-> ```
-
----
-
-## ٦. اختياري — ملء محل بالحركة التجارية
-
-الأمر `migrate --seed` ينشئ الهيكل: الخطط، ومحلّين، والفروع، والموظفين، وقاعدة ولاء.
-ولا ينشئ أي زبون ولا أي فاتورة، فتفتح التقارير والرسوم البيانية فارغة.
-
-لملء المحل الأول (Al Noor Stores) بزبائن وفواتير موزّعة على الأشهر الماضية ومكافأة
-مصروفة:
-
-```bash
-php artisan db:seed --class=DemoDataSeeder
-```
-
-يمكن تنفيذه أكثر من مرة — يمسح حركة ذلك المحل أولاً، ولا يلمس شيئاً يتعلق بالمحل
-الثاني. والمحل الثاني يُترك فارغاً عن قصد: مستأجر فارغ بجانب مستأجر ممتلئ هو ما يجعل
-عزل البيانات مرئياً.
+## 🚀 Getting Started Locally
+
+### Prerequisites
+- PHP >= 8.2 & Composer
+- Node.js & npm / Angular CLI
+- MySQL
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Maya-Mahmoud/Customer_Loyalty_Platform.git](https://github.com/Maya-Mahmoud/Customer_Loyalty_Platform.git)
+   cd Customer_Loyalty_Platform
